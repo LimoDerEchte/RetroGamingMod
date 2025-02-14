@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RKR",
+    "IGI",
+    "RKR"
+  ],
+  "key": {
+    "G": {
+      "item": "emumod:gameboy_color"
+    },
+    "K": {
+      "item": "minecraft:copper_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "emumod:gameboy_advance",
+    "count": 1
+  }
+}
