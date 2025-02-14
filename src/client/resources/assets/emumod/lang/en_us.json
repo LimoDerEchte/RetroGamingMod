@@ -1,0 +1,33 @@
+{
+  "itemGroup.emumod.main": "Retro Gaming",
+
+  "item.emumod.cartridge": "Empty Cartridge",
+  "item.emumod.broken_cartridge": "Broken Cartridge",
+  "item.emumod.gameboy_cartridge": "Gameboy Cartridge",
+  "item.emumod.gameboy_color_cartridge": "Gameboy Color Cartridge",
+  "item.emumod.gameboy_advance_cartridge": "Gameboy Advance Cartridge",
+  "item.emumod.gameboy": "Gameboy",
+  "item.emumod.gameboy_color": "Gameboy Color",
+  "item.emumod.gameboy_advance": "Gameboy Advance",
+
+  "block.emumod.monitor": "Monitor",
+
+  "item.emumod.tooltip.game": "Game: %s",
+  "item.emumod.tooltip.file": "File: %s",
+
+  "item.emumod.gameboy.start_link": "Cartridge insertion started",
+  "item.emumod.gameboy.cancel_link": "Cartridge insertion was cancelled",
+  "item.emumod.gameboy.eject_cart": "Cartridge was ejected",
+  "item.emumod.gameboy.inserted": "Cartridge was inserted successfully",
+  "item.emumod.gameboy.file_deleted": "The file linked with the cartridge was deleted!",
+
+  "emumod.gui.cartridge.title": "Cartridge Creation",
+  "emumod.gui.cartridge.create": "Create Cartridge",
+  "emumod.gui.cartridge.unsupported": "That rom isn't supported!",
+  "emumod.gui.cartridge.file_not_found": "This file doesn't exist!",
+  "emumod.gui.cartridge.failed": "Something went wrong!",
+  "emumod.gui.cartridge.item_unavailable": "The Item is not available!",
+
+  "emumod.emulator.license_1": "This emulator falls under the %s License.",
+  "emumod.emulator.license_2": "The license can be found under %s."
+}

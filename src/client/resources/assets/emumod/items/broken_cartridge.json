@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "emumod:item/broken_cartridge"
+  }
+}
