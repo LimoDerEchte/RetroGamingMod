@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "facing=north": { "model": "emumod:block/monitor" },
+    "facing=east":  { "model": "emumod:block/monitor", "y":  90 },
+    "facing=south": { "model": "emumod:block/monitor", "y": 180 },
+    "facing=west":  { "model": "emumod:block/monitor", "y": 270 }
+  }
+}
+
