@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "emumod",
+  "version": "${version}",
+  "name": "EmuMod",
+  "description": "A mod for playing retro games in in-game emulators",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/emumod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.limo.emumod.client.EmuModClient"
+    ],
+    "main": [
+      "com.limo.emumod.EmuMod"
+    ]
+  },
+  "mixins": [
+    "emumod.mixins.json",
+    {
+      "config": "emumod.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
