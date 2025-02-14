@@ -1,5 +1,6 @@
 package com.limo.emumod.network;
 
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -16,7 +17,11 @@ public class S2C {
 
         @Override
         public Id<? extends CustomPayload> getId() {
-            return null;
+            return ID;
         }
+    }
+
+    public static void init() {
+        PayloadTypeRegistry.playS2C().register(S2C.OpenScreenPayload.ID, S2C.OpenScreenPayload.CODEC);
     }
 }

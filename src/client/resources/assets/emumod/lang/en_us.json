@@ -21,12 +21,13 @@
   "item.emumod.gameboy.inserted": "Cartridge was inserted successfully",
   "item.emumod.gameboy.file_deleted": "The file linked with the cartridge was deleted!",
 
-  "emumod.gui.cartridge.title": "Cartridge Creation",
-  "emumod.gui.cartridge.create": "Create Cartridge",
-  "emumod.gui.cartridge.unsupported": "That rom isn't supported!",
-  "emumod.gui.cartridge.file_not_found": "This file doesn't exist!",
-  "emumod.gui.cartridge.failed": "Something went wrong!",
-  "emumod.gui.cartridge.item_unavailable": "The Item is not available!",
+  "gui.emumod.cartridge.title": "Cartridge Creation",
+  "gui.emumod.cartridge.create": "Create Cartridge",
+  "gui.emumod.cartridge.unsupported": "That rom isn't supported!",
+  "gui.emumod.cartridge.file_not_found": "This file doesn't exist!",
+  "gui.emumod.cartridge.file_read_error": "The file couldn't be read!",
+  "gui.emumod.cartridge.failed": "Something went wrong!",
+  "gui.emumod.cartridge.item_unavailable": "The Item is not available!",
 
   "emumod.emulator.license_1": "This emulator falls under the %s License.",
   "emumod.emulator.license_2": "The license can be found under %s."
