@@ -1,6 +1,7 @@
 package com.limo.emumod.registry;
 
 import com.limo.emumod.cartridge.CartridgeItem;
+import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.item.Item;
@@ -12,8 +13,11 @@ import net.minecraft.text.Text;
 
 public class EmuItems {
     public static final Item CARTRIDGE = register(new CartridgeItem(), ItemId.Registry.CARTRIDGE);
-    public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8)
-            .registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
+    public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
+
+    public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY), ItemId.Registry.GAMEBOY);
+    public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR), ItemId.Registry.GAMEBOY_COLOR);
+    public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
 
     public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.emumod.main"))
