@@ -35,6 +35,8 @@ public class ItemId {
         public static final RegistryKey<Item> GAMEBOY_COLOR = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_COLOR);
         public static final RegistryKey<Item> GAMEBOY_ADVANCE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE);
 
+        public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
+
         public static final RegistryKey<ItemGroup> MAIN_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP, Id.MAIN_GROUP);
     }
 }

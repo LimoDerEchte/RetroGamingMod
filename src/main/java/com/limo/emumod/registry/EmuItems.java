@@ -4,6 +4,7 @@ import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.registry.Registries;
@@ -18,6 +19,8 @@ public class EmuItems {
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY_CARTRIDGE);
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+
+    public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8).registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
 
     public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.emumod.main"))
@@ -36,6 +39,8 @@ public class EmuItems {
         ItemGroupEvents.modifyEntriesEvent(ItemId.Registry.MAIN_GROUP).register(group -> {
             group.add(CARTRIDGE);
             group.add(BROKEN_CARTRIDGE);
+
+            group.add(MONITOR);
         });
     }
 }
