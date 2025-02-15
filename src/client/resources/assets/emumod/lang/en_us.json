@@ -3,9 +3,11 @@
 
   "item.emumod.cartridge": "Empty Cartridge",
   "item.emumod.broken_cartridge": "Broken Cartridge",
+
   "item.emumod.gameboy_cartridge": "Gameboy Cartridge",
   "item.emumod.gameboy_color_cartridge": "Gameboy Color Cartridge",
   "item.emumod.gameboy_advance_cartridge": "Gameboy Advance Cartridge",
+
   "item.emumod.gameboy": "Gameboy",
   "item.emumod.gameboy_color": "Gameboy Color",
   "item.emumod.gameboy_advance": "Gameboy Advance",
@@ -13,7 +15,7 @@
   "block.emumod.monitor": "Monitor",
 
   "item.emumod.tooltip.game": "Game: %s",
-  "item.emumod.tooltip.file": "File: %s",
+  "item.emumod.tooltip.file": "File: %s.cart",
 
   "item.emumod.gameboy.start_link": "Cartridge insertion started",
   "item.emumod.gameboy.cancel_link": "Cartridge insertion was cancelled",
@@ -26,9 +28,10 @@
   "gui.emumod.cartridge.unsupported": "That rom isn't supported!",
   "gui.emumod.cartridge.file_not_found": "This file doesn't exist!",
   "gui.emumod.cartridge.file_read_error": "The file couldn't be read!",
-  "gui.emumod.cartridge.failed": "Something went wrong!",
-  "gui.emumod.cartridge.item_unavailable": "The Item is not available!",
+  "gui.emumod.cartridge.file_write_error": "The save file couldn't be written!",
+  "gui.emumod.cartridge.item_unavailable": "You are not holding a cartridge!",
+  "gui.emumod.cartridge.success": "The cartridge was successfully created.",
 
-  "emumod.emulator.license_1": "This emulator falls under the %s License.",
-  "emumod.emulator.license_2": "The license can be found under %s."
+  "gui.emumod.emulator.license_1": "This emulator falls under the %s License.",
+  "gui.emumod.emulator.license_2": "The license can be found under %s."
 }

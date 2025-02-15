@@ -8,11 +8,12 @@ import net.minecraft.network.packet.CustomPayload;
 
 public class C2S {
 
-    public record CreateCartridgePayload(byte[] data) implements CustomPayload {
-        public static final Id<C2S.CreateCartridgePayload> ID = new Id<>(NetworkId.CREATE_CARTRIDGE);
-        public static final PacketCodec<RegistryByteBuf, C2S.CreateCartridgePayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.BYTE_ARRAY, C2S.CreateCartridgePayload::data,
-                C2S.CreateCartridgePayload::new
+    public record CreateCartridgePayload(int handle, byte[] data) implements CustomPayload {
+        public static final Id<CreateCartridgePayload> ID = new Id<>(NetworkId.CREATE_CARTRIDGE);
+        public static final PacketCodec<RegistryByteBuf, CreateCartridgePayload> CODEC = PacketCodec.tuple(
+                PacketCodecs.INTEGER, CreateCartridgePayload::handle,
+                PacketCodecs.BYTE_ARRAY, CreateCartridgePayload::data,
+                CreateCartridgePayload::new
         );
 
         @Override

@@ -21,7 +21,21 @@ public class S2C {
         }
     }
 
+    public record CloseScreenPayload(int handle) implements CustomPayload {
+        public static final Id<CloseScreenPayload> ID = new Id<>(NetworkId.CLOSE_SCREEN);
+        public static final PacketCodec<RegistryByteBuf, CloseScreenPayload> CODEC = PacketCodec.tuple(
+                PacketCodecs.INTEGER, CloseScreenPayload::handle,
+                CloseScreenPayload::new
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
     public static void init() {
-        PayloadTypeRegistry.playS2C().register(S2C.OpenScreenPayload.ID, S2C.OpenScreenPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
     }
 }
