@@ -1,3 +1,3 @@
-[submodule "src/core/lib/visualboyadvance-m"]
-	path = src/core/lib/visualboyadvance-m
-	url = https://github.com/visualboyadvance-m/visualboyadvance-m.git
+[submodule "src/core/lib/mgba"]
+	path = src/core/lib/mgba
+	url = https://github.com/mgba-emu/mgba.git

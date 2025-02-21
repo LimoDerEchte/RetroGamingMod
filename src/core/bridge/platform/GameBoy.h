@@ -1,9 +1,12 @@
 #pragma once
 #include <string>
+#include <mgba/internal/gb/gb.h>
 
 class GameBoy {
+    GB *gb = nullptr;
+
 public:
-    void load(std::pmr::string path);
+    void load(const char *path);
     void start();
     void stop();
 };

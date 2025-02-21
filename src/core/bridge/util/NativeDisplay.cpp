@@ -6,9 +6,9 @@
 #include <headers/com_limo_emumod_bridge_NativeDisplay.h>
 #include <util/NativeDisplay.h>
 
-JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize(JNIEnv *, jclass, const jlong *display) {
-    const auto nativeDisplay = reinterpret_cast<NativeDisplay*>(*display);
-    return nativeDisplay->bufSize();
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize(JNIEnv *, jclass, const jlong display) {
+    const auto nativeDisplay = reinterpret_cast<NativeDisplay*>(display);
+    return static_cast<jint>(nativeDisplay->bufSize);
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeDisplay_update(JNIEnv *env, const jobject *obj, const jlong display) {
