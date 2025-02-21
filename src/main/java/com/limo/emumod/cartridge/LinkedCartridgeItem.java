@@ -31,10 +31,19 @@ public class LinkedCartridgeItem extends Item {
 
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+        gameTooltip(stack, tooltip);
+    }
+
+    public static void gameTooltip(ItemStack stack, List<Text> tooltip) {
         ComponentMap components = stack.getComponents();
         if(components.contains(FILE_ID) && components.contains(GAME)) {
             tooltip.add(Text.translatable("item.emumod.tooltip.game", components.get(GAME)).formatted(Formatting.GRAY));
             tooltip.add(Text.translatable("item.emumod.tooltip.file", components.get(FILE_ID)).formatted(Formatting.GRAY));
         }
+    }
+
+    public static boolean hasGame(ItemStack stack) {
+        ComponentMap components = stack.getComponents();
+        return components.contains(FILE_ID) && components.contains(GAME);
     }
 }

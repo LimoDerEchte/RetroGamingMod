@@ -2,6 +2,7 @@ package com.limo.emumod.registry;
 
 import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.gameboy.GameboyItem;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.item.BlockItem;
@@ -19,6 +20,10 @@ public class EmuItems {
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY_CARTRIDGE);
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+
+    public static final Item GAMEBOY = register(new GameboyItem(ItemId.Registry.GAMEBOY), ItemId.Registry.GAMEBOY);
+    public static final Item GAMEBOY_COLOR = register(new GameboyItem(ItemId.Registry.GAMEBOY_COLOR), ItemId.Registry.GAMEBOY_COLOR);
+    public static final Item GAMEBOY_ADVANCE = register(new GameboyItem(ItemId.Registry.GAMEBOY_ADVANCE), ItemId.Registry.GAMEBOY_ADVANCE);
 
     public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8).registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
 
@@ -39,6 +44,10 @@ public class EmuItems {
         ItemGroupEvents.modifyEntriesEvent(ItemId.Registry.MAIN_GROUP).register(group -> {
             group.add(CARTRIDGE);
             group.add(BROKEN_CARTRIDGE);
+
+            group.add(GAMEBOY);
+            group.add(GAMEBOY_COLOR);
+            group.add(GAMEBOY_ADVANCE);
 
             group.add(MONITOR);
         });

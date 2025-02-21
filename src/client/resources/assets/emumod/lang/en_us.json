@@ -19,8 +19,8 @@
 
   "item.emumod.gameboy.start_link": "Cartridge insertion started",
   "item.emumod.gameboy.cancel_link": "Cartridge insertion was cancelled",
-  "item.emumod.gameboy.eject_cart": "Cartridge was ejected",
-  "item.emumod.gameboy.inserted": "Cartridge was inserted successfully",
+  "item.emumod.gameboy.eject": "Cartridge was ejected",
+  "item.emumod.gameboy.insert": "Cartridge was inserted successfully",
   "item.emumod.gameboy.file_deleted": "The file linked with the cartridge was deleted!",
 
   "gui.emumod.cartridge.title": "Cartridge Creation",
