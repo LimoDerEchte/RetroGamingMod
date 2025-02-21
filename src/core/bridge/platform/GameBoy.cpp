@@ -2,11 +2,12 @@
 // Created by limo on 2/21/25.
 //
 
+#include "GameBoy.h"
+
 #include <jni.h>
 #include <headers/com_limo_emumod_bridge_NativeGameBoy.h>
-#include <mgba-util/vfs.h>
 
-#include "GameBoy.h"
+#include "util/VFileFix.h"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init(JNIEnv *, jclass) {
     return reinterpret_cast<jlong>(new GameBoy());
@@ -24,10 +25,11 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
 }
 
 void GameBoy::load(const char *path) {
-    //const auto file = VFileOpen(path, 0);
+    const auto file = VFileLoadFixed(path);
     gb = new GB();
+    GBLoadROM(gb, file);
     GBCreate(gb);
-    //GBLoadSave(gb, file);
+    GBSkipBIOS(gb);
 }
 
 void GameBoy::start() {
@@ -35,5 +37,6 @@ void GameBoy::start() {
 }
 
 void GameBoy::stop() {
+    GBDestroy(gb);
     // TODO
 }

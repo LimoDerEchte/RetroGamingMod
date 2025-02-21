@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <mgba/internal/gb/gb.h>
 
 class GameBoy {

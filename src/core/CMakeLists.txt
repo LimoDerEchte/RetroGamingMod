@@ -5,13 +5,10 @@ project(RetroGamingCore)
 
 set(CMAKE_CXX_STANDARD 26)
 
-# Include mGBA
-set(DISTBUILD ON)
-set(BUILD_HEADLESS ON)
-set(BUILD_SHARED ON)
-set(ENABLE_VFS_FILE ON)
+# Include Libs
 add_subdirectory(lib/mgba)
+add_subdirectory(lib/cppfs)
 
 # Create Core
 add_subdirectory(bridge)
-target_link_libraries(bridge PRIVATE mgba)
+target_link_libraries(bridge PRIVATE mgba cppfs)

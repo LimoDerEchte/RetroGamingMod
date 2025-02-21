@@ -11,4 +11,5 @@ add_library(bridge SHARED
         util/NativeDisplay.h
         platform/GameBoy.cpp
         platform/GameBoy.h
+        util/VFileFix.h
 )

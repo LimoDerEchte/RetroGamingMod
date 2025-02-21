@@ -1,3 +1,6 @@
 [submodule "src/core/lib/mgba"]
 	path = src/core/lib/mgba
 	url = https://github.com/mgba-emu/mgba.git
+[submodule "src/core/lib/cppfs"]
+	path = src/core/lib/cppfs
+	url = https://github.com/cginternals/cppfs.git
