@@ -10,18 +10,26 @@ extern "C" {
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
  * Method:    init
- * Signature: ()Lcom/sun/jna/Pointer;
+ * Signature: ()J
  */
-JNIEXPORT jobject JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init
   (JNIEnv *, jclass);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
  * Method:    load
- * Signature: (Lcom/sun/jna/Pointer;Ljava/lang/String;)V
+ * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_load
-  (JNIEnv *, jclass, jobject, jstring);
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGameBoy
+ * Method:    stop
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

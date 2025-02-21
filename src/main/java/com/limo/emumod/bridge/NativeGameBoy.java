@@ -1,11 +1,9 @@
 package com.limo.emumod.bridge;
 
-import com.sun.jna.Pointer;
-
 import java.io.File;
 
 public class NativeGameBoy {
-    private final Pointer pointer;
+    private final long pointer;
 
     public NativeGameBoy() {
         pointer = init();
@@ -15,6 +13,11 @@ public class NativeGameBoy {
         load(pointer, file.getAbsolutePath());
     }
 
-    private native static Pointer init();
-    private native static void load(Pointer pointer, String path);
+    public void stop() {
+        stop(pointer);
+    }
+
+    private native static long init();
+    private native static void load(long pointer, String path);
+    private native static void stop(long pointer);
 }
