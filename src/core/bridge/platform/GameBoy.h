@@ -7,5 +7,5 @@ class GameBoy {
 public:
     void load(const char *path);
     void start();
-    void stop();
+    void stop() const;
 };
