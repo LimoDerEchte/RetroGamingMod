@@ -1,20 +1,19 @@
 package com.limo.emumod.bridge;
 
-import com.sun.jna.Pointer;
-
 public class NativeDisplay {
-    private final Pointer display;
+    private final long pointer;
     private final int[] buf;
 
-    public NativeDisplay(Pointer display, int bufSize) {
-        this.display = display;
-        this.buf = new int[bufSize];
+    public NativeDisplay(long pointer) {
+        this.pointer = pointer;
+        this.buf = new int[bufSize(pointer)];
     }
 
-    public int[] retrieveBuf() {
-        update(display);
+    public int[] getBuf() {
+        update(pointer);
         return buf;
     }
 
-    private native void update(Pointer display);
+    private static native int bufSize(long pointer);
+    private native void update(long pointer);
 }

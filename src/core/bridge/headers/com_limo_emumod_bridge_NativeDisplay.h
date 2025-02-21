@@ -9,11 +9,19 @@ extern "C" {
 #endif
 /*
  * Class:     com_limo_emumod_bridge_NativeDisplay
+ * Method:    bufSize
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeDisplay
  * Method:    update
- * Signature: (Lcom/sun/jna/Pointer;)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeDisplay_update
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
 }
