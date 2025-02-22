@@ -47,6 +47,14 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     com_limo_emumod_bridge_NativeGameBoy
+ * Method:    createDisplay
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay
+  (JNIEnv *, jclass, jlong);
+
 #ifdef __cplusplus
 }
 #endif

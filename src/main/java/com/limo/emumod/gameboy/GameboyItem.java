@@ -1,8 +1,8 @@
 package com.limo.emumod.gameboy;
 
+import com.limo.emumod.bridge.NativeGameBoy;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.registry.EmuItems;
-import com.limo.emumod.registry.ItemId;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -14,13 +14,18 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.limo.emumod.cartridge.LinkedCartridgeItem.FILE_ID;
 import static com.limo.emumod.cartridge.LinkedCartridgeItem.GAME;
 
 public class GameboyItem extends Item {
     public static long lastInteractionTime;
+    public static final Map<UUID, NativeGameBoy> running = new HashMap<>();
+    public static ItemStack link;
 
     public GameboyItem(RegistryKey<Item> type) {
         super(new Settings().maxCount(1).registryKey(type));
@@ -53,8 +58,17 @@ public class GameboyItem extends Item {
                 user.getInventory().insertStack(cart);
                 stack.remove(GAME);
                 stack.remove(FILE_ID);
-                // TODO: Dispose GB
+                running.get(stack.getComponents().get(FILE_ID)).stop();
+                running.remove(stack.getComponents().get(FILE_ID));
                 user.sendMessage(Text.translatable("item.gameboy.eject"), true);
+            } else {
+                if(link != null) {
+                    link = null;
+                    user.sendMessage(Text.translatable("item.gameboy.cancel_link"), true);
+                }else {
+                    link = user.getStackInHand(hand);
+                    user.sendMessage(Text.translatable("item.gameboy.start_link"), true);
+                }
             }
         }
         return ActionResult.PASS;

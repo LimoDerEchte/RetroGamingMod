@@ -24,9 +24,14 @@ public class NativeGameBoy {
         stop(pointer);
     }
 
+    public NativeDisplay createDisplay() {
+        return new NativeDisplay(createDisplay(pointer));
+    }
+
     private native static long init();
     private native static void loadROM(long pointer, String path);
     private native static void loadSave(long pointer, String path);
     private native static void start(long pointer);
     private native static void stop(long pointer);
+    private native static long createDisplay(long pointer);
 }
