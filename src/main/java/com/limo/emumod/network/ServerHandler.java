@@ -19,6 +19,7 @@ import java.util.UUID;
 public class ServerHandler {
 
     public static void init() {
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> FileUtil.init());
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
@@ -26,7 +27,7 @@ public class ServerHandler {
             UUID fileUuid = UUID.randomUUID();
             String game = new String(nameBytes).replace("\u0000", "");
             ctx.server().execute(() -> {
-                File rom = FileUtil.idToCartridgeFile(fileUuid);
+                File rom = FileUtil.idToFile(fileUuid, "cart");
                 try(FileOutputStream fos = new FileOutputStream(rom)) {
                     fos.write(payload.data());
                     fos.flush();
@@ -47,6 +48,5 @@ public class ServerHandler {
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });
         });
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> FileUtil.init());
     }
 }

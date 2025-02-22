@@ -10,9 +10,9 @@ import java.util.UUID;
 public class FileUtil {
     public static IClientPath clientPath;
 
-    public static File idToCartridgeFile(UUID uuid) {
+    public static File idToFile(UUID uuid, String extension) {
         String parent = clientPath == null ? getSavePath() : clientPath.getSavePath();
-        return new File(parent + File.separator + "cartridges", uuid + ".cart");
+        return new File(parent + File.separator + "cartridges", uuid + "." + extension);
     }
 
     public static File getRequiredFile(String name) {

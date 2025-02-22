@@ -17,11 +17,27 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
- * Method:    load
+ * Method:    loadROM
  * Signature: (JLjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_load
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_loadROM
   (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGameBoy
+ * Method:    loadSave
+ * Signature: (JLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_loadSave
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGameBoy
+ * Method:    start
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
