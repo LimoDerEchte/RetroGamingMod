@@ -6,6 +6,8 @@
 
 #include <jni.h>
 #include <headers/com_limo_emumod_bridge_NativeGameBoy.h>
+#include <mgba/core/core.h>
+#include <mgba/core/core.h>
 
 #include "util/VFileFix.h"
 
@@ -26,6 +28,9 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
 
 void GameBoy::load(const char *path) {
     const auto file = VFileLoadFixed(path);
+    mCoreLoadFile(core, file);
+    core->loadROM(core, file);
+
     gb = new GB();
     GBCreate(gb);
     GBLoadROM(gb, file);

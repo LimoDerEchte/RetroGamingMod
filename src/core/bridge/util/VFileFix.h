@@ -10,13 +10,11 @@
 #include "cppfs/FileHandle.h"
 #include "cppfs/fs.h"
 
-#define val const auto
-
 static VFile* VFileLoadFixed(const char *path) {
-    val file = cppfs::fs::open(std::string(path));
-    val size = file.size();
-    val data = new char[size];
+    const auto file = cppfs::fs::open(std::string(path));
+    const auto size = file.size();
+    const auto data = new char[size];
     file.createInputStream()->read(data, size);
-    val vFile = VFileFromMemory(data, size);
+    const auto vFile = VFileFromMemory(data, size);
     return vFile;
 }

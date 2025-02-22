@@ -1,8 +1,9 @@
 #pragma once
-#include <mgba/internal/gb/gb.h>
+#include <mgba/core/core.h>
+#include <mgba/gb/core.h>
 
 class GameBoy {
-    GB *gb = nullptr;
+    mCore *core = GBCoreCreate();
 
 public:
     void load(const char *path);
