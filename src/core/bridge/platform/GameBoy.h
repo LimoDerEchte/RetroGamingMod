@@ -1,12 +1,11 @@
 #pragma once
 #include <mutex>
 #include <mgba/core/core.h>
-#include <mgba/gb/core.h>
 
 #include "util/NativeDisplay.h"
 
 class GameBoy {
-    mCore *core = GBCoreCreate();
+    mCore *core;
     mColor videoBuffer[25800]{};
     bool isRunning = false;
     NativeDisplay *display = nullptr;

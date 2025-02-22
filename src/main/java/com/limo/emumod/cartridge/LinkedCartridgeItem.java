@@ -53,14 +53,14 @@ public class LinkedCartridgeItem extends Item {
             if(!file.exists()) {
                 stack.setCount(0);
                 user.getInventory().insertStack(new ItemStack(EmuItems.BROKEN_CARTRIDGE));
-                user.sendMessage(Text.translatable("item.gameboy.file_deleted").formatted(Formatting.RED), true);
+                user.sendMessage(Text.translatable("item.emumod.gameboy.file_deleted").formatted(Formatting.RED), true);
             } else {
                 link.applyComponentsFrom(ComponentMap.builder()
                         .add(GAME, stack.getComponents().get(GAME))
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
                 clearLinkItem();
                 stack.setCount(0);
-                user.sendMessage(Text.translatable("item.gameboy.insert"), true);
+                user.sendMessage(Text.translatable("item.emumod.gameboy.insert"), true);
                 run(id);
             }
         }

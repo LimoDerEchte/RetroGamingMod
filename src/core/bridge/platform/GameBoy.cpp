@@ -9,6 +9,7 @@
 #include <thread>
 #include <headers/com_limo_emumod_bridge_NativeGameBoy.h>
 #include <mgba/core/core.h>
+#include <mgba/gb/core.h>
 
 #include "util/VFileFix.h"
 
@@ -45,6 +46,7 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(
 
 GameBoy::GameBoy() {
     std::lock_guard lock(mutex);
+    core = GBCoreCreate();
     core->init(core);
     core->setVideoBuffer(core, videoBuffer, 160 * 144);
     mCoreOptions opts = {};

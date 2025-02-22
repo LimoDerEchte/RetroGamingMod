@@ -58,16 +58,18 @@ public class GameboyItem extends Item {
                 user.getInventory().insertStack(cart);
                 stack.remove(GAME);
                 stack.remove(FILE_ID);
-                running.get(stack.getComponents().get(FILE_ID)).stop();
+                UUID file = stack.getComponents().get(FILE_ID);
+                if(running.containsKey(file))
+                    running.get(file).stop();
                 running.remove(stack.getComponents().get(FILE_ID));
-                user.sendMessage(Text.translatable("item.gameboy.eject"), true);
+                user.sendMessage(Text.translatable("item.emumod.gameboy.eject"), true);
             } else {
                 if(link != null) {
                     link = null;
-                    user.sendMessage(Text.translatable("item.gameboy.cancel_link"), true);
-                }else {
+                    user.sendMessage(Text.translatable("item.emumod.gameboy.cancel_link"), true);
+                } else {
                     link = user.getStackInHand(hand);
-                    user.sendMessage(Text.translatable("item.gameboy.start_link"), true);
+                    user.sendMessage(Text.translatable("item.emumod.gameboy.start_link"), true);
                 }
             }
         }

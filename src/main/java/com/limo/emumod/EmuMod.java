@@ -15,14 +15,11 @@ public class EmuMod implements ModInitializer {
     public static final Random RANDOM = Random.create();
 
     static {
-        //System.load("/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/bridge/libbridge.so");
+        System.load("/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/bridge/libbridge.so");
     }
 
     @Override
     public void onInitialize() {
-        //NativeGameBoy gb = new NativeGameBoy();
-        //gb.load(new File("/home/limo/Documents/Test/Legend of Zelda, The - Link's Awakening (USA, Europe).gb"));
-
         FileUtil.initGeneric();
         EmuItems.init();
         S2C.init();
