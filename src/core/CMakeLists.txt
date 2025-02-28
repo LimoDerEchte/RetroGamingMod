@@ -5,10 +5,12 @@ project(RetroGamingCore)
 
 set(CMAKE_CXX_STANDARD 26)
 
-# Include Libs
-add_subdirectory(lib/mgba)
-add_subdirectory(lib/cppfs)
+# Library Stuff (vcpkg & internal)
+find_package(boost_interprocess CONFIG REQUIRED)
 
-# Create Core
+# Actual Stuff & Linking
 add_subdirectory(bridge)
-target_link_libraries(bridge PRIVATE mgba cppfs)
+target_link_libraries(bridge PRIVATE Boost::interprocess)
+
+add_subdirectory(bridge-instance)
+#target_link_libraries(bridge-instance PRIVATE Boost::interprocess)
