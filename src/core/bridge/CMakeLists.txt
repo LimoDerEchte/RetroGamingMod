@@ -8,8 +8,8 @@ include_directories(
 
 add_library(bridge SHARED
         util/NativeDisplay.cpp
-        util/NativeDisplay.h
+        util/NativeDisplay.hpp
         platform/GameBoy.cpp
-        platform/GameBoy.h
-        util/VFileFix.h
+        platform/GameBoy.hpp
+        util/util.hpp
 )
