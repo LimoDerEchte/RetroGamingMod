@@ -5,7 +5,7 @@
 #pragma once
 
 class GameBoy {
-    char id[32];
+    char id[32]{};
 
 public:
     GameBoy();

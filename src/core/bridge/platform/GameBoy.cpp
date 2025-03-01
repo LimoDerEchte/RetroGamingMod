@@ -7,6 +7,8 @@
 #include <headers/com_limo_emumod_bridge_NativeGameBoy.h>
 #include <jni.h>
 
+#include "util/util.hpp"
+
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init(JNIEnv *, jclass) {
     return reinterpret_cast<jlong>(new GameBoy());
 }
@@ -23,7 +25,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
 }
 
 GameBoy::GameBoy() {
-    id = std::rand()
+    GenerateID(id);
 }
 
 void GameBoy::allocate(const char *rom) {
