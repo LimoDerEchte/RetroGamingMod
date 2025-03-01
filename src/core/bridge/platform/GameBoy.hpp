@@ -7,11 +7,11 @@
 #include <boost/process.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "util/NativeDisplay.hpp"
+
+struct NativeDisplay;
 
 class GameBoy {
     char id[32]{};
-    NativeDisplay *display = nullptr;
     GameBoyShared *shared = nullptr;
     boost::interprocess::managed_shared_memory *segment = nullptr;
     boost::process::child *child = nullptr;
@@ -22,5 +22,5 @@ public:
     void allocate(const char *rom);
     void start();
     void dispose() const;
-    NativeDisplay *getDisplay();
+    NativeDisplay *getDisplay() const;
 };

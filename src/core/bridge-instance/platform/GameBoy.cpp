@@ -5,8 +5,8 @@
 #include "GameBoy.hpp"
 
 #include <iostream>
+#include <PlatformStructures.hpp>
 
-#include "PlatformStructures.hpp"
 #include "sys/LibRetroCore.hpp"
 #include "sys/paths.h"
 
@@ -36,7 +36,8 @@ int GB::init(const std::string &id, bip::managed_shared_memory *segment) {
                 const uint8_t g = pixel[2];
                 const uint8_t b = pixel[3];
                 constexpr uint8_t a = 0xFF;
-                shared->display[y * width + x] = a << 24 | r << 16 | g << 8 | b;
+                shared->display.buf[y * width + x] = a << 24 | r << 16 | g << 8 | b;
+                shared->display.changed = true;
             }
         }
     });

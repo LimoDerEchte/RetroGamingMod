@@ -9,9 +9,9 @@ include_directories(
 
 add_library(bridge SHARED
         util/NativeDisplay.cpp
-        util/NativeDisplay.hpp
         platform/GameBoy.cpp
         platform/GameBoy.hpp
         util/util.hpp
         ../shared/PlatformStructures.hpp
+        ../shared/MainStructures.hpp
 )

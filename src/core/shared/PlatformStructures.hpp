@@ -1,7 +1,8 @@
 
 #pragma once
+#include <MainStructures.hpp>
 
 struct GameBoyShared {
     const char *rom;
-    int display[144*160] = {};
+    NativeDisplay display = NativeDisplay(160, 144);
 };

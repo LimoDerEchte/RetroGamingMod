@@ -61,10 +61,7 @@ void GameBoy::dispose() const {
     bip::shared_memory_object::remove(id);
 }
 
-NativeDisplay *GameBoy::getDisplay() {
-    if (display == nullptr) {
-        display = new NativeDisplay(160, 144);
-    }
-    return display;
+NativeDisplay *GameBoy::getDisplay() const {
+    return &shared->display;
 }
 

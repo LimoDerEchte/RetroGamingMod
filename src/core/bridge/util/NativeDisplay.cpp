@@ -2,11 +2,11 @@
 // Created by limo on 2/21/25.
 //
 
-#include "NativeDisplay.hpp"
-
+#include <MainStructures.hpp>
 #include <headers/com_limo_emumod_bridge_NativeDisplay.h>
 #include <jni.h>
 
+struct NativeDisplay;
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize(JNIEnv *, jclass, const jlong display) {
     const auto nativeDisplay = reinterpret_cast<NativeDisplay*>(display);
     return static_cast<jint>(nativeDisplay->bufSize);
