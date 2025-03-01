@@ -11,4 +11,7 @@ add_executable(bridge-instance main.cpp
         sys/LibRetroCore.cpp
         sys/LibRetroCore.hpp
         sys/paths.h
+        sys/libretro.h
+        ../shared/MainStructures.hpp
+        ../shared/PlatformStructures.hpp
 )

@@ -30,12 +30,13 @@ bool LibRetroCore::loadCore() {
         return false;
     }
 
-    retro_init = static_cast<retro_init_t>(dlsym(coreHandle, "retro_init"));
-    retro_deinit = static_cast<retro_deinit_t>(dlsym(coreHandle, "retro_deinit"));
-    retro_run = static_cast<retro_run_t>(dlsym(coreHandle, "retro_run"));
-    retro_load_game = static_cast<retro_load_game_t>(dlsym(coreHandle, "retro_load_game"));
-    retro_unload_game = static_cast<retro_unload_game_t>(dlsym(coreHandle, "retro_unload_game"));
-    retro_set_video_refresh = static_cast<retro_set_video_refresh_t>(dlsym(coreHandle, "retro_set_video_refresh"));
+    // ReSharper disable CppCStyleCast
+    retro_init = (retro_init_t) dlsym(coreHandle, "retro_init");
+    retro_deinit = (retro_deinit_t) dlsym(coreHandle, "retro_deinit");
+    retro_run = (retro_run_t) dlsym(coreHandle, "retro_run");
+    retro_load_game = (retro_load_game_t) dlsym(coreHandle, "retro_load_game");
+    retro_unload_game = (retro_unload_game_t) dlsym(coreHandle, "retro_unload_game");
+    retro_set_video_refresh = (retro_set_video_refresh_t) dlsym(coreHandle, "retro_set_video_refresh");
 
     if (!retro_init || !retro_deinit || !retro_run || !retro_load_game || !retro_unload_game || !retro_set_video_refresh) {
         std::cerr << "Failed to load one or more required functions." << std::endl;

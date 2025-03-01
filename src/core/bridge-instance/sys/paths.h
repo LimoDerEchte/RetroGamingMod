@@ -4,4 +4,4 @@
 
 #pragma once
 
-#define GB_CORE_PATH "gbcore.so"
+#define GB_CORE_PATH "/home/limo/Downloads/mgba_libretro.so"
