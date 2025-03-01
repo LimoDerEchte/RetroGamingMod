@@ -46,17 +46,15 @@ void GameBoy::allocate(const char *rom) {
 }
 
 void GameBoy::start() {
-    std::cout << "[RetroGamingCore] Starting up new bridge instance" << id << std::endl;
-    child = new boost::process::child(PATH_TO_LIB, "gb", std::string(id));
+    std::cout << "[RetroGamingCore] Starting up new bridge instance " << std::string(id, 32) << std::endl;
+    child = new bp::child(PATH_TO_LIB, bp::args({"gb", std::string(id, 32)}));
 }
 
 void GameBoy::dispose() const {
-    std::cout << "[RetroGamingCore] Disposing bridge instance" << id << std::endl;
-// ReSharper disable once CppDFANullDereference
+    std::cout << "[RetroGamingCore] Disposing bridge instance " << std::string(id, 32) << std::endl;
+// ReSharper disable CppDFANullDereference
     child->terminate();
-// ReSharper disable once CppDFANullDereference
     child->wait();
-// ReSharper disable once CppDFANullDereference
     segment->destroy<GameBoyShared>("SharedData");
     bip::shared_memory_object::remove(id);
 }

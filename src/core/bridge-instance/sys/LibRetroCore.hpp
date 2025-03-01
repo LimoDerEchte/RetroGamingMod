@@ -12,7 +12,7 @@ public:
     ~LibRetroCore();
     bool loadCore();
     bool loadROM(const std::string &romPath) const;
-    void runCore() const;
+    [[noreturn]] void runCore() const;
     void setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback);
 
 private:

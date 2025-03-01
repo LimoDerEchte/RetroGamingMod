@@ -11,11 +11,9 @@ int main() {
     GameBoy gameboy{};
     log(gameboy.id);
     gameboy.allocate("/home/limo/Documents/Test/Links Awakening.gb");
-    log("1");
     gameboy.start();
-    log("2");
     const auto display = gameboy.getDisplay();
-    while (!display->changed) {}
+    while (!display->changed && gameboy.child->running()) {}
     gameboy.dispose();
     return 0;
 }

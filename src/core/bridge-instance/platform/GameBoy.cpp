@@ -41,6 +41,7 @@ int GB::init(const std::string &id, bip::managed_shared_memory *segment) {
             }
         }
     });
+    std::cout << "[RetroGamingCore | " << id << "] Successfully loaded - running core..." << std::endl;
     core.runCore();
     return EXIT_SUCCESS;
 }

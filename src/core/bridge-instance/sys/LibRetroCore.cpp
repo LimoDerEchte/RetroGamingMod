@@ -57,9 +57,8 @@ bool LibRetroCore::loadROM(const std::string &romPath) const {
     return true;
 }
 
-void LibRetroCore::runCore() const {
-    constexpr int maxFrames = 10;
-    for (int i = 0; i < maxFrames; ++i) {
+[[noreturn]] void LibRetroCore::runCore() const {
+    for (;;) {
         retro_run();
     }
 }
