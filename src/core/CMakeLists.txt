@@ -14,4 +14,4 @@ add_subdirectory(bridge)
 target_link_libraries(bridge PRIVATE Boost::interprocess)
 
 add_subdirectory(bridge-instance)
-#target_link_libraries(bridge-instance PRIVATE Boost::interprocess)
+target_link_libraries(bridge-instance PRIVATE Boost::interprocess)

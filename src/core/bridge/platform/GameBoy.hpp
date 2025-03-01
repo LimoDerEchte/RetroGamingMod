@@ -3,19 +3,11 @@
 //
 
 #pragma once
+#include <PlatformStructures.hpp>
 #include <boost/process.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include "util/NativeDisplay.hpp"
-
-struct GameBoyShared {
-    const char *rom;
-    int display[144*160] = {};
-
-    explicit GameBoyShared(const char *rom) {
-        this->rom = rom;
-    }
-};
 
 class GameBoy {
     char id[32]{};

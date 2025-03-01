@@ -47,7 +47,7 @@ void GameBoy::allocate(const char *rom) {
 
 void GameBoy::start() {
     std::cout << "[RetroGamingCore] Starting up new bridge instance" << id << std::endl;
-    child = new boost::process::child(PATH_TO_LIB, id);
+    child = new boost::process::child(PATH_TO_LIB, "gb", std::string(id));
 }
 
 void GameBoy::dispose() const {
