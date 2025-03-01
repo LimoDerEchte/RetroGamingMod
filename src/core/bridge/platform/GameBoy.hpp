@@ -11,12 +11,12 @@
 struct NativeDisplay;
 
 class GameBoy {
-    char id[32]{};
     GameBoyShared *shared = nullptr;
     boost::interprocess::managed_shared_memory *segment = nullptr;
     boost::process::child *child = nullptr;
 
 public:
+    char id[32]{};
     GameBoy();
 
     void allocate(const char *rom);

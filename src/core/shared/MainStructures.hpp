@@ -15,6 +15,6 @@ struct NativeDisplay {
         std::lock_guard lock(mutex);
         bufSize = width * height;
         buf = new int[bufSize];
-        changed = true;
+        changed = false;
     }
 };
