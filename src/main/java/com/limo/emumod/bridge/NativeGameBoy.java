@@ -15,9 +15,7 @@ public class NativeGameBoy {
     public void load(UUID file) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
-        loadROM(pointer, rom.getAbsolutePath());
-        loadSave(pointer, save.getAbsolutePath());
-        start(pointer);
+        start(pointer, rom.getAbsolutePath(), save.getAbsolutePath());
     }
 
     public void stop() {
@@ -29,9 +27,7 @@ public class NativeGameBoy {
     }
 
     private native static long init();
-    private native static void loadROM(long pointer, String path);
-    private native static void loadSave(long pointer, String path);
-    private native static void start(long pointer);
+    private native static void start(long pointer, String rom, String save);
     private native static void stop(long pointer);
     private native static long createDisplay(long pointer);
 }

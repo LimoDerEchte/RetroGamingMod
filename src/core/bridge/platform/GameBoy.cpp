@@ -28,6 +28,11 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
     gameboy->dispose();
 }
 
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(JNIEnv *, jclass, const jlong ptr) {
+    const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
+    return reinterpret_cast<jlong>(gameboy->getDisplay());
+}
+
 GameBoy::GameBoy() {
     GenerateID(id);
 }
@@ -54,5 +59,12 @@ void GameBoy::dispose() const {
 // ReSharper disable once CppDFANullDereference
     segment->destroy<GameBoyShared>("SharedData");
     bip::shared_memory_object::remove(id);
+}
+
+NativeDisplay *GameBoy::getDisplay() {
+    if (display == nullptr) {
+        display = new NativeDisplay(160, 144);
+    }
+    return display;
 }
 
