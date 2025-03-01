@@ -1,3 +1,6 @@
 [submodule "src/core/lib/lrcpp"]
 	path = src/core/lib/lrcpp
 	url = https://github.com/leiradel/lrcpp.git
+[submodule "src/core/vcpkg"]
+	path = src/core/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
