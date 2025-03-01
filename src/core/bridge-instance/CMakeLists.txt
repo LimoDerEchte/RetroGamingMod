@@ -8,6 +8,6 @@ include_directories(
 add_executable(bridge-instance main.cpp
         platform/GameBoy.cpp
         platform/GameBoy.hpp
-        sys/Video.hpp
-        sys/Video.cpp
+        sys/LibRetroCore.cpp
+        sys/LibRetroCore.hpp
 )
