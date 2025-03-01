@@ -5,7 +5,7 @@
 #include <iostream>
 #include <platform/GameBoy.hpp>
 
-#define log(msg) std::cout << msg << std::endl
+#define log(msg) std::cout << "[Test] " << msg << std::endl
 
 int main() {
     GameBoy gameboy{};
@@ -14,6 +14,7 @@ int main() {
     gameboy.start();
     const auto display = gameboy.getDisplay();
     while (!display->changed && gameboy.child->running()) {}
+    log(gameboy.child->exit_code());
     gameboy.dispose();
     return 0;
 }

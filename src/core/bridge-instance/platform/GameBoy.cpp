@@ -23,7 +23,7 @@ int GB::init(const std::string &id, bip::managed_shared_memory *segment) {
         std::cerr << "[RetroGamingCore | " << id << "] Error: Failed to load core!" << std::endl;
         return EXIT_FAILURE;
     }
-    if (!core.loadROM(shared->rom)) {
+    if (!core.loadROM(std::string(shared->rom))) {
         std::cerr << "[RetroGamingCore | " << id << "] Error: Failed to load ROM!" << std::endl;
         return EXIT_FAILURE;
     }

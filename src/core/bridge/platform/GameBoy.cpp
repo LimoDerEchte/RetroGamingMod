@@ -42,7 +42,7 @@ void GameBoy::allocate(const char *rom) {
     segment = new bip::managed_shared_memory(bip::create_only, id, 65536);
 
     shared = segment->construct<GameBoyShared>("SharedData")();
-    shared->rom = rom;
+    shared->setRom(rom);
 }
 
 void GameBoy::start() {
