@@ -2,13 +2,17 @@ package com.limo.emumod.gameboy;
 
 import com.limo.emumod.bridge.NativeGameBoy;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.EmuItems;
+import com.limo.emumod.screen.ScreenId;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -72,6 +76,16 @@ public class GameboyItem extends Item {
                     user.sendMessage(Text.translatable("item.emumod.gameboy.start_link"), true);
                 }
             }
+        } else {
+            if(!stack.hasChangedComponent(FILE_ID)) {
+                user.sendMessage(Text.translatable("item.emumod.gameboy.no_game"), true);
+                return ActionResult.PASS;
+            }
+            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
+                    stack.getItem() == EmuItems.GAMEBOY_ADVANCE ? ScreenId.GAMEBOY_ADVANCE :
+                    stack.getItem() == EmuItems.GAMEBOY_COLOR ? ScreenId.GAMEBOY_COLOR :
+                    ScreenId.GAMEBOY, stack.getComponents().get(FILE_ID)
+            ));
         }
         return ActionResult.PASS;
     }

@@ -19,6 +19,7 @@
 
   "item.emumod.gameboy.start_link": "Cartridge insertion started",
   "item.emumod.gameboy.cancel_link": "Cartridge insertion was cancelled",
+  "item.emumod.gameboy.no_game": "You have to insert a game first",
   "item.emumod.gameboy.eject": "Cartridge was ejected",
   "item.emumod.gameboy.insert": "Cartridge was inserted successfully",
   "item.emumod.gameboy.file_deleted": "The file linked with the cartridge was deleted!",
@@ -33,5 +34,5 @@
   "gui.emumod.cartridge.success": "The cartridge was successfully created.",
 
   "gui.emumod.emulator.license_1": "This emulator falls under the %s License.",
-  "gui.emumod.emulator.license_2": "The license can be found under %s."
+  "gui.emumod.emulator.license_2": "The license can be found at %s."
 }
