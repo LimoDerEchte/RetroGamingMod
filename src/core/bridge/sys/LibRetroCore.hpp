@@ -13,15 +13,15 @@ public:
     explicit LibRetroCore(std::string corePath);
     ~LibRetroCore();
     bool loadCore();
-    bool loadROM(const std::string &romPath) const;
+    [[nodiscard]] bool loadROM(const std::string &romPath) const;
     void runCore() const;
     void setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback);
     void dispose() const;
 
-private:
     LibRetroCore(const LibRetroCore&) = delete;
     LibRetroCore& operator=(const LibRetroCore&) = delete;
 
+private:
     std::string corePath;
     void* coreHandle;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;

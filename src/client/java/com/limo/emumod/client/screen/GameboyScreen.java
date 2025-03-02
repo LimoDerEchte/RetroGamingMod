@@ -57,7 +57,7 @@ public class GameboyScreen extends Screen {
         context.getMatrices().scale(scale, scale, scale);
         // Background
         context.drawTexture(RenderLayer::getGuiTextured, isGbc ? GAMEBOY_COLOR_TEXTURE : GAMEBOY_TEXTURE,
-                (width / 2 - 80) / scale, (height / 2 - 144) / scale, 0, 0, 160, 144, 160, 144);
+                (width / 2 - 512 / 2) / scale, (height / 2 - 144 - 64) / scale, 0, 0, 512, 512, 512, 512);
         // Frame
         context.drawTexture(RenderLayer::getGuiTextured, screenTexture, (width / 2 - 80) / scale,
                 (height / 2 - 144) / scale, 0, 0, 160, 144, 160, 144);

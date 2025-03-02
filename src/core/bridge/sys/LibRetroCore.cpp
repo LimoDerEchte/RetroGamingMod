@@ -47,6 +47,7 @@ bool LibRetroCore::loadCore() {
         std::cerr << "Failed to load core: " << dlerror() << std::endl;
         return false;
     }
+    // ReSharper disable CppCStyleCast
     retro_init = (retro_init_t) dlsym(coreHandle, "retro_init");
     retro_deinit = (retro_deinit_t) dlsym(coreHandle, "retro_deinit");
     retro_run = (retro_run_t) dlsym(coreHandle, "retro_run");
@@ -88,7 +89,7 @@ bool LibRetroCore::loadCore() {
 }
 
 bool LibRetroCore::loadROM(const std::string &romPath) const {
-    retro_game_info gameInfo = {
+    const retro_game_info gameInfo = {
         romPath.c_str(),
         nullptr,
         0,
@@ -106,7 +107,7 @@ bool LibRetroCore::loadROM(const std::string &romPath) const {
 
 void LibRetroCore::runCore() const {
     try {
-        const float fps = g_av_info.timing.fps > 0 ? g_av_info.timing.fps : 60.0f;
+        const double fps = g_av_info.timing.fps > 0 ? g_av_info.timing.fps : 60.0f;
         const std::chrono::microseconds frametime(static_cast<int>(1000000.0f / fps));
         std::cout << "Starting main loop at " << fps << " fps (frame time: "
                   << frametime.count() << "μs)" << std::endl;
@@ -150,10 +151,10 @@ void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, 
     }
 }
 
-bool LibRetroCore::environmentCallback(unsigned cmd, void* data) {
+bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
     switch (cmd) {
         case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
-            struct retro_log_callback *cb = (struct retro_log_callback*)data;
+            auto *cb = static_cast<struct retro_log_callback *>(data);
             cb->log = log_printf;
             return true;
         }
@@ -161,8 +162,7 @@ bool LibRetroCore::environmentCallback(unsigned cmd, void* data) {
             *static_cast<bool*>(data) = true;
             return true;
         case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
-            const enum retro_pixel_format *fmt = (enum retro_pixel_format *)data;
-            if (*fmt > RETRO_PIXEL_FORMAT_RGB565) {
+            if (const retro_pixel_format *fmt = static_cast<enum retro_pixel_format *>(data); *fmt > RETRO_PIXEL_FORMAT_RGB565) {
                 return false;
             }
             return true;
@@ -170,29 +170,30 @@ bool LibRetroCore::environmentCallback(unsigned cmd, void* data) {
         case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY: {
-            *(const char**)data = ".";
+            *static_cast<const char **>(data) = ".";
             return true;
         }
         case RETRO_ENVIRONMENT_SET_VARIABLES:
         case RETRO_ENVIRONMENT_GET_VARIABLE:
         case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 void LibRetroCore::inputPollCallback() {
-    // No-op
+
 }
 
 int16_t LibRetroCore::inputStateCallback(unsigned port, unsigned device, unsigned index, unsigned id) {
-    return 0; // No buttons pressed
+    return 0;
 }
 
 void LibRetroCore::audioSampleCallback(int16_t left, int16_t right) {
-    // Discard audio samples
+
 }
 
 size_t LibRetroCore::audioSampleBatchCallback(const int16_t *data, size_t frames) {
-    return frames; // Pretend all frames were processed
+    return frames;
 }
