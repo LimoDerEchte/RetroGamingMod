@@ -14,7 +14,6 @@ add_library(bridge SHARED
         util/util.hpp
         sys/LibRetroCore.cpp
         sys/LibRetroCore.hpp
-        sys/paths.h
         sys/libretro.h
         util/NativeDisplay.hpp
 )

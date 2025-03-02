@@ -9,16 +9,15 @@
 #include <jni.h>
 #include <bits/std_thread.h>
 
-#include "sys/paths.h"
 #include "util/util.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init(JNIEnv *, jclass) {
     return reinterpret_cast<jlong>(new GameBoy());
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start(JNIEnv *env, jclass, const jlong ptr, const jstring rom, jstring) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start(JNIEnv *env, jclass, const jlong ptr, const jstring core, const jstring rom, jstring) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
-    gameboy->load(env->GetStringUTFChars(rom, nullptr));
+    gameboy->load(env->GetStringUTFChars(core, nullptr), env->GetStringUTFChars(rom, nullptr));
     gameboy->start();
 }
 
@@ -32,9 +31,9 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(
     return reinterpret_cast<jlong>(gameboy->getDisplay());
 }
 
-void GameBoy::load(const char *rom) {
+void GameBoy::load(const char *core, const char *rom) {
     std::lock_guard lock(mutex);
-    libRetroCore = new LibRetroCore(GB_CORE_PATH);
+    libRetroCore = new LibRetroCore(core);
     if (!libRetroCore->loadCore()) {
         std::cerr << "[RetroGamingCore] Failed to load core library" << std::endl;
         return;

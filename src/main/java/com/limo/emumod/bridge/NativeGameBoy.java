@@ -1,5 +1,6 @@
 package com.limo.emumod.bridge;
 
+import com.limo.emumod.util.CoreManager;
 import com.limo.emumod.util.FileUtil;
 
 import java.io.File;
@@ -16,7 +17,7 @@ public class NativeGameBoy {
     public void load(UUID file) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
-        start(pointer, rom.getAbsolutePath(), save.getAbsolutePath());
+        start(pointer, CoreManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
     }
 
     public void stop() {
@@ -30,7 +31,7 @@ public class NativeGameBoy {
     }
 
     private native static long init();
-    private native static void start(long pointer, String rom, String save);
+    private native static void start(long pointer, String core, String rom, String save);
     private native static void stop(long pointer);
     private native static long createDisplay(long pointer);
 }

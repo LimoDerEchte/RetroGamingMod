@@ -18,10 +18,10 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
  * Method:    start
- * Signature: (JLjava/lang/String;Ljava/lang/String;)V
+ * Signature: (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start
-  (JNIEnv *, jclass, jlong, jstring, jstring);
+  (JNIEnv *, jclass, jlong, jstring, jstring, jstring);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy

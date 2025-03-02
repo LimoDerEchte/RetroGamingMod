@@ -13,7 +13,7 @@ class GameBoy {
     NativeDisplay* nativeDisplay = new NativeDisplay(160, 144);
 
 public:
-    void load(const char *rom);
+    void load(const char *core, const char *rom);
     void start();
     void dispose();
     [[nodiscard]] NativeDisplay *getDisplay() const;

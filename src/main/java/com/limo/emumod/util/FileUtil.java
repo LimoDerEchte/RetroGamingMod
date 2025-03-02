@@ -16,14 +16,14 @@ public class FileUtil {
     }
 
     public static File getRequiredFile(String name) {
-        return new File(getSavePath() + File.separator + "requiredFiles", name);
+        return new File(getSavePath() + File.separator + "retroGamingRequired", name);
     }
 
     public static void initGeneric() {
-        File f = new File(getSavePath() + File.separator + "requiredFiles");
+        File f = new File(getSavePath() + File.separator + "retroGamingRequired");
         if(!f.exists())
             if(!f.mkdir())
-                EmuMod.LOGGER.error("Failed to create requiredFiles folder");
+                EmuMod.LOGGER.error("Failed to create retroGamingRequired folder");
     }
 
     public static void init() {

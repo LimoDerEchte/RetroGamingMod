@@ -9,7 +9,7 @@
 
 int main() {
     GameBoy gameboy{};
-    gameboy.load("/home/limo/Documents/Test/Links Awakening.gb");
+    gameboy.load("/home/limo/Documents/Test/Links Awakening.gb", "/home/limo/Downloads/mgba_libretro.so");
     gameboy.start();
     const auto display = gameboy.getDisplay();
     while (!display->changed) {}
