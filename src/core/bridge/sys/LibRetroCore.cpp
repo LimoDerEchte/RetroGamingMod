@@ -42,7 +42,7 @@ LibRetroCore::~LibRetroCore() {
 }
 
 bool LibRetroCore::loadCore() {
-    coreHandle = dlopen(corePath.c_str(), RTLD_LAZY);
+    coreHandle = dlopen(corePath.c_str(), RTLD_LOCAL | RTLD_LAZY);
     if (!coreHandle) {
         std::cerr << "Failed to load core: " << dlerror() << std::endl;
         return false;
@@ -127,6 +127,13 @@ void LibRetroCore::runCore() const {
 
 void LibRetroCore::setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback) {
     videoFrameCallback = callback;
+}
+
+void LibRetroCore::dispose() const {
+    retro_unload_game();
+    retro_deinit();
+    if (coreHandle)
+        dlclose(coreHandle);
 }
 
 void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, const unsigned height, const size_t pitch) {

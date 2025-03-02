@@ -3,24 +3,18 @@
 //
 
 #pragma once
-#include <PlatformStructures.hpp>
-#include <boost/process.hpp>
-#include <boost/interprocess/managed_shared_memory.hpp>
 
-
-struct NativeDisplay;
+#include "sys/LibRetroCore.hpp"
+#include "util/NativeDisplay.hpp"
 
 class GameBoy {
+    std::mutex mutex{};
+    LibRetroCore* libRetroCore = nullptr;
+    NativeDisplay* nativeDisplay = new NativeDisplay(160, 144);
+
 public:
-    char id[32]{};
-    GameBoyShared *shared = nullptr;
-    boost::interprocess::managed_shared_memory *segment = nullptr;
-    boost::process::child *child = nullptr;
-
-    GameBoy();
-
-    void allocate(const char *rom);
+    void load(const char *rom);
     void start();
-    void dispose() const;
-    NativeDisplay *getDisplay() const;
+    void dispose();
+    [[nodiscard]] NativeDisplay *getDisplay() const;
 };

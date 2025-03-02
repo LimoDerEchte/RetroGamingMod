@@ -2,8 +2,6 @@
 #pragma once
 #include <random>
 
-#define PATH_TO_LIB "/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/bridge-instance/bridge-instance"
-
 inline void GenerateID(char* id, const int length = 32) {
     constexpr char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     constexpr int charsetSize = sizeof(charset) - 1;

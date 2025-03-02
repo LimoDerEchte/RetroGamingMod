@@ -16,6 +16,7 @@ public:
     bool loadROM(const std::string &romPath) const;
     void runCore() const;
     void setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback);
+    void dispose() const;
 
 private:
     LibRetroCore(const LibRetroCore&) = delete;
