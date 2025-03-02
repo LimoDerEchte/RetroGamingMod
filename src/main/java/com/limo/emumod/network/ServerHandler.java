@@ -19,7 +19,11 @@ import java.util.UUID;
 public class ServerHandler {
 
     public static void init() {
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> FileUtil.init());
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            FileUtil.init();
+            new Thread(() -> DisplaySyncer.run(server)).start();
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> DisplaySyncer.stop());
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);

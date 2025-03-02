@@ -49,10 +49,11 @@ void GameBoy::load(const char *rom) {
         const auto pixelData = reinterpret_cast<const uint8_t*>(data);
         for (unsigned y = 0; y < height; ++y) {
             for (unsigned x = 0; x < width; ++x) {
-                const uint8_t* pixel = pixelData + y * pitch + x * 4;
-                const uint8_t r = pixel[1];
-                const uint8_t g = pixel[2];
-                const uint8_t b = pixel[3];
+                const uint8_t* pixel = pixelData + y * pitch + x * 2;
+                const uint16_t rgb565 = pixel[0] | pixel[1] << 8;
+                const uint8_t r = ((rgb565 >> 11) & 0x1F) << 3;
+                const uint8_t g = ((rgb565 >> 5) & 0x3F) << 2;
+                const uint8_t b = (rgb565 & 0x1F) << 3;
                 constexpr uint8_t a = 0xFF;
                 nativeDisplay->buf[y * width + x] = a << 24 | r << 16 | g << 8 | b;
                 nativeDisplay->changed = true;

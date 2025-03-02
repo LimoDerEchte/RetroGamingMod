@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public class NativeGameBoy {
     private final long pointer;
+    private NativeDisplay nativeDisplay;
 
     public NativeGameBoy() {
         pointer = init();
@@ -23,7 +24,9 @@ public class NativeGameBoy {
     }
 
     public NativeDisplay createDisplay() {
-        return new NativeDisplay(createDisplay(pointer));
+        if(nativeDisplay == null)
+            nativeDisplay = new NativeDisplay(createDisplay(pointer));
+        return nativeDisplay;
     }
 
     private native static long init();
