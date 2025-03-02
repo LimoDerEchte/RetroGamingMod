@@ -10,8 +10,8 @@ public class NativeGameBoy {
     private final long pointer;
     private NativeDisplay nativeDisplay;
 
-    public NativeGameBoy() {
-        pointer = init();
+    public NativeGameBoy(boolean isGBA) {
+        pointer = init(isGBA);
     }
 
     public void load(UUID file) {
@@ -30,7 +30,7 @@ public class NativeGameBoy {
         return nativeDisplay;
     }
 
-    private native static long init();
+    private native static long init(boolean isGBA);
     private native static void start(long pointer, String core, String rom, String save);
     private native static void stop(long pointer);
     private native static long createDisplay(long pointer);

@@ -8,7 +8,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class DisplaySyncer {
-    private static final float fps = 30;
+    private static final float fps = 10;
     private static long lastTime = System.nanoTime();
     private static boolean running = true;
 

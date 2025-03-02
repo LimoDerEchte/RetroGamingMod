@@ -68,19 +68,19 @@ public class LinkedCartridgeItem extends Item {
     }
 
     private ItemStack findLinkItem() {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this)
+        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
             return GameboyItem.link;
         return ItemStack.EMPTY;
     }
 
     private void clearLinkItem() {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this)
+        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
             GameboyItem.link = null;
     }
 
     private void run(UUID id) {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this) {
-            NativeGameBoy gb = new NativeGameBoy();
+        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this) {
+            NativeGameBoy gb = new NativeGameBoy(EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this);
             gb.load(id);
             GameboyItem.running.put(id, gb);
         }
