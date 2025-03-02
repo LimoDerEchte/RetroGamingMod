@@ -8,4 +8,5 @@ set(CMAKE_CXX_STANDARD 26)
 
 # Actual Projects
 add_subdirectory(bridge)
+add_subdirectory(retro-core)
 add_subdirectory(test)

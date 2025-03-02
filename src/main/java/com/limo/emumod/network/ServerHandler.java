@@ -2,6 +2,7 @@ package com.limo.emumod.network;
 
 import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -51,6 +52,13 @@ public class ServerHandler {
                 ctx.player().getInventory().insertStack(stack);
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(C2S.UpdateGameControls.ID, (payload, ctx) -> {
+            // Gameboys
+            if(GameboyItem.running.containsKey(payload.uuid())) {
+                GameboyItem.running.get(payload.uuid()).updateInput(payload.input());
+                return;
+            }
         });
     }
 }

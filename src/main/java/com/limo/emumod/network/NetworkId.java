@@ -9,6 +9,7 @@ public class NetworkId {
     public static final Identifier UPDATE_DISPLAY_DATA = Identifier.of("emumod", "display_data");
 
     public static final Identifier CREATE_CARTRIDGE = Identifier.of("emumod", "create_cartridge");
+    public static final Identifier UPDATE_CONTROLS = Identifier.of("emumod", "update_controls");
 
     public static class ScreenType {
         public static final byte CARTRIDGE_CREATION = 0x00;

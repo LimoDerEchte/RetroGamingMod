@@ -4,17 +4,33 @@
 
 #pragma once
 
-#include "sys/LibRetroCore.hpp"
+#include <functional>
+
 #include "util/NativeDisplay.hpp"
 
 class GameBoy {
     std::mutex mutex{};
-    LibRetroCore* libRetroCore = nullptr;
-    NativeDisplay* nativeDisplay = new NativeDisplay(160, 144);
+    void* retroCoreHandle = nullptr;
+    NativeDisplay* nativeDisplay;
+
+    typedef bool (*core_load_t)(const char* core);
+    typedef bool (*rom_load_t)(const char* rom);
+    typedef void (*update_input_t)(short input);
+    typedef void (*video_callback_t)(std::function<void(const int*, unsigned, unsigned, size_t)> videoCallback);
+    typedef void (*start_t)();
+
+    core_load_t coreLoad = nullptr;
+    rom_load_t romLoad = nullptr;
+    update_input_t updateInput = nullptr;
+    video_callback_t videoCallback = nullptr;
+    start_t startGame = nullptr;
 
 public:
-    void load(const char *core, const char *rom);
+    explicit GameBoy(bool isGBA);
+
+    void load(const char *retroCore, const char *core, const char *rom);
     void start();
     void dispose();
     [[nodiscard]] NativeDisplay *getDisplay() const;
+    void input(int16_t input);
 };

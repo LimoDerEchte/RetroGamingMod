@@ -30,8 +30,13 @@ public class NativeGameBoy {
         return nativeDisplay;
     }
 
+    public void updateInput(short input) {
+        updateInput(pointer, input);
+    }
+
     private native static long init(boolean isGBA);
     private native static void start(long pointer, String core, String rom, String save);
     private native static void stop(long pointer);
     private native static long createDisplay(long pointer);
+    private native static void updateInput(long pointer, short input);
 }

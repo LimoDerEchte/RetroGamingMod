@@ -4,6 +4,7 @@
 
 #include "GameBoy.hpp"
 
+#include <dlfcn.h>
 #include <iostream>
 #include <headers/com_limo_emumod_bridge_NativeGameBoy.h>
 #include <jni.h>
@@ -11,13 +12,13 @@
 
 #include "util/util.hpp"
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init(JNIEnv *, jclass) {
-    return reinterpret_cast<jlong>(new GameBoy());
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_init(JNIEnv *, jclass, const jboolean isGBA) {
+    return reinterpret_cast<jlong>(new GameBoy(isGBA));
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start(JNIEnv *env, jclass, const jlong ptr, const jstring core, const jstring rom, jstring) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, jstring) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
-    gameboy->load(env->GetStringUTFChars(core, nullptr), env->GetStringUTFChars(rom, nullptr));
+    gameboy->load(env->GetStringUTFChars(retroCore, nullptr), env->GetStringUTFChars(core, nullptr), env->GetStringUTFChars(rom, nullptr));
     gameboy->start();
 }
 
@@ -31,18 +32,38 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(
     return reinterpret_cast<jlong>(gameboy->getDisplay());
 }
 
-void GameBoy::load(const char *core, const char *rom) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput(JNIEnv *, jclass, const jlong ptr, jshort input) {
+    const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
+    gameboy->input(input);
+}
+
+GameBoy::GameBoy(const bool isGBA) {
+    nativeDisplay = new NativeDisplay(
+        isGBA ? 240 : 160,
+        isGBA ? 160 : 144
+    );
+}
+
+void GameBoy::load(const char *retroCore, const char *core, const char *rom) {
     std::lock_guard lock(mutex);
-    libRetroCore = new LibRetroCore(core);
-    if (!libRetroCore->loadCore()) {
+    retroCoreHandle = dlopen(retroCore, RTLD_LAZY | RTLD_LOCAL);
+
+    // ReSharper disable CppCStyleCast
+    coreLoad = (core_load_t) dlsym(retroCoreHandle, "coreLoad");
+    romLoad = (rom_load_t) dlsym(retroCoreHandle, "romLoad");
+    updateInput = (update_input_t) dlsym(retroCoreHandle, "updateInput");
+    videoCallback = (video_callback_t) dlsym(retroCoreHandle, "setVideoCallback");
+    startGame = (start_t) dlsym(retroCoreHandle, "start");
+
+    if (!coreLoad(core)) {
         std::cerr << "[RetroGamingCore] Failed to load core library" << std::endl;
         return;
     }
-    if (!libRetroCore->loadROM(rom)) {
+    if (!romLoad(rom)) {
         std::cerr << "[RetroGamingCore] Failed to load ROM" << std::endl;
         return;
     }
-    libRetroCore->setVideoFrameCallback([this](const int* data, const unsigned width, const unsigned height, const size_t pitch) {
+    videoCallback([this](const int* data, const unsigned width, const unsigned height, const size_t pitch) {
         std::lock_guard lLock(mutex);
         std::lock_guard dLock(nativeDisplay->mutex);
         const auto pixelData = reinterpret_cast<const uint8_t*>(data);
@@ -64,21 +85,23 @@ void GameBoy::load(const char *core, const char *rom) {
 void GameBoy::start() {
     std::cout << "[RetroGamingCore] Starting up new bridge instance" << std::endl;
     std::lock_guard lock(mutex);
-    std::thread t([this] {
-        libRetroCore->runCore();
-    });
-    t.detach();
+    startGame();
 }
 
 void GameBoy::dispose() {
     std::cout << "[RetroGamingCore] Disposing bridge instance " << std::endl;
     std::lock_guard lock(mutex);
-    if (libRetroCore)
-        libRetroCore->dispose();
-    libRetroCore = nullptr;
+    if (retroCoreHandle)
+        dlclose(retroCoreHandle);
+    retroCoreHandle = nullptr;
 }
 
 NativeDisplay *GameBoy::getDisplay() const {
     return nativeDisplay;
+}
+
+void GameBoy::input(const int16_t input) {
+    std::lock_guard lock(mutex);
+    updateInput(input);
 }
 

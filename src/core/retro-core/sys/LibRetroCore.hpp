@@ -10,6 +10,8 @@
 
 class LibRetroCore {
 public:
+    int16_t inputData = 0;
+
     explicit LibRetroCore(std::string corePath);
     ~LibRetroCore();
     bool loadCore();

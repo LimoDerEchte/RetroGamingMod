@@ -12,8 +12,8 @@ add_library(bridge SHARED
         platform/GameBoy.cpp
         platform/GameBoy.hpp
         util/util.hpp
-        sys/LibRetroCore.cpp
-        sys/LibRetroCore.hpp
-        sys/libretro.h
+        ../retro-core/sys/LibRetroCore.cpp
+        ../retro-core/sys/LibRetroCore.hpp
+        ../retro-core/sys/libretro.h
         util/NativeDisplay.hpp
 )
