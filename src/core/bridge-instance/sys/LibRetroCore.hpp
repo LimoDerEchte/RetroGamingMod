@@ -10,7 +10,7 @@
 
 class LibRetroCore {
 public:
-    explicit LibRetroCore(const std::string &corePath);
+    explicit LibRetroCore(std::string corePath);
     ~LibRetroCore();
     bool loadCore();
     bool loadROM(const std::string &romPath) const;
@@ -28,7 +28,7 @@ private:
     typedef void (*retro_init_t)();
     typedef void (*retro_deinit_t)();
     typedef void (*retro_run_t)();
-    typedef bool (*retro_load_game_t)(const struct retro_game_info *game);
+    typedef bool (*retro_load_game_t)(const retro_game_info *game);
     typedef void (*retro_unload_game_t)();
     typedef void (*retro_set_video_refresh_t)(void (*)(const void* data, unsigned width, unsigned height, size_t pitch));
     typedef void (*retro_set_environment_t)(bool (*)(unsigned cmd, void *data));
@@ -36,8 +36,8 @@ private:
     typedef void (*retro_set_input_state_t)(int16_t (*)(unsigned port, unsigned device, unsigned index, unsigned id));
     typedef void (*retro_set_audio_sample_t)(void (*)(int16_t left, int16_t right));
     typedef void (*retro_set_audio_sample_batch_t)(size_t (*)(const int16_t *data, size_t frames));
-    typedef void (*retro_get_system_info_t)(struct retro_system_info *info);
-    typedef void (*retro_get_system_av_info_t)(struct retro_system_av_info *info);
+    typedef void (*retro_get_system_info_t)(retro_system_info *info);
+    typedef void (*retro_get_system_av_info_t)(retro_system_av_info *info);
 
     retro_init_t retro_init;
     retro_deinit_t retro_deinit;
