@@ -25,7 +25,12 @@ public class ServerHandler {
             FileUtil.init();
             new Thread(() -> DisplaySyncer.run(server)).start();
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> DisplaySyncer.stop());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            DisplaySyncer.stop();
+            GameboyItem.running.forEach((ignore, nat) -> {
+                nat.stop();
+            });
+        });
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes;

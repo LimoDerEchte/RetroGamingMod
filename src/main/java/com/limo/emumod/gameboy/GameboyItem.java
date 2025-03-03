@@ -60,12 +60,12 @@ public class GameboyItem extends Item {
                         .add(GAME, stack.getComponents().get(GAME))
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
                 user.getInventory().insertStack(cart);
-                stack.remove(GAME);
-                stack.remove(FILE_ID);
                 UUID file = stack.getComponents().get(FILE_ID);
                 if(running.containsKey(file))
                     running.get(file).stop();
                 running.remove(stack.getComponents().get(FILE_ID));
+                stack.remove(GAME);
+                stack.remove(FILE_ID);
                 user.sendMessage(Text.translatable("item.emumod.gameboy.eject"), true);
             } else {
                 if(link != null) {

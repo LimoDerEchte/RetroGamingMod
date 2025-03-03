@@ -24,7 +24,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
     gameboy->dispose();
 }
 
-// ReSharper disable once CppDFAConstantFunctionResult
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
     return reinterpret_cast<jlong>(gameboy->getDisplay());
@@ -48,16 +47,17 @@ void GameBoy::load(const char *retroCore, const char *core, const char *rom) {
     std::cout << "[RetroGamingCore] Created shared memory " << strId << std::endl;
     retroCoreProcess = new bp::child(retroCore, bp::args({"gb", strId, core, rom}));
     retroCoreProcess->detach();
-    nativeDisplay = new NativeDisplay(isGba ? 240 : 160, isGba ? 160 : 144, &retroCoreHandle->displayChanged, retroCoreHandle->display);
+    nativeDisplay = new NativeDisplay(isGba ? 240 : 160, isGba ? 160 : 144,
+        &retroCoreHandle->displayChanged, retroCoreHandle->display);
 }
 
 void GameBoy::dispose() {
     std::cout << "[RetroGamingCore] Disposing bridge instance " << std::endl;
     std::lock_guard lock(mutex);
     retroCoreHandle = nullptr;
-    // ReSharper disable CppDFAConstantConditions
-    if (retroCoreProcess != nullptr && retroCoreProcess->running()) {
+    if (retroCoreProcess != nullptr) {
         retroCoreProcess->terminate();
+        std::cout << "[RetroGamingCore] Terminating emulator " << std::endl;
         retroCoreProcess->wait();
     }
     if (sharedMemoryHandle != nullptr) {
@@ -66,7 +66,6 @@ void GameBoy::dispose() {
     bip::shared_memory_object::remove(id);
 }
 
-// ReSharper disable once CppDFAConstantFunctionResult
 NativeDisplay *GameBoy::getDisplay() const {
     return nativeDisplay;
 }
