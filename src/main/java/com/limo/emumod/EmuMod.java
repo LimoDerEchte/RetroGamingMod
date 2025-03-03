@@ -3,6 +3,8 @@ package com.limo.emumod;
 import com.limo.emumod.network.C2S;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.network.ServerHandler;
+import com.limo.emumod.registry.EmuBlockEntities;
+import com.limo.emumod.registry.EmuComponents;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.CoreManager;
 import com.limo.emumod.util.FileUtil;
@@ -23,7 +25,9 @@ public class EmuMod implements ModInitializer {
     public void onInitialize() {
         FileUtil.initGeneric();
         CoreManager.init();
+        EmuComponents.init();
         EmuItems.init();
+        EmuBlockEntities.init();
         S2C.init();
         C2S.init();
         ServerHandler.init();
