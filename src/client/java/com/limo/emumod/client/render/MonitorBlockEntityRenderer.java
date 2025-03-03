@@ -1,6 +1,7 @@
 package com.limo.emumod.client.render;
 
 import com.limo.emumod.client.network.ClientHandler;
+import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -18,12 +19,12 @@ import org.joml.Matrix4f;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.limo.emumod.client.EmuModClient.mc;
 
 public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBlockEntity> {
+    private static final Map<BlockPos, NativeImageRatio> ratioCache = new HashMap<>();
     private static final Map<BlockPos, NativeImageBackedTexture> textureCache = new HashMap<>();
     private static final Map<BlockPos, Identifier> idCache = new HashMap<>();
 
@@ -35,6 +36,7 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         if(!idCache.containsKey(entity.getPos())) {
             idCache.put(entity.getPos(), Identifier.of("emumod", "monitor_" + entity.getPos().getX() + "_" + entity.getPos().getY() + "_" + entity.getPos().getZ()));
             textureCache.put(entity.getPos(), new NativeImageBackedTexture(new NativeImage(1, 1, false)));
+            ratioCache.put(entity.getPos(), new NativeImageRatio(1, 1, 1,  1));
             mc.getTextureManager().registerTexture(idCache.get(entity.getPos()), textureCache.get(entity.getPos()));
         }
         UUID file = entity.fileId;
@@ -42,13 +44,16 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         if(ClientHandler.displayBuffer.containsKey(file)) {
             NativeImageBackedTexture tex = textureCache.get(entity.getPos());
             NativeImage newTex = ClientHandler.displayBuffer.get(file);
-            if(tex.getImage() != newTex) {
-                NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(newTex);
+            NativeImageRatio r = ratioCache.get(entity.getPos());
+            if(!r.matches(newTex)) {
+                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
+                ratioCache.put(entity.getPos(), r);
+                NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(r.getImage());
                 textureCache.put(entity.getPos(), newAlloc);
                 mc.getTextureManager().registerTexture(id, newAlloc);
-            } else {
-                tex.upload();
             }
+            r.readFrom(newTex);
+            tex.upload();
         }
         // Render
         matrices.push();
