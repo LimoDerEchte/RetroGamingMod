@@ -7,6 +7,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
@@ -23,6 +24,20 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         RenderLayer screenLayer = RenderLayer.getEntityTranslucent(GAMEBOY_TEXTURE);
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(screenLayer);
 
+        switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
+            case EAST -> {
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
+                matrices.translate(0, 0, -1);
+            }
+            case WEST -> {
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
+                matrices.translate(-1, 0, 0);
+            }
+            case SOUTH -> {
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
+                matrices.translate(-1, 0, -1);
+            }
+        }
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
 
         Matrix4f modelMatrix = matrices.peek().getPositionMatrix();

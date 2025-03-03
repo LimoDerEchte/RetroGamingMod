@@ -12,7 +12,7 @@
   "item.emumod.gameboy_color": "Gameboy Color",
   "item.emumod.gameboy_advance": "Gameboy Advance",
 
-  "block.emumod.monitor": "Monitor",
+  "item.emumod.monitor": "Monitor",
 
   "item.emumod.tooltip.game": "Game: %s",
   "item.emumod.tooltip.file": "File: %s.cart",
