@@ -69,11 +69,11 @@ public class GameboyAdvanceScreen extends Screen {
         context.getMatrices().push();
         context.getMatrices().scale(scale, scale, scale);
         // Background
-        context.drawTexture(RenderLayer::getGuiTextured, GAMEBOY_ADVANCE_TEXTURE,
-                (width / 2 - 640 / 2) / scale, (height / 2 - 380) / scale, 0, 0, 640, 640, 640, 640);
+        context.drawTexture(RenderLayer::getGuiTextured, GAMEBOY_ADVANCE_TEXTURE, (width / 2 - 640 / 2) / scale,
+                (height / 2 - 440) / scale, 0, 0, 640, 640, 640, 640);
         // Frame
         context.drawTexture(RenderLayer::getGuiTextured, screenTexture, (width / 2 - 120) / scale,
-                (height / 2 - 160) / scale, 0, 0, 240, 160, 240, 160);
+                (height / 2 - 220) / scale, 0, 0, 240, 160, 240, 160);
         context.getMatrices().pop();
     }
 
