@@ -29,7 +29,7 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(
     return reinterpret_cast<jlong>(gameboy->getDisplay());
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput(JNIEnv *, jclass, const jlong ptr, jshort input) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput(JNIEnv *, jclass, const jlong ptr, const jshort input) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
     gameboy->input(input);
 }

@@ -1,6 +1,6 @@
 package com.limo.emumod.bridge;
 
-import com.limo.emumod.util.CoreManager;
+import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
 
 import java.io.File;
@@ -17,7 +17,7 @@ public class NativeGameBoy {
     public void load(UUID file) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
-        start(pointer, "/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/retro-core/retro-core", CoreManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
+        start(pointer, RequirementManager.core.getAbsolutePath(), RequirementManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
     }
 
     public void stop() {

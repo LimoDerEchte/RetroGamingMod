@@ -6,7 +6,7 @@ import com.limo.emumod.network.ServerHandler;
 import com.limo.emumod.registry.EmuBlockEntities;
 import com.limo.emumod.registry.EmuComponents;
 import com.limo.emumod.registry.EmuItems;
-import com.limo.emumod.util.CoreManager;
+import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.math.random.Random;
@@ -24,7 +24,7 @@ public class EmuMod implements ModInitializer {
     @Override
     public void onInitialize() {
         FileUtil.initGeneric();
-        CoreManager.init();
+        RequirementManager.init();
         EmuComponents.init();
         EmuItems.init();
         EmuBlockEntities.init();
