@@ -13,7 +13,7 @@ import java.util.zip.ZipInputStream;
 public class RequirementManager {
     private static final String baseUrl = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/";
 
-    public static File core = new File("/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/retro-core/retro-core");
+    public static File core = FileUtil.getRequiredFile("retro-core");
     public static File mGBA;
 
     public static void init() {

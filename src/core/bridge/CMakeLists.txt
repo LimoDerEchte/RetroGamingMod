@@ -19,3 +19,8 @@ add_library(bridge SHARED
 )
 
 target_link_libraries(bridge Boost::interprocess)
+
+# Post Build
+add_custom_command(TARGET bridge POST_BUILD
+        COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/libbridge.* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
+)

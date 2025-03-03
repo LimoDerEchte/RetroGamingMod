@@ -49,7 +49,7 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
         memcpy(gb->audio, data, 2 * pitch);
         gb->audioChanged = true;
     });
-    std::cout << "[RetroGamingCore] Starting gameboy core" << std::endl;
+    std::cout << "[RetroGamingCore] Starting GameBoy core" << std::endl;
     g_instance->runCore();
     return EXIT_SUCCESS;
 }

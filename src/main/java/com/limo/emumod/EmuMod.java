@@ -17,10 +17,6 @@ public class EmuMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(EmuMod.class);
     public static final Random RANDOM = Random.create();
 
-    static {
-        System.load("/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/bridge/libbridge.so");
-    }
-
     @Override
     public void onInitialize() {
         FileUtil.initGeneric();
@@ -31,5 +27,6 @@ public class EmuMod implements ModInitializer {
         S2C.init();
         C2S.init();
         ServerHandler.init();
+        System.load(FileUtil.getRequiredFile("libbridge.so").getAbsolutePath());
     }
 }
