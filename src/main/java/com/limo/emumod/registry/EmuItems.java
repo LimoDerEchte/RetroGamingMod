@@ -29,7 +29,7 @@ public class EmuItems {
 
     public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.emumod.main"))
-            .icon(CARTRIDGE::getDefaultStack)
+            .icon(GAMEBOY_ADVANCE::getDefaultStack)
             .build(), ItemId.Registry.MAIN_GROUP);
 
     public static Item register(Item item, RegistryKey<Item> registryKey) {

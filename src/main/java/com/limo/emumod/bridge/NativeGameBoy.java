@@ -17,7 +17,7 @@ public class NativeGameBoy {
     public void load(UUID file) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
-        start(pointer, CoreManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
+        start(pointer, "/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/retro-core/libretro-core.so", CoreManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
     }
 
     public void stop() {
@@ -35,7 +35,7 @@ public class NativeGameBoy {
     }
 
     private native static long init(boolean isGBA);
-    private native static void start(long pointer, String core, String rom, String save);
+    private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
     private native static long createDisplay(long pointer);
     private native static void updateInput(long pointer, short input);

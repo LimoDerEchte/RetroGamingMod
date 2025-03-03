@@ -48,6 +48,11 @@ public class CartridgeScreen extends Screen {
     }
 
     @Override
+    public boolean shouldPause() {
+        return false;
+    }
+
+    @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         ctx.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.emumod.cartridge.title"), width / 2, height / 2 - 40, Color.WHITE.getRGB());
         if(failMessage != null)

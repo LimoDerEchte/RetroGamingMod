@@ -16,17 +16,19 @@ public class ControlHandler {
         this.link = link;
     }
 
-    public void down(int key) {
+    public boolean down(int key) {
         if(!keyMap.containsKey(key))
-            return;
+            return false;
         input |= keyMap.get(key);
         ClientPlayNetworking.send(new C2S.UpdateGameControls(link, input));
+        return true;
     }
 
-    public void up(int key) {
+    public boolean up(int key) {
         if(!keyMap.containsKey(key))
-            return;
+            return false;
         input &= (short) ~keyMap.get(key);
         ClientPlayNetworking.send(new C2S.UpdateGameControls(link, input));
+        return true;
     }
 }

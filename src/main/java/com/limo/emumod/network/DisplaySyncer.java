@@ -8,13 +8,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class DisplaySyncer {
-    private static final float fps = 10;
+    private static final float fps = 20;
     private static long lastTime = System.nanoTime();
     private static boolean running = true;
 
     public static void run(MinecraftServer server) {
         running = true;
-        int nqDelay = (int) (1_000_000 / fps);
+        int nqDelay = (int) (1_000_000_000 / fps);
         while (running) {
             while (System.nanoTime() - lastTime < nqDelay) {
                 Thread.onSpinWait();
@@ -23,8 +23,9 @@ public class DisplaySyncer {
             // Gameboy Screens
             GameboyItem.running.forEach((uuid, gb) -> {
                 NativeDisplay display = gb.createDisplay();
+                S2C.UpdateDisplayDataPayload pl = new S2C.UpdateDisplayDataPayload(uuid, display.getBuf());
                 for(ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    ServerPlayNetworking.send(player, new S2C.UpdateDisplayDataPayload(uuid, display.getBuf()));
+                    ServerPlayNetworking.send(player, pl);
                 }
             });
         }

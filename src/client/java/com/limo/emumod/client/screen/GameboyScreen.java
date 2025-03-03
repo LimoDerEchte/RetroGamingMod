@@ -79,14 +79,21 @@ public class GameboyScreen extends Screen {
     }
 
     @Override
+    public boolean shouldPause() {
+        return false;
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        controlHandler.down(keyCode);
-        return true;
+        if(controlHandler.down(keyCode))
+            return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        controlHandler.up(keyCode);
-        return true;
+        if(controlHandler.up(keyCode))
+            return true;
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 }
