@@ -39,7 +39,7 @@ public class CartridgeScreen extends Screen {
                     return;
                 }
                 try {
-                    ClientPlayNetworking.send(new C2S.CreateCartridgePayload(handle, Files.readAllBytes(file.toPath())));
+                    ClientPlayNetworking.send(new C2S.CreateCartridgePayload(handle, (byte) (file.getName().endsWith(".gba") ? 1 : 0), Files.readAllBytes(file.toPath())));
                 } catch (IOException e) {
                     failMessage = Text.translatable("gui.emumod.cartridge.file_read_error");
                 }

@@ -1,6 +1,7 @@
 package com.limo.emumod.client.network;
 
 import com.limo.emumod.client.screen.CartridgeScreen;
+import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.screen.ScreenId;
@@ -25,6 +26,7 @@ public class ClientHandler {
                 (payload, ctx) -> ctx.client().execute(() -> ctx.client().setScreen(switch (payload.type()) {
                     case ScreenId.GAMEBOY -> new GameboyScreen(false, payload.fileId());
                     case ScreenId.GAMEBOY_COLOR -> new GameboyScreen(true, payload.fileId());
+                    case ScreenId.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.fileId());
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID,

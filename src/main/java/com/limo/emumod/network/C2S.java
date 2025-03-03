@@ -11,10 +11,11 @@ import java.util.UUID;
 
 public class C2S {
 
-    public record CreateCartridgePayload(int handle, byte[] data) implements CustomPayload {
+    public record CreateCartridgePayload(int handle, byte type, byte[] data) implements CustomPayload {
         public static final Id<CreateCartridgePayload> ID = new Id<>(NetworkId.CREATE_CARTRIDGE);
         public static final PacketCodec<RegistryByteBuf, CreateCartridgePayload> CODEC = PacketCodec.tuple(
                 PacketCodecs.INTEGER, CreateCartridgePayload::handle,
+                PacketCodecs.BYTE, CreateCartridgePayload::type,
                 PacketCodecs.BYTE_ARRAY, CreateCartridgePayload::data,
                 CreateCartridgePayload::new
         );

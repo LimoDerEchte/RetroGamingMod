@@ -8,6 +8,7 @@ import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 
@@ -27,8 +28,22 @@ public class ServerHandler {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> DisplaySyncer.stop());
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
-            byte[] nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
-            boolean isGBC = payload.data()[0x143] != 0;
+            byte[] nameBytes;
+            Item item;
+            switch (payload.type()) {
+                case 0 -> {
+                    nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
+                    item = payload.data()[0x143] != 0 ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE;
+                }
+                case 1 -> {
+                    nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
+                    item = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE;
+                }
+                default -> {
+                    ctx.player().sendMessage(Text.literal("Invalid request"), true);
+                    return;
+                }
+            }
             UUID fileUuid = UUID.randomUUID();
             String game = new String(nameBytes).replace("\u0000", "");
             ctx.server().execute(() -> {
@@ -45,7 +60,7 @@ public class ServerHandler {
                     return;
                 }
                 ctx.player().getMainHandStack().decrement(1);
-                ItemStack stack = new ItemStack(isGBC ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE);
+                ItemStack stack = new ItemStack(item);
                 stack.applyComponentsFrom(ComponentMap.builder()
                         .add(LinkedCartridgeItem.GAME, game)
                         .add(LinkedCartridgeItem.FILE_ID, fileUuid).build());
@@ -57,7 +72,6 @@ public class ServerHandler {
             // Gameboys
             if(GameboyItem.running.containsKey(payload.uuid())) {
                 GameboyItem.running.get(payload.uuid()).updateInput(payload.input());
-                return;
             }
         });
     }
