@@ -25,14 +25,14 @@ public class MonitorBlockEntity extends BlockEntity {
     @Override
     protected void readComponents(ComponentsAccess components) {
         super.readComponents(components);
-        fileId = components.getOrDefault(EmuComponents.FILE_ID, null);
+        fileId = components.getOrDefault(EmuComponents.LINK_ID, null);
     }
 
     @Override
     protected void addComponents(ComponentMap.Builder builder) {
         super.addComponents(builder);
         if(fileId != null) {
-            builder.add(EmuComponents.FILE_ID, fileId);
+            builder.add(EmuComponents.LINK_ID, fileId);
         }
     }
 

@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.limo.emumod.cartridge.LinkedCartridgeItem.FILE_ID;
-import static com.limo.emumod.cartridge.LinkedCartridgeItem.GAME;
+import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GameboyItem extends Item {
     public static long lastInteractionTime;

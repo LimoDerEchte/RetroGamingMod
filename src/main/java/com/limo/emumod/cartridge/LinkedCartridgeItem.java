@@ -4,15 +4,11 @@ import com.limo.emumod.bridge.NativeGameBoy;
 import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
-import com.mojang.serialization.Codec;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.component.ComponentType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
@@ -22,15 +18,10 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
+import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
+
 public class LinkedCartridgeItem extends Item {
-    public static final ComponentType<String> GAME = Registry.register(
-            Registries.DATA_COMPONENT_TYPE,
-            Identifier.of("emumod", "game"),
-            ComponentType.<String>builder().codec(Codec.STRING).build());
-    public static final ComponentType<UUID> FILE_ID = Registry.register(
-            Registries.DATA_COMPONENT_TYPE,
-            Identifier.of("emumod", "file_id"),
-            ComponentType.<UUID>builder().codec(Uuids.CODEC).build());
 
     public LinkedCartridgeItem(RegistryKey<Item> key) {
         super(new Settings().maxCount(1).registryKey(key));
@@ -68,8 +59,12 @@ public class LinkedCartridgeItem extends Item {
     }
 
     private ItemStack findLinkItem() {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
-            return GameboyItem.link;
+        if(EmuItems.GAMEBOY_CARTRIDGE == this)
+            return GameboyItem.link.getItem() == EmuItems.GAMEBOY ? GameboyItem.link : ItemStack.EMPTY;
+        if(EmuItems.GAMEBOY_COLOR_CARTRIDGE == this)
+            return GameboyItem.link.getItem() == EmuItems.GAMEBOY_COLOR ? GameboyItem.link : ItemStack.EMPTY;
+        if(EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
+            return GameboyItem.link.getItem() == EmuItems.GAMEBOY_ADVANCE ? GameboyItem.link : ItemStack.EMPTY;
         return ItemStack.EMPTY;
     }
 

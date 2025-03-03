@@ -3,12 +3,10 @@ package com.limo.emumod.monitor;
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.registry.BlockId;
-import com.limo.emumod.registry.EmuComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
-import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -26,6 +24,8 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
+import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 
 public class MonitorBlock extends BlockWithEntity {
     private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((s) -> new MonitorBlock());
@@ -48,7 +48,7 @@ public class MonitorBlock extends BlockWithEntity {
             if(LinkedCartridgeItem.hasGame(stack)) {
                 BlockEntity entity = world.getBlockEntity(pos);
                 if(entity instanceof MonitorBlockEntity mon) {
-                    mon.fileId = stack.get(LinkedCartridgeItem.FILE_ID);
+                    mon.fileId = stack.get(FILE_ID);
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
                     EmuMod.LOGGER.info("Linked Monitor at X:{}, Y:{}, Z:{}", pos.getX(), pos.getY(), pos.getZ());

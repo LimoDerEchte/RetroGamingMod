@@ -1,7 +1,6 @@
 package com.limo.emumod.network;
 
 import com.limo.emumod.cartridge.CartridgeItem;
-import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
@@ -17,6 +16,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
+
+import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class ServerHandler {
 
@@ -67,8 +69,8 @@ public class ServerHandler {
                 ctx.player().getMainHandStack().decrement(1);
                 ItemStack stack = new ItemStack(item);
                 stack.applyComponentsFrom(ComponentMap.builder()
-                        .add(LinkedCartridgeItem.GAME, game)
-                        .add(LinkedCartridgeItem.FILE_ID, fileUuid).build());
+                        .add(GAME, game)
+                        .add(FILE_ID, fileUuid).build());
                 ctx.player().getInventory().insertStack(stack);
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });
