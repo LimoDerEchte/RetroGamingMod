@@ -2,9 +2,9 @@ package com.limo.emumod.gameboy;
 
 import com.limo.emumod.bridge.NativeGameBoy;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.EmuItems;
-import com.limo.emumod.screen.ScreenId;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
@@ -82,9 +82,9 @@ public class GameboyItem extends Item {
                 return ActionResult.PASS;
             }
             ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
-                    stack.getItem() == EmuItems.GAMEBOY_ADVANCE ? ScreenId.GAMEBOY_ADVANCE :
-                    stack.getItem() == EmuItems.GAMEBOY_COLOR ? ScreenId.GAMEBOY_COLOR :
-                    ScreenId.GAMEBOY, stack.getComponents().get(FILE_ID)
+                    stack.getItem() == EmuItems.GAMEBOY_ADVANCE ? NetworkId.ScreenType.GAMEBOY_ADVANCE :
+                    stack.getItem() == EmuItems.GAMEBOY_COLOR ? NetworkId.ScreenType.GAMEBOY_COLOR :
+                    NetworkId.ScreenType.GAMEBOY, stack.getComponents().get(FILE_ID)
             ));
         }
         return ActionResult.PASS;

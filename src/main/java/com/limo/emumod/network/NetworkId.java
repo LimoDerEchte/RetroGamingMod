@@ -12,6 +12,15 @@ public class NetworkId {
     public static final Identifier UPDATE_CONTROLS = Identifier.of("emumod", "update_controls");
 
     public static class ScreenType {
-        public static final byte CARTRIDGE_CREATION = 0x00;
+        public static final byte CARTRIDGE = 0x00;
+
+        public static final byte GAMEBOY = 0x00;
+        public static final byte GAMEBOY_COLOR = 0x01;
+        public static final byte GAMEBOY_ADVANCE = 0x02;
+    }
+
+    public static class DisplaySize {
+        public static final byte w160h144 = 0x00;
+        public static final byte w240h160 = 0x01;
     }
 }

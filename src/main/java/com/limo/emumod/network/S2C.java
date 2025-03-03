@@ -51,10 +51,11 @@ public class S2C {
         }
     }
 
-    public record UpdateDisplayDataPayload(UUID uuid, int[] data) implements CustomPayload {
+    public record UpdateDisplayDataPayload(UUID uuid, byte type, int[] data) implements CustomPayload {
         public static final Id<UpdateDisplayDataPayload> ID = new Id<>(NetworkId.UPDATE_DISPLAY_DATA);
         public static final PacketCodec<RegistryByteBuf, UpdateDisplayDataPayload> CODEC = PacketCodec.tuple(
                 Uuids.PACKET_CODEC, UpdateDisplayDataPayload::uuid,
+                PacketCodecs.BYTE, UpdateDisplayDataPayload::type,
                 EmuCodec.INT_ARRAY, UpdateDisplayDataPayload::data,
                 UpdateDisplayDataPayload::new
         );

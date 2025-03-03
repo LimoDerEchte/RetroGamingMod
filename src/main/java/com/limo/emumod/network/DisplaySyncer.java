@@ -8,7 +8,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class DisplaySyncer {
-    private static final float fps = 20;
+    private static final float fps = 30;
     private static long lastTime = System.nanoTime();
     private static boolean running = true;
 
@@ -23,7 +23,8 @@ public class DisplaySyncer {
             // Gameboy Screens
             GameboyItem.running.forEach((uuid, gb) -> {
                 NativeDisplay display = gb.createDisplay();
-                S2C.UpdateDisplayDataPayload pl = new S2C.UpdateDisplayDataPayload(uuid, display.getBuf());
+                S2C.UpdateDisplayDataPayload pl = new S2C.UpdateDisplayDataPayload(uuid, display.getBuf().length == 38_400 ?
+                        NetworkId.DisplaySize.w240h160 : NetworkId.DisplaySize.w160h144, display.getBuf());
                 for(ServerPlayerEntity player : PlayerLookup.all(server)) {
                     ServerPlayNetworking.send(player, pl);
                 }

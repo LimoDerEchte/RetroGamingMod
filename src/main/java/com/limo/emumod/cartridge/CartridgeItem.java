@@ -23,7 +23,7 @@ public class CartridgeItem extends Item {
             return super.use(world, user, hand);
         if(!(user instanceof ServerPlayerEntity player))
             return ActionResult.PASS;
-        ServerPlayNetworking.send(player, new S2C.OpenScreenPayload(NetworkId.ScreenType.CARTRIDGE_CREATION));
+        ServerPlayNetworking.send(player, new S2C.OpenScreenPayload(NetworkId.ScreenType.CARTRIDGE));
         return ActionResult.SUCCESS;
     }
 }

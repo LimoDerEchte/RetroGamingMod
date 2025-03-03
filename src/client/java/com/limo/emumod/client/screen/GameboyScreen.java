@@ -58,12 +58,7 @@ public class GameboyScreen extends Screen {
                 "https://github.com/mgba-emu/mgba/blob/master/LICENSE"), 10, height - 15, Color.WHITE.getRGB(), true);
         // Update Texture
         if(ClientHandler.displayBuffer.containsKey(fileId)) {
-            int[] display = ClientHandler.displayBuffer.get(fileId);
-            for(int y = 0; y < 144; y++) {
-                for(int x = 0; x < 160; x++) {
-                    Objects.requireNonNull(frameTexture.getImage()).setColorArgb(x, y, display[y * 160 + x]);
-                }
-            }
+            Objects.requireNonNull(frameTexture.getImage()).copyFrom(ClientHandler.displayBuffer.get(fileId));
             frameTexture.upload();
         }
         // Render Actual Stuff
