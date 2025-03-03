@@ -187,7 +187,7 @@ void LibRetroCore::inputPollCallback() {
 }
 
 int16_t LibRetroCore::inputStateCallback(unsigned port, unsigned device, unsigned index, unsigned id) {
-    return 0;
+    return (g_instance->inputData & (1 << id)) ? 0x7FFF : 0;
 }
 
 void LibRetroCore::audioSampleCallback(int16_t left, int16_t right) {

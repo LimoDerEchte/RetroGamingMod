@@ -21,14 +21,16 @@ public class GameboyAdvanceScreen extends Screen {
     private static final Identifier GAMEBOY_ADVANCE_TEXTURE = Identifier.of("emumod", "textures/gui/gameboy_advance.png");
     private static final int scale = 1;
     private static final Map<Integer, Short> inputMap = Map.of(
-            GLFW.GLFW_KEY_W, (short) 0b1, // D-Pad Up
-            GLFW.GLFW_KEY_A, (short) 0b10, // D-Pad Left
-            GLFW.GLFW_KEY_S, (short) 0b100, // D-Pad Down
-            GLFW.GLFW_KEY_D, (short) 0b1000, // D-Pad Right
-            GLFW.GLFW_KEY_J, (short) 0b10000, // A
-            GLFW.GLFW_KEY_I, (short) 0b100000, // B
-            GLFW.GLFW_KEY_ENTER, (short) 0b100000000, // Start
-            GLFW.GLFW_KEY_RIGHT_SHIFT, (short) 0b1000000000 // Select
+            GLFW.GLFW_KEY_I, (short) 0b1, // B
+            GLFW.GLFW_KEY_RIGHT_SHIFT, (short) 0b100, // Select
+            GLFW.GLFW_KEY_ENTER, (short) 0b1000, // Start
+            GLFW.GLFW_KEY_W, (short) 0b10000, // Up
+            GLFW.GLFW_KEY_S, (short) 0b100000, // Down
+            GLFW.GLFW_KEY_A, (short) 0b1000000, // Left
+            GLFW.GLFW_KEY_D, (short) 0b10000000, // Right
+            GLFW.GLFW_KEY_J, (short) 0b100000000, // A
+            GLFW.GLFW_KEY_U, (short) 0b10000000000, // L
+            GLFW.GLFW_KEY_O, (short) 0b100000000000 // R
     );
 
     private final ControlHandler controlHandler;
