@@ -6,7 +6,7 @@
 #include <string>
 #include <functional>
 
-#include "libretro.h"
+#include "../lib/libretro-common/include/libretro.h"
 
 class LibRetroCore {
 public:

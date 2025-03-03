@@ -5,7 +5,6 @@
 #include <chrono>
 #include <cstdarg>
 #include <utility>
-#include "libretro.h"
 
 static LibRetroCore* g_instance = nullptr;
 static retro_system_info g_system_info = {nullptr};

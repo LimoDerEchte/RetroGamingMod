@@ -6,7 +6,7 @@ include_directories(
 
 add_executable(retro-core main.cpp
         ../shared/SharedStructs.hpp
-        sys/libretro.h
+        ../lib/libretro-common/include/libretro.h
         sys/LibRetroCore.cpp
         sys/LibRetroCore.hpp
         platform/GameBoy.cpp
