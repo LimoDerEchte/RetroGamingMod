@@ -1,13 +1,16 @@
 package com.limo.emumod.client.network;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.client.screen.CartridgeScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.VideoCompression;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.texture.NativeImage;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -44,13 +47,17 @@ public class ClientHandler {
                     default -> throw new AssertionError();
             });
             NativeImage img = displayBuffer.get(payload.uuid());
-            int[] display = payload.data();
-            int height = img.getHeight();
-            int width = img.getWidth();
-            for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
-                    img.setColorArgb(x, y, display[y * width + x]);
+            try {
+                int[] display = VideoCompression.decompress(payload.data());
+                int height = img.getHeight();
+                int width = img.getWidth();
+                for(int y = 0; y < height; y++) {
+                    for(int x = 0; x < width; x++) {
+                        img.setColorArgb(x, y, display[y * width + x]);
+                    }
                 }
+            } catch (IOException e) {
+                EmuMod.LOGGER.error("Failed to decompress display image", e);
             }
         }));
     }

@@ -10,6 +10,10 @@ public class NativeGameBoy {
     private final long pointer;
     private NativeDisplay nativeDisplay;
 
+    static {
+        System.load("/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/bridge/libbridge.so");
+    }
+
     public NativeGameBoy(boolean isGBA) {
         pointer = init(isGBA);
     }
