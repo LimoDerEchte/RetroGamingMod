@@ -33,6 +33,14 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
+ * Method:    updateInput
+ * Signature: (JS)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput
+  (JNIEnv *, jclass, jlong, jshort);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGameBoy
  * Method:    createDisplay
  * Signature: (J)J
  */
@@ -41,11 +49,11 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGameBoy
- * Method:    updateInput
- * Signature: (JS)V
+ * Method:    createAudio
+ * Signature: (J)J
  */
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput
-  (JNIEnv *, jclass, jlong, jshort);
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createAudio
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

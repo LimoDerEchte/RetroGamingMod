@@ -24,14 +24,19 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_stop(JNIEnv *, 
     gameboy->dispose();
 }
 
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput(JNIEnv *, jclass, const jlong ptr, const jshort input) {
+    const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
+    gameboy->input(input);
+}
+
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createDisplay(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
     return reinterpret_cast<jlong>(gameboy->getDisplay());
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_updateInput(JNIEnv *, jclass, const jlong ptr, const jshort input) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGameBoy_createAudio(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GameBoy*>(ptr);
-    gameboy->input(input);
+    return reinterpret_cast<jlong>(gameboy->getAudio());
 }
 
 GameBoy::GameBoy(const bool isGBA): isGba(isGBA) {
@@ -49,6 +54,7 @@ void GameBoy::load(const char *retroCore, const char *core, const char *rom) {
     retroCoreProcess->detach();
     nativeDisplay = new NativeDisplay(isGba ? 240 : 160, isGba ? 160 : 144,
         &retroCoreHandle->displayChanged, retroCoreHandle->display);
+    nativeAudio = new NativeAudio(&retroCoreHandle->audioChanged, retroCoreHandle->audio);
 }
 
 void GameBoy::dispose() {
@@ -68,6 +74,10 @@ void GameBoy::dispose() {
 
 NativeDisplay *GameBoy::getDisplay() const {
     return nativeDisplay;
+}
+
+NativeAudio *GameBoy::getAudio() const {
+    return nativeAudio;
 }
 
 void GameBoy::input(const int16_t input) {

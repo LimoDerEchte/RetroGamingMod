@@ -129,6 +129,10 @@ void LibRetroCore::setVideoFrameCallback(const std::function<void(const int*, un
     videoFrameCallback = callback;
 }
 
+void LibRetroCore::setAudioCallback(const std::function<void(const int16_t*, size_t)> &callback) {
+    audioCallback = callback;
+}
+
 void LibRetroCore::dispose() const {
     retro_unload_game();
     retro_deinit();
@@ -182,7 +186,7 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
 }
 
 void LibRetroCore::inputPollCallback() {
-
+    // Nothing to do
 }
 
 int16_t LibRetroCore::inputStateCallback(unsigned port, unsigned device, unsigned index, unsigned id) {
@@ -190,9 +194,11 @@ int16_t LibRetroCore::inputStateCallback(unsigned port, unsigned device, unsigne
 }
 
 void LibRetroCore::audioSampleCallback(int16_t left, int16_t right) {
-
+    // Nothing to do
 }
 
-size_t LibRetroCore::audioSampleBatchCallback(const int16_t *data, size_t frames) {
+size_t LibRetroCore::audioSampleBatchCallback(const int16_t *data, const size_t frames) {
+    if(g_instance && g_instance->audioCallback)
+        g_instance->audioCallback(data, frames);
     return frames;
 }

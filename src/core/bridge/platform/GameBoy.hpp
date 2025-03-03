@@ -8,12 +8,15 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/process.hpp>
 
+#include "util/NativeAudio.hpp"
+
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GameBoy {
     std::mutex mutex{};
     NativeDisplay* nativeDisplay = nullptr;
+    NativeAudio* nativeAudio = nullptr;
 
     char id[32] = {};
     GameBoyShared* retroCoreHandle = nullptr;
@@ -27,5 +30,7 @@ public:
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
     [[nodiscard]] NativeDisplay *getDisplay() const;
+    [[nodiscard]] NativeAudio *getAudio() const;
+
     void input(int16_t input);
 };

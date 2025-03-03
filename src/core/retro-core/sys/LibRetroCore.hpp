@@ -18,6 +18,7 @@ public:
     [[nodiscard]] bool loadROM(const std::string &romPath) const;
     void runCore() const;
     void setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback);
+    void setAudioCallback(std::function<void(const int16_t*, size_t)> const &callback);
     void dispose() const;
 
     LibRetroCore(const LibRetroCore&) = delete;
@@ -27,6 +28,7 @@ private:
     std::string corePath;
     void* coreHandle;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
+    std::function<void(const int16_t*, size_t)> audioCallback;
 
     typedef void (*retro_init_t)();
     typedef void (*retro_deinit_t)();

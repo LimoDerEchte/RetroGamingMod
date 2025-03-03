@@ -14,6 +14,8 @@ add_library(bridge SHARED
         platform/GameBoy.hpp
         util/util.hpp
         util/NativeDisplay.hpp
+        util/NativeAudio.cpp
+        util/NativeAudio.hpp
 )
 
 target_link_libraries(bridge Boost::interprocess)

@@ -42,6 +42,13 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
         }
         g_instance->inputData = gb->controls;
     });
+    g_instance->setAudioCallback([gb](const int16_t* data, size_t pitch) {
+        if (pitch > 4096) {
+            pitch = 4096;
+        }
+        memcpy(gb->audio, data, 2 * pitch);
+        gb->audioChanged = true;
+    });
     std::cout << "[RetroGamingCore] Starting gameboy core" << std::endl;
     g_instance->runCore();
     return EXIT_SUCCESS;
