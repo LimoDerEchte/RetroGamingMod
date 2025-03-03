@@ -6,6 +6,9 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/
 project(RetroGamingCore)
 set(CMAKE_CXX_STANDARD 26)
 
+# Lib
+find_package(boost_interprocess CONFIG REQUIRED)
+
 # Actual Projects
 add_subdirectory(bridge)
 add_subdirectory(retro-core)

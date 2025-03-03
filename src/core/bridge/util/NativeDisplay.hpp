@@ -3,15 +3,15 @@
 #include <mutex>
 
 struct NativeDisplay {
-    bool changed{};
+    bool* changed{};
     int *buf{};
     size_t bufSize{};
     std::mutex mutex;
 
-    NativeDisplay(const int width, const int height) {
+    NativeDisplay(const int width, const int height, bool* existingChanged, int* existingBuf) {
         std::lock_guard lock(mutex);
         bufSize = width * height;
-        buf = new int[bufSize];
-        changed = false;
+        buf = existingBuf;
+        changed = existingChanged;
     }
 };
