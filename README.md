@@ -23,7 +23,8 @@ None as of now
 ### First of all
 I strongly discourage contributing currently, as the project is still in it's earliest stage and the codebase might change by a lot.
 ### Getting the project set up
-To use this project, you first have to use your C++ IDE of choice to open the src/core folder containing the cpp code. If you don't want to edit any native code, you can also just build using cmake.
+Initially, please clone this repo and all it's submodules and create the run/retroGamingRequired folder.
+To now use this project, you first have to use your C++ IDE of choice to open the src/core folder containing the cpp code. If you don't want to edit any native code, you can also just build using cmake.
 Afterwards you can use your Java IDE of choice to open the gradle project. Now you should be all set.
 ### Please note
 The project is not yet ready for being packaged as a .jar file, as it depends on the native files, which are not included as of now.
