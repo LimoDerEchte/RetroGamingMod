@@ -39,6 +39,8 @@ public class DisplaySyncer {
         // Gameboy Screens
         for(Map.Entry<UUID, NativeGameBoy> entry : GameboyItem.running.entrySet()) {
             NativeDisplay display = entry.getValue().createDisplay();
+            if(!display.hasChanged())
+                return;
             S2C.UpdateDisplayDataPayload pl = new S2C.UpdateDisplayDataPayload(entry.getKey(), display.getBuf().length == 38_400 ?
                     NetworkId.DisplaySize.w240h160 : NetworkId.DisplaySize.w160h144, VideoCompression.compress(display.getBuf()));
             for(ServerPlayerEntity player : PlayerLookup.all(server)) {

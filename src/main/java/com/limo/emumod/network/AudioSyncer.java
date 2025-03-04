@@ -20,6 +20,8 @@ public class AudioSyncer {
     private static boolean running = true;
 
     public static void run(MinecraftServer server) {
+        if(1==1)
+        return;
         running = true;
         int nqDelay = 10_000_000;
         while (running) {

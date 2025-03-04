@@ -17,6 +17,14 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize
 
 /*
  * Class:     com_limo_emumod_bridge_NativeDisplay
+ * Method:    hasChanged
+ * Signature: (J)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeDisplay_hasChanged
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeDisplay
  * Method:    update
  * Signature: (J)V
  */

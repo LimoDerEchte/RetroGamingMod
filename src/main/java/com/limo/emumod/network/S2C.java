@@ -67,12 +67,11 @@ public class S2C {
     }
 
     public record UpdateAudioDataPayload(UUID uuid, byte[] data) implements CustomPayload {
-        public static final Id<UpdateDisplayDataPayload> ID = new Id<>(NetworkId.UPDATE_DISPLAY_DATA);
-        public static final PacketCodec<RegistryByteBuf, UpdateDisplayDataPayload> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateDisplayDataPayload::uuid,
-                PacketCodecs.BYTE, UpdateDisplayDataPayload::type,
-                PacketCodecs.BYTE_ARRAY, UpdateDisplayDataPayload::data,
-                UpdateDisplayDataPayload::new
+        public static final Id<UpdateAudioDataPayload> ID = new Id<>(NetworkId.UPDATE_AUDIO_DATA);
+        public static final PacketCodec<RegistryByteBuf, UpdateAudioDataPayload> CODEC = PacketCodec.tuple(
+                Uuids.PACKET_CODEC, UpdateAudioDataPayload::uuid,
+                PacketCodecs.BYTE_ARRAY, UpdateAudioDataPayload::data,
+                UpdateAudioDataPayload::new
         );
 
         @Override
