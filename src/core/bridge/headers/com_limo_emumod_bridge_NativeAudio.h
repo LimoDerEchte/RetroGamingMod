@@ -17,6 +17,14 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeAudio_bufSize
 
 /*
  * Class:     com_limo_emumod_bridge_NativeAudio
+ * Method:    hasChanged
+ * Signature: (J)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeAudio_hasChanged
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeAudio
  * Method:    update
  * Signature: (J)V
  */

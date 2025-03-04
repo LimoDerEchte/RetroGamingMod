@@ -12,6 +12,12 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeAudio_bufSize(JNIEnv *,
     return static_cast<jint>(nativeAudio->bufSize);
 }
 
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeAudio_hasChanged(JNIEnv *, jclass, const jlong audio) {
+    const auto nativeAudio = reinterpret_cast<NativeAudio*>(audio);
+    std::lock_guard lock(nativeAudio->mutex);
+    return *nativeAudio->changed;
+}
+
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeAudio_update(JNIEnv *env, const jobject obj, const jlong audio) {
     const auto nativeAudio = reinterpret_cast<NativeAudio*>(audio);
     std::lock_guard lock(nativeAudio->mutex);

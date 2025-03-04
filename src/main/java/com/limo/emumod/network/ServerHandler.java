@@ -26,9 +26,11 @@ public class ServerHandler {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             FileUtil.init();
             new Thread(() -> DisplaySyncer.run(server)).start();
+            new Thread(() -> AudioSyncer.run(server)).start();
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             DisplaySyncer.stop();
+            AudioSyncer.stop();
             GameboyItem.running.forEach((ignore, nat) -> {
                 nat.stop();
             });
