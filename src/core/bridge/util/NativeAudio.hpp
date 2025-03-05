@@ -8,12 +8,12 @@
 struct NativeAudio {
     bool* changed{};
     int16_t *buf{};
-    size_t bufSize{};
+    size_t* dataSize{};
     std::mutex mutex;
 
-    NativeAudio(bool* existingChanged, int16_t* existingBuf) {
+    NativeAudio(bool* existingChanged, int16_t* existingBuf, size_t* existingDataSize) {
         std::lock_guard lock(mutex);
-        bufSize = 8192;
+        dataSize = existingDataSize;
         buf = existingBuf;
         changed = existingChanged;
     }

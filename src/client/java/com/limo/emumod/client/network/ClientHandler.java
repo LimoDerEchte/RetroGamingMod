@@ -4,8 +4,10 @@ import com.limo.emumod.EmuMod;
 import com.limo.emumod.client.screen.CartridgeScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
+import com.limo.emumod.client.util.BufferedAudioOutput;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.AudioCompression;
 import com.limo.emumod.util.VideoCompression;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.texture.NativeImage;
@@ -19,27 +21,26 @@ import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
     public static Map<UUID, NativeImage> displayBuffer = new HashMap<>();
+    public static HashMap<UUID, BufferedAudioOutput> audioBuffer = new HashMap<>();
 
     public static void init() {
-        ClientPlayNetworking.registerGlobalReceiver(S2C.OpenScreenPayload.ID,
-                (payload, ctx) -> ctx.client().execute(() -> ctx.client().setScreen(switch (payload.type()) {
+        ClientPlayNetworking.registerGlobalReceiver(S2C.OpenScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
+                ctx.client().setScreen(switch (payload.type()) {
                     case NetworkId.ScreenType.CARTRIDGE -> new CartridgeScreen();
-            default -> throw new AssertionError();
+                    default -> throw new AssertionError();
         })));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.OpenGameScreenPayload.ID,
-                (payload, ctx) -> ctx.client().execute(() -> ctx.client().setScreen(switch (payload.type()) {
+        ClientPlayNetworking.registerGlobalReceiver(S2C.OpenGameScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
+                ctx.client().setScreen(switch (payload.type()) {
                     case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.fileId());
                     case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.fileId());
                     case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.fileId());
                     default -> throw new AssertionError();
         })));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID,
-                (payload, ctx) -> ctx.client().execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(mc.currentScreen instanceof CartridgeScreen screen && screen.handle == payload.handle())
                 screen.close();
         }));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayDataPayload.ID,
-                (payload, ctx) -> ctx.client().execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!displayBuffer.containsKey(payload.uuid()))
                 displayBuffer.put(payload.uuid(), switch (payload.type()) {
                     case NetworkId.DisplaySize.w160h144 -> new NativeImage(160, 144, false);
@@ -59,6 +60,16 @@ public class ClientHandler {
             } catch (IOException e) {
                 EmuMod.LOGGER.error("Failed to decompress display image", e);
             }
+        }));
+        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+            /*if(!audioBuffer.containsKey(payload.uuid())) {
+                audioBuffer.put(payload.uuid(), new BufferedAudioOutput());
+            }
+            try {
+                audioBuffer.get(payload.uuid()).appendBuffer(AudioCompression.decompressAudio(payload.data()));
+            } catch (IOException e) {
+                EmuMod.LOGGER.error("Failed to decompress audio buffer", e);
+            }*/
         }));
     }
 }

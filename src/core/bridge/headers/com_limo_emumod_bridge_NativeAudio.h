@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     com_limo_emumod_bridge_NativeAudio
- * Method:    bufSize
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeAudio_bufSize
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeAudio
  * Method:    hasChanged
  * Signature: (J)Z
  */

@@ -54,7 +54,7 @@ void GameBoy::load(const char *retroCore, const char *core, const char *rom) {
     retroCoreProcess->detach();
     nativeDisplay = new NativeDisplay(isGba ? 240 : 160, isGba ? 160 : 144,
         &retroCoreHandle->displayChanged, retroCoreHandle->display);
-    nativeAudio = new NativeAudio(&retroCoreHandle->audioChanged, retroCoreHandle->audio);
+    nativeAudio = new NativeAudio(&retroCoreHandle->audioChanged, retroCoreHandle->audio, &retroCoreHandle->audioSize);
 }
 
 void GameBoy::dispose() {

@@ -141,15 +141,7 @@ void LibRetroCore::dispose() const {
 }
 
 void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, const unsigned height, const size_t pitch) {
-    if (!g_instance) {
-        std::cerr << "ERROR: g_instance is null in videoRefreshCallback" << std::endl;
-        return;
-    }
-    if (!data) {
-        std::cerr << "ERROR: data is null in videoRefreshCallback" << std::endl;
-        return;
-    }
-    if (g_instance->videoFrameCallback) {
+    if (g_instance && g_instance->videoFrameCallback) {
         g_instance->videoFrameCallback(static_cast<const int*>(data), width, height, pitch);
     }
 }
@@ -190,7 +182,7 @@ void LibRetroCore::inputPollCallback() {
 }
 
 int16_t LibRetroCore::inputStateCallback(unsigned port, unsigned device, unsigned index, unsigned id) {
-    return (g_instance->inputData & (1 << id)) ? 0x7FFF : 0;
+    return g_instance->inputData & 1 << id ? 0x7FFF : 0;
 }
 
 void LibRetroCore::audioSampleCallback(int16_t left, int16_t right) {
