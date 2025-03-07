@@ -60,11 +60,11 @@ public class LinkedCartridgeItem extends Item {
 
     private ItemStack findLinkItem() {
         if(EmuItems.GAMEBOY_CARTRIDGE == this)
-            return GameboyItem.link.getItem() == EmuItems.GAMEBOY ? GameboyItem.link : ItemStack.EMPTY;
+            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY ? GameboyItem.link : ItemStack.EMPTY;
         if(EmuItems.GAMEBOY_COLOR_CARTRIDGE == this)
-            return GameboyItem.link.getItem() == EmuItems.GAMEBOY_COLOR ? GameboyItem.link : ItemStack.EMPTY;
+            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY_COLOR ? GameboyItem.link : ItemStack.EMPTY;
         if(EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
-            return GameboyItem.link.getItem() == EmuItems.GAMEBOY_ADVANCE ? GameboyItem.link : ItemStack.EMPTY;
+            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY_ADVANCE ? GameboyItem.link : ItemStack.EMPTY;
         return ItemStack.EMPTY;
     }
 
