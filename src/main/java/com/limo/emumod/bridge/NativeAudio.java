@@ -1,7 +1,5 @@
 package com.limo.emumod.bridge;
 
-import com.limo.emumod.EmuMod;
-
 public class NativeAudio {
     private final long pointer;
     private final short[] buf;
@@ -17,7 +15,6 @@ public class NativeAudio {
 
     public short[] getBuf() {
         update(pointer);
-        EmuMod.LOGGER.info(buf.length);
         return buf;
     }
 

@@ -42,7 +42,7 @@ public class AudioSyncer {
             if(!audio.hasChanged())
                 continue;
             S2C.UpdateAudioDataPayload pl = new S2C.UpdateAudioDataPayload(entry.getKey(),
-                    AudioCompression.compressAudioLossy(audio.getBuf(), 4, Deflater.BEST_COMPRESSION));
+                    AudioCompression.compressAudioLossy(audio.getBuf(), 0, Deflater.BEST_COMPRESSION));
             for(ServerPlayerEntity player : PlayerLookup.all(server)) {
                 ServerPlayNetworking.send(player, pl);
             }
