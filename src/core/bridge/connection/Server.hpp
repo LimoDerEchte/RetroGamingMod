@@ -37,7 +37,7 @@ public:
 };
 
 inline RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
-    for (auto element : clients) {
+    for (const auto element : *clients) {
         if (element->peer == peer) {
             return element;
         }

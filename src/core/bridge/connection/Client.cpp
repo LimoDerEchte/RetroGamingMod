@@ -4,6 +4,7 @@
 
 #include "Client.hpp"
 
+#include <cstring>
 #include <iostream>
 #include <thread>
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
@@ -51,7 +52,7 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token) {
         mainLoop();
     }).detach();
     // Auth Packet
-    void* pak = malloc(33);
+    int8_t pak[33]{};
     memset(pak, PACKET_AUTH, 1);
     memcpy(&pak[1], token, 32);
     enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
@@ -115,7 +116,7 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             if (kick == nullptr) {
                 return;
             }
-            const char* str = kick->data[0];
+            const char* str = &kick->data[0];
             std::cerr << "[RetroClient] Received kick packet: " << std::string(str, strlen(str)) << std::endl;
         }
         case PACKET_UPDATE_DISPLAY: {
