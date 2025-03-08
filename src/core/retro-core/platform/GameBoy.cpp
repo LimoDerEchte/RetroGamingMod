@@ -12,7 +12,7 @@
 static LibRetroCore* g_instance = nullptr;
 
 int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom) {
-    auto [gb, len] = mem->find<GameBoyShared>("SharedData");
+    auto [gb, len] = mem->find<GenericShared>("SharedData");
     if (gb == nullptr || len == 0) {
         std::cerr << "[RetroGamingCore] The shared memory data couldn't be located" << std::endl;
         return EXIT_FAILURE;

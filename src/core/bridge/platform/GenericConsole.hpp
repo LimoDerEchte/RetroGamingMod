@@ -13,19 +13,19 @@
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
-class GameBoy {
+class GenericConsole {
     std::mutex mutex{};
     NativeDisplay* nativeDisplay = nullptr;
     NativeAudio* nativeAudio = nullptr;
 
     char id[32] = {};
-    GameBoyShared* retroCoreHandle = nullptr;
+    const int width, height;
+    GenericShared* retroCoreHandle = nullptr;
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
-    const bool isGba;
 
 public:
-    explicit GameBoy(bool isGBA);
+    explicit GenericConsole(int width, int height);
 
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();

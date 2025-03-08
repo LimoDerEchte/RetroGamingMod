@@ -3,13 +3,13 @@
 //
 
 #include <iostream>
-#include <platform/GameBoy.hpp>
+#include <platform/GenericConsole.hpp>
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
 int main() {
-    GameBoy gameboy(false);
-    GameBoy gameboy2(false);
+    GenericConsole gameboy(false);
+    GenericConsole gameboy2(false);
     gameboy.load(
         "/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/retro-core/retro-core",
         "/home/limo/Downloads/mgba_libretro.so",
