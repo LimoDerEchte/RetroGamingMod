@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-#include "platform/GameBoy.hpp"
+#include "platform/GenericConsole.hpp"
 
 int main(const int argc, char* argv[]) {
     if (argc < 5) {
@@ -19,7 +19,7 @@ int main(const int argc, char* argv[]) {
         std::cerr << "[RetroGamingCore] " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-    if (platform == "gb") {
+    if (platform == "gn") {
         return GB::load(segment, core, rom);
     }
     std::cerr << "This should NEVER be called by a user (unknown platform " << platform << ")" << std::endl;

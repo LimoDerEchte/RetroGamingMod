@@ -2,7 +2,7 @@
 // Created by limo on 3/3/25.
 //
 
-#include "GameBoy.hpp"
+#include "GenericConsole.hpp"
 
 #include <iostream>
 
@@ -50,7 +50,7 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
         gb->audioSize = 2 * pitch;
         gb->audioChanged = true;
     });
-    std::cout << "[RetroGamingCore] Starting GameBoy core" << std::endl;
+    std::cout << "[RetroGamingCore] Starting generic core" << std::endl;
     g_instance->runCore();
     return EXIT_SUCCESS;
 }
