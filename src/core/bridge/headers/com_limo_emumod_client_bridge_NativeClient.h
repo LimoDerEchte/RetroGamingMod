@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    connect
- * Signature: (ILjava/lang/String;)J
+ * Signature: (Ljava/lang/String;ILjava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_connect
-  (JNIEnv *, jclass, jint, jstring);
+  (JNIEnv *, jclass, jstring, jint, jstring);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient

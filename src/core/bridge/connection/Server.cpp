@@ -55,6 +55,7 @@ std::array<char, 32> RetroServer::genToken() const {
 }
 
 void RetroServer::dispose() {
+    running = false;
     if (server != nullptr) {
         enet_host_destroy(server);
         server = nullptr;
@@ -115,7 +116,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
             std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
-                    enet_peer_send(peer, 0, enet_packet_create(new char[]{PACKET_AUTH_ACK}, 1, 0));
+                    enet_peer_send(peer, 0, enet_packet_create(new char[]{PACKET_AUTH_ACK}, 1, ENET_PACKET_FLAG_RELIABLE));
                     return true;
                 }
                 return false;
