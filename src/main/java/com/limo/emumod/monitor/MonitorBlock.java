@@ -3,6 +3,7 @@ package com.limo.emumod.monitor;
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.registry.BlockId;
+import com.limo.emumod.registry.EmuComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
@@ -32,7 +33,8 @@ public class MonitorBlock extends BlockWithEntity {
 
     public MonitorBlock() {
         super(Settings.create()
-                .nonOpaque().sounds(BlockSoundGroup.GLASS)
+                .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((state, world, pos)
+                        -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.fileId != null)
                 .pistonBehavior(PistonBehavior.DESTROY).registryKey(BlockId.Registry.MONITOR));
         setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
     }
