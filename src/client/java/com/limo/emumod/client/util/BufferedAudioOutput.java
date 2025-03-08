@@ -179,9 +179,7 @@ public class BufferedAudioOutput {
     public void cleanup() {
         ALC11.alcMakeContextCurrent(context);
         if(sources != null) {
-            for (int source : sources) {
-                AL11.alSourceStop(source);
-            }
+            AL11.alSourceStopv(sources);
             AL11.alDeleteSources(sources);
         }
         if(buffers != null) {
