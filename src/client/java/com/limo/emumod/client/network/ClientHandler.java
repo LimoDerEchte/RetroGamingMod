@@ -63,7 +63,7 @@ public class ClientHandler {
         }));
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!audioBuffer.containsKey(payload.uuid())) {
-                audioBuffer.put(payload.uuid(), new BufferedAudioOutput());
+                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(0));
             }
             try {
                 audioBuffer.get(payload.uuid()).playAudio(AudioCompression.decompressAudio(payload.data()));

@@ -11,6 +11,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.io.IOException;
+import java.nio.ShortBuffer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.Deflater;
@@ -18,6 +20,9 @@ import java.util.zip.Deflater;
 public class AudioSyncer {
     private static long lastTime = System.nanoTime();
     private static boolean running = true;
+
+    private static final Map<UUID, ShortBuffer> bufferBuilders = new HashMap<>();
+    private static final int bufferLengthOnSend = 4 * 1024;
 
     public static void run(MinecraftServer server) {
         running = true;
@@ -41,8 +46,21 @@ public class AudioSyncer {
             NativeAudio audio = entry.getValue().createAudio();
             if(!audio.hasChanged())
                 continue;
+            if(!bufferBuilders.containsKey(entry.getKey()))
+                bufferBuilders.put(entry.getKey(), ShortBuffer.allocate(bufferLengthOnSend));
+            short[] data  = audio.getBuf();
+            ShortBuffer buffer = bufferBuilders.get(entry.getKey());
+            if(buffer.position() + data.length < bufferLengthOnSend) {
+                buffer.put(data);
+                continue;
+            }
+            int copyLen = bufferLengthOnSend - buffer.position();
+            buffer.put(data, 0, copyLen);
+            buffer.flip();
             S2C.UpdateAudioDataPayload pl = new S2C.UpdateAudioDataPayload(entry.getKey(),
-                    AudioCompression.compressAudioLossy(audio.getBuf(), 0, Deflater.BEST_COMPRESSION));
+                    AudioCompression.compressAudioLossy(buffer.array(), 0, Deflater.BEST_COMPRESSION));
+            buffer.clear();
+            buffer.put(data, copyLen, data.length - copyLen);
             for(ServerPlayerEntity player : PlayerLookup.all(server)) {
                 ServerPlayNetworking.send(player, pl);
             }

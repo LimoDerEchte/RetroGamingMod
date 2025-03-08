@@ -13,10 +13,10 @@ public class BufferedAudioOutput {
     private long context;
     private int[] buffers;
     private int source;
-    private static final int BUFFER_COUNT = 5;
-    private static final int SAMPLE_RATE = 44100;
+    private static final int BUFFER_COUNT = 4; // Quadruple Buffering
+    private final int SAMPLE_RATE = 48000;
 
-    public BufferedAudioOutput() {
+    public BufferedAudioOutput(int sampleRate) {
         initialize();
     }
 
