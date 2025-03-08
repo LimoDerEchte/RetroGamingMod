@@ -66,13 +66,15 @@ public class ClientHandler {
         }));
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!audioBuffer.containsKey(payload.uuid())) {
-                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(48000, new TrackedPosition()));
+                TrackedPosition tp = new TrackedPosition();
+                tp.setPos(new Vec3d(0, 0, 0));
+                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(48000, tp));
             }
-            try {
+            /*try {
                 audioBuffer.get(payload.uuid()).playAudio(AudioCompression.decompressAudio(payload.data()));
             } catch (IOException e) {
                 EmuMod.LOGGER.error("Failed to decompress audio buffer", e);
-            }
+            }*/
         }));
     }
 }

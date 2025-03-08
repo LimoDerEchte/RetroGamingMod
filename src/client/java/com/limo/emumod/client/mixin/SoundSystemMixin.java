@@ -13,6 +13,6 @@ public class SoundSystemMixin {
 
     @Inject(method = "tick()V", at = @At("HEAD"))
     private void tick(CallbackInfo ci) {
-        ClientHandler.audioBuffer.values().forEach(BufferedAudioOutput::updateListener);
+        ClientHandler.audioBuffer.values().forEach(BufferedAudioOutput::updatePositions);
     }
 }
