@@ -16,10 +16,10 @@ public:
 
     void dispose();
 
-    void mainLoop() const;
-    void onConnect(ENetPeer* peer) const;
-    void onDisconnect(ENetPeer* peer) const;
-    void onMessage(ENetPeer* peer, const ENetPacket* packet) const;
+    void mainLoop();
+    void onConnect() const;
+    void onDisconnect();
+    void onMessage(const ENetPacket* packet);
 
     [[nodiscard]] bool isAuthenticated() const {
         return authenticated;

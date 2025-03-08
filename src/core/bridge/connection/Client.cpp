@@ -28,7 +28,7 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token) {
     if (enet_initialize() != 0) {
-        std::cerr << "[RetroServer] Failed to initialize ENet" << std::endl;
+        std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
         return;
     }
     ENetAddress address;
@@ -36,13 +36,13 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token) {
     address.port = port;
     client = enet_host_create(nullptr, 1, 2, 0, 0);
     if (client == nullptr) {
-        std::cerr << "[RetroServer] Failed to create ENet client" << std::endl;
+        std::cerr << "[RetroClient] Failed to create ENet client" << std::endl;
         enet_deinitialize();
         return;
     }
     peer = enet_host_connect(client, &address, 2, 0);
     if (peer == nullptr) {
-        std::cerr << "[RetroServer] Failed to connect to ENet server" << std::endl;
+        std::cerr << "[RetroClient] Failed to connect to ENet server" << std::endl;
         enet_deinitialize();
         return;
     }
@@ -66,29 +66,72 @@ void RetroClient::dispose() {
     enet_deinitialize();
 }
 
-void RetroClient::mainLoop() const {
+void RetroClient::mainLoop() {
     if (client == nullptr)
         return;
     while (running) {
         ENetEvent event;
         if (const auto status = enet_host_service(client, &event, 0); status < 0) {
-            std::cerr << "[RetroServer] Failed to receive ENet event (" << status << ")" << std::endl;
+            std::cerr << "[RetroClient] Failed to receive ENet event (" << status << ")" << std::endl;
         } else if (status == 0) {
             continue;
         }
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE: {
-                std::cerr << "[RetroServer] Event received an ENET_EVENT_TYPE_NONE" << std::endl;
+                std::cerr << "[RetroClient] Event received an ENET_EVENT_TYPE_NONE" << std::endl;
             }
             case ENET_EVENT_TYPE_CONNECT: {
-                onConnect(event.peer);
+                onConnect();
             }
             case ENET_EVENT_TYPE_DISCONNECT: {
-                onDisconnect(event.peer);
+                onDisconnect();
             }
             case ENET_EVENT_TYPE_RECEIVE: {
-                onMessage(event.peer, event.packet);
+                onMessage(event.packet);
             }
+        }
+    }
+}
+
+void RetroClient::onConnect() const {
+    std::cerr << "[RetroClient] Connection established on " << peer->address.port << std::endl;
+}
+
+void RetroClient::onDisconnect() {
+    std::cerr << "[RetroClient] Disconnected on " << peer->address.port << std::endl;
+    dispose();
+}
+
+void RetroClient::onMessage(const ENetPacket *packet) {
+    if (packet->dataLength == 0) {
+        std::cerr << "[RetroClient] Received empty packet from server" << std::endl;
+    }
+    switch (const auto type = static_cast<PacketType>(packet->data[0])) {
+        case PACKET_AUTH_ACK: {
+            authenticated = true;
+        }
+        case PACKET_KICK: {
+            const auto kick = KickPacket::unpack(packet);
+            if (kick == nullptr) {
+                return;
+            }
+            const char* str = kick->data[0];
+            std::cerr << "[RetroClient] Received kick packet: " << std::string(str, strlen(str)) << std::endl;
+        }
+        case PACKET_UPDATE_DISPLAY: {
+            std::cerr << "[RetroClient] Received update display packet" << std::endl;
+            // TODO: Update Display
+        }
+        case PACKET_UPDATE_AUDIO: {
+            std::cerr << "[RetroClient] Received update audio packet" << std::endl;
+            // TODO: Update Audio
+        }
+        case PACKET_AUTH:
+        case PACKET_UPDATE_CONTROLS: {
+            std::cerr << "[RetroClient] Received C2S packet on client" << std::endl;
+        }
+        default: {
+            std::cerr << "[RetroClient] Unknown C2S packet type" << std::hex << type << std::endl;
         }
     }
 }

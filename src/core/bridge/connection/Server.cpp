@@ -90,7 +90,7 @@ void RetroServer::mainLoop() const {
     }
 }
 
-void RetroServer::onConnect(ENetPeer *peer) const { // NOLINT(*-convert-member-functions-to-static)
+void RetroServer::onConnect(ENetPeer *peer) const {
     const auto client = new RetroServerClient(peer);
     clients->push_back(client);
 }
@@ -111,7 +111,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
         std::cerr << "[RetroServer] Received non-auth packet before auth from " << peer->incomingPeerID << std::endl;
         return;
     }
-    switch (type) { // NOLINT(*-multiway-paths-covered)
+    switch (type) {
         case PACKET_AUTH: {
             std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
