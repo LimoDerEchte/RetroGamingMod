@@ -111,7 +111,7 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             authenticated = true;
         }
         case PACKET_KICK: {
-            const auto kick = KickPacket::unpack(packet);
+            const auto kick = CharArrayPacket::unpack(packet);
             if (kick == nullptr) {
                 return;
             }

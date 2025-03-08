@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#define SERVER_MAX_CLIENTS 100
 #include <cstring>
 #include <iostream>
-#include <string>
+
+#define SERVER_MAX_CLIENTS 100
 
 enum PacketType {
     // Main Connection
@@ -20,36 +20,93 @@ enum PacketType {
     PACKET_UPDATE_CONTROLS      = 0x60,
 };
 
-struct KickPacket {
-    PacketType type = PACKET_KICK;
+struct CharArrayPacket {
+    PacketType type;
     std::vector<char> data;
 
-    explicit KickPacket(const char* msg) {
+    explicit CharArrayPacket(const PacketType type, const char* msg) : type(type) {
         data.assign(msg, msg + strlen(msg));
     }
 
-    explicit KickPacket(const unsigned char* ptr, const size_t size) {
+    explicit CharArrayPacket(const PacketType type, const unsigned char* ptr, const size_t size) : type(type) {
         data.assign(ptr, ptr + size);
     }
 
-    static KickPacket* unpack(const ENetPacket* packet) {
+    static CharArrayPacket* unpack(const ENetPacket* packet) {
+        const auto type = static_cast<PacketType>(packet->data[0]);
         if (packet->dataLength < 9) {
-            std::cerr << "[RetroServer] Kick packet too small" << std::endl;
+            std::cerr << "[RetroPacket] Char packet too small (" << type << ")" << std::endl;
             return nullptr;
         }
         size_t size = 0;
         memcpy(&size, &packet->data[1], sizeof(size_t));
-        return new KickPacket(&packet->data[9], size);
+        return new CharArrayPacket(type, &packet->data[9], size);
     }
 
     [[nodiscard]] ENetPacket* pack() const {
-        int8_t packed[data.size() + 9]{};
+        void* packed = malloc(data.size() + 9);
         const auto sizeB = reinterpret_cast<int8_t*>(data.size());
-        packed[0] = type;
+        memcpy(&packed[0], &type, 1);
         memcpy(&packed[1], &sizeB, sizeof(size_t));
         memcpy(&packed[9], &data[0], data.size());
         return enet_packet_create(packed, sizeof(packed), ENET_PACKET_FLAG_RELIABLE);
     }
 };
 
+struct Int8ArrayPacket {
+    PacketType type;
+    std::vector<int8_t> data;
 
+    explicit Int8ArrayPacket(const PacketType type, const unsigned char* ptr, const size_t size) : type(type) {
+        data.assign(ptr, ptr + size);
+    }
+
+    static Int8ArrayPacket* unpack(const ENetPacket* packet) {
+        const auto type = static_cast<PacketType>(packet->data[0]);
+        if (packet->dataLength < 9) {
+            std::cerr << "[RetroPacket] Int8arr packet too small (" << type << ")" << std::endl;
+            return nullptr;
+        }
+        size_t size = 0;
+        memcpy(&size, &packet->data[1], sizeof(size_t));
+        return new Int8ArrayPacket(type, &packet->data[9], size);
+    }
+
+    [[nodiscard]] ENetPacket* pack() const {
+        void* packed = malloc(data.size() + 9);
+        const auto sizeB = reinterpret_cast<int8_t*>(data.size());
+        memcpy(&packed[0], &type, 1);
+        memcpy(&packed[1], &sizeB, sizeof(size_t));
+        memcpy(&packed[9], &data[0], data.size());
+        return enet_packet_create(packed, sizeof(packed), 0);
+    }
+};
+
+struct Int16ArrayPacket {
+    PacketType type;
+    std::vector<int16_t> data;
+
+    explicit Int16ArrayPacket(const PacketType type, const unsigned char* ptr, const size_t size) : type(type) {
+        data.assign(ptr, ptr + size);
+    }
+
+    static Int16ArrayPacket* unpack(const ENetPacket* packet) {
+        const auto type = static_cast<PacketType>(packet->data[0]);
+        if (packet->dataLength < 9) {
+            std::cerr << "[RetroPacket] Int16arr packet too small (" << type << ")" << std::endl;
+            return nullptr;
+        }
+        size_t size = 0;
+        memcpy(&size, &packet->data[1], sizeof(size_t));
+        return new Int16ArrayPacket(type, &packet->data[9], size);
+    }
+
+    [[nodiscard]] ENetPacket* pack() const {
+        void* packed = malloc(data.size() * 2 + 9);
+        const auto sizeB = reinterpret_cast<int16_t*>(data.size());
+        memcpy(&packed[0], &type, 1);
+        memcpy(&packed[1], &sizeB, sizeof(size_t));
+        memcpy(&packed[9], &data[0], data.size() * 2);
+        return enet_packet_create(packed, sizeof(packed), 0);
+    }
+};

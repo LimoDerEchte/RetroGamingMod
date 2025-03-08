@@ -46,7 +46,7 @@ inline RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) co
 }
 
 inline void RetroServer::kick(ENetPeer *peer, const char *message) {
-    enet_peer_send(peer, 0, KickPacket(message).pack());
+    enet_peer_send(peer, 0, CharArrayPacket(PACKET_KICK, message).pack());
     enet_peer_disconnect(peer, 0);
 }
 
