@@ -16,9 +16,14 @@ add_library(bridge SHARED
         util/NativeDisplay.hpp
         util/NativeAudio.cpp
         util/NativeAudio.hpp
+        connection/Server.cpp
+        connection/Server.hpp
+        connection/Client.cpp
+        connection/Client.hpp
+        connection/NetworkDefinitions.hpp
 )
 
-target_link_libraries(bridge Boost::interprocess)
+target_link_libraries(bridge Boost::interprocess unofficial::enet::enet)
 
 # Post Build
 add_custom_command(TARGET bridge POST_BUILD
