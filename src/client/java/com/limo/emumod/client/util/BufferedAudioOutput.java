@@ -1,34 +1,42 @@
 package com.limo.emumod.client.util;
 
 import com.limo.emumod.EmuMod;
+import net.minecraft.util.math.Vec3d;
 import org.lwjgl.openal.*;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class BufferedAudioOutput {
     private long device;
     private long context;
     private int[] buffers;
-    private int source;
+    private int[] sources;
     private static final int BUFFER_COUNT = 4; // Quadruple Buffering
-    private final int SAMPLE_RATE = 48000;
 
-    public BufferedAudioOutput(int sampleRate) {
+    private final int sampleRate;
+    private final List<Supplier<Vec3d>> trackedPositions = new ArrayList<>();
+
+    public BufferedAudioOutput(int sampleRate, Supplier<Vec3d> initialPosition) {
+        this.sampleRate = sampleRate;
+        trackedPositions.add(initialPosition);
         initialize();
     }
 
     private void initialize() {
         device = ALC11.alcOpenDevice((ByteBuffer) null);
-        if (device == 0) {
+        if(device == 0) {
             throw new RuntimeException("Failed to open the default OpenAL device");
         }
 
         IntBuffer contextAttribs = MemoryUtil.memAllocInt(16);
         contextAttribs.put(ALC11.ALC_FREQUENCY);
-        contextAttribs.put(SAMPLE_RATE);
+        contextAttribs.put(sampleRate);
         contextAttribs.put(ALC11.ALC_REFRESH);
         contextAttribs.put(60);
         contextAttribs.put(ALC11.ALC_SYNC);
@@ -37,44 +45,83 @@ public class BufferedAudioOutput {
 
         context = ALC11.alcCreateContext(device, contextAttribs);
         MemoryUtil.memFree(contextAttribs);
-        if (context == 0) {
+        if(context == 0) {
             ALC11.alcCloseDevice(device);
             throw new RuntimeException("Failed to create OpenAL context");
         }
-
         ALC11.alcMakeContextCurrent(context);
         AL.createCapabilities(ALC.createCapabilities(device));
 
-        buffers = new int[BUFFER_COUNT];
-        AL11.alGenBuffers(buffers);
+        genSources();
+        genBuffers();
+    }
 
-        source = AL11.alGenSources();
-        checkAlError();
-        AL11.alSourcei(source, AL11.AL_LOOPING, AL11.AL_FALSE);
-        checkAlError();
+    private void genSources() {
+        sources = new int[trackedPositions.size()];
+
+        AL11.alGenSources(sources);
+        for(int i = 0; i < sources.length; i++) {
+            Vec3d pos = trackedPositions.get(i).get();
+            AL11.alSourcei(sources[i], AL11.AL_LOOPING, AL11.AL_FALSE);
+            AL11.alSourcef(sources[i], AL11.AL_GAIN, 1.0f);
+            AL11.alSource3f(sources[i], AL11.AL_POSITION, (float) pos.x, (float) pos.y, (float) pos.z);
+        }
 
         int error = AL11.alGetError();
-        if (error != AL11.AL_NO_ERROR) {
+        if(error != AL11.AL_NO_ERROR) {
             cleanup();
             throw new RuntimeException("OpenAL error: " + error);
         }
+    }
 
-        for (int i = 0; i < BUFFER_COUNT; i++) {
+    private void genBuffers() {
+        for(int source : sources) {
+            AL11.alSourceStop(source);
+        }
+        if(buffers != null) {
+            AL11.alDeleteBuffers(buffers);
+        }
+        buffers = new int[BUFFER_COUNT * trackedPositions.size()];
+        AL11.alGenBuffers(buffers);
+
+        for(int i = 0; i < BUFFER_COUNT * trackedPositions.size(); i++) {
             ShortBuffer silentBuffer = MemoryUtil.memAllocShort(0);
             silentBuffer.flip();
 
-            AL11.alBufferData(buffers[i], AL11.AL_FORMAT_STEREO16, silentBuffer, SAMPLE_RATE);
-            AL11.alSourceQueueBuffers(source, buffers[i]);
+            AL11.alBufferData(buffers[i], AL11.AL_FORMAT_STEREO16, silentBuffer, sampleRate);
+            AL11.alSourceQueueBuffers(sources[i / BUFFER_COUNT], buffers[i]);
             MemoryUtil.memFree(silentBuffer);
         }
 
-        AL11.alSourcePlay(source);
+        for(int source : sources) {
+            AL11.alSourcePlay(source);
+        }
         checkAlError();
     }
 
+    public void addTrackedPosition(Supplier<Vec3d> pos) {
+        trackedPositions.add(pos);
+        ALC11.alcMakeContextCurrent(context);
+        genSources();
+        genBuffers();
+    }
+
+    public void removeTrackedPosition(Supplier<Vec3d> pos) {
+        trackedPositions.remove(pos);
+        ALC11.alcMakeContextCurrent(context);
+        genSources();
+        genBuffers();
+    }
+
     public void playAudio(short[] audioData) {
+        for(int source : sources) {
+            playAudio(source, audioData);
+        }
+    }
+
+    private void playAudio(int source, short[] audioData) {
         int processedBuffers = AL11.alGetSourcei(source, AL11.AL_BUFFERS_PROCESSED);
-        if (processedBuffers <= 0) {
+        if(processedBuffers <= 0) {
             checkAlError();
             return;
         }
@@ -89,7 +136,7 @@ public class BufferedAudioOutput {
         dataBuffer.put(audioData);
         dataBuffer.flip();
 
-        AL11.alBufferData(bufferID, AL11.AL_FORMAT_STEREO16, dataBuffer, SAMPLE_RATE);
+        AL11.alBufferData(bufferID, AL11.AL_FORMAT_STEREO16, dataBuffer, sampleRate);
         MemoryUtil.memFree(dataBuffer);
         checkAlError();
 
@@ -104,24 +151,26 @@ public class BufferedAudioOutput {
     }
 
     public void cleanup() {
-        if (source != 0) {
-            AL11.alSourceStop(source);
-            AL11.alDeleteSources(source);
+        if(sources != null) {
+            for (int source : sources) {
+                AL11.alSourceStop(source);
+            }
+            AL11.alDeleteSources(sources);
         }
-        if (buffers != null) {
+        if(buffers != null) {
             AL11.alDeleteBuffers(buffers);
         }
-        if (context != 0) {
+        if(context != 0) {
             ALC11.alcDestroyContext(context);
         }
-        if (device != 0) {
+        if(device != 0) {
             ALC11.alcCloseDevice(device);
         }
     }
 
     public static void checkAlError() {
         int error = AL11.alGetError();
-        if (error == AL11.AL_NO_ERROR) {
+        if(error == AL11.AL_NO_ERROR) {
             return;
         }
         StackTraceElement stack = Thread.currentThread().getStackTrace()[2];

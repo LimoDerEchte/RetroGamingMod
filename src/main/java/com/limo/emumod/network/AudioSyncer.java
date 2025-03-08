@@ -59,11 +59,11 @@ public class AudioSyncer {
             buffer.flip();
             S2C.UpdateAudioDataPayload pl = new S2C.UpdateAudioDataPayload(entry.getKey(),
                     AudioCompression.compressAudioLossy(buffer.array(), 0, Deflater.BEST_COMPRESSION));
-            buffer.clear();
-            buffer.put(data, copyLen, data.length - copyLen);
             for(ServerPlayerEntity player : PlayerLookup.all(server)) {
                 ServerPlayNetworking.send(player, pl);
             }
+            buffer.clear();
+            buffer.put(data, copyLen, data.length - copyLen);
         }
     }
 

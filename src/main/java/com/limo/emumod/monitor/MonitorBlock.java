@@ -3,7 +3,6 @@ package com.limo.emumod.monitor;
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.registry.BlockId;
-import com.limo.emumod.registry.EmuComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
