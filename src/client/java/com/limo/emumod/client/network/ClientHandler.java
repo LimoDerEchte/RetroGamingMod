@@ -9,8 +9,10 @@ import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.util.AudioCompression;
 import com.limo.emumod.util.VideoCompression;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.entity.TrackedPosition;
 import net.minecraft.util.math.Vec3d;
 
 import java.io.IOException;
@@ -64,7 +66,7 @@ public class ClientHandler {
         }));
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!audioBuffer.containsKey(payload.uuid())) {
-                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(48000, () -> Vec3d.ZERO));
+                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(48000, new TrackedPosition()));
             }
             try {
                 audioBuffer.get(payload.uuid()).playAudio(AudioCompression.decompressAudio(payload.data()));

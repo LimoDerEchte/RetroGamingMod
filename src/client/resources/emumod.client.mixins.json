@@ -1,9 +1,10 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.limo.emumod.mixin.client",
+  "package": "com.limo.emumod.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "SoundSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

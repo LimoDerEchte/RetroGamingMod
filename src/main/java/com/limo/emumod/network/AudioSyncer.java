@@ -26,7 +26,7 @@ public class AudioSyncer {
 
     public static void run(MinecraftServer server) {
         running = true;
-        int nqDelay = 10_000_000;
+        int nqDelay = 1_000_000;
         while (running) {
             while (System.nanoTime() - lastTime < nqDelay) {
                 Thread.onSpinWait();

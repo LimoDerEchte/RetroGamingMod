@@ -1,6 +1,7 @@
 package com.limo.emumod.client.util;
 
 import com.limo.emumod.EmuMod;
+import net.minecraft.entity.TrackedPosition;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.openal.*;
 import org.lwjgl.system.MemoryUtil;
@@ -10,19 +11,20 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+
+import static com.limo.emumod.client.EmuModClient.mc;
 
 public class BufferedAudioOutput {
     private long device;
     private long context;
     private int[] buffers;
     private int[] sources;
-    private static final int BUFFER_COUNT = 4; // Quadruple Buffering
+    private static final int BUFFER_COUNT = 5;
 
     private final int sampleRate;
-    private final List<Supplier<Vec3d>> trackedPositions = new ArrayList<>();
+    private final List<TrackedPosition> trackedPositions = new ArrayList<>();
 
-    public BufferedAudioOutput(int sampleRate, Supplier<Vec3d> initialPosition) {
+    public BufferedAudioOutput(int sampleRate, TrackedPosition initialPosition) {
         this.sampleRate = sampleRate;
         trackedPositions.add(initialPosition);
         initialize();
@@ -51,6 +53,8 @@ public class BufferedAudioOutput {
         }
         ALC11.alcMakeContextCurrent(context);
         AL.createCapabilities(ALC.createCapabilities(device));
+        AL11.alDistanceModel(AL11.AL_INVERSE_DISTANCE_CLAMPED);
+        checkAlError();
 
         genSources();
         genBuffers();
@@ -61,10 +65,13 @@ public class BufferedAudioOutput {
 
         AL11.alGenSources(sources);
         for(int i = 0; i < sources.length; i++) {
-            Vec3d pos = trackedPositions.get(i).get();
+            Vec3d pos = trackedPositions.get(i).getPos();
             AL11.alSourcei(sources[i], AL11.AL_LOOPING, AL11.AL_FALSE);
             AL11.alSourcef(sources[i], AL11.AL_GAIN, 1.0f);
             AL11.alSource3f(sources[i], AL11.AL_POSITION, (float) pos.x, (float) pos.y, (float) pos.z);
+            AL11.alSourcef(sources[i], AL11.AL_ROLLOFF_FACTOR, 1.0f);
+            AL11.alSourcef(sources[i], AL11.AL_REFERENCE_DISTANCE, 1.0f);
+            AL11.alSourcef(sources[i], AL11.AL_MAX_DISTANCE, 16.0f);
         }
 
         int error = AL11.alGetError();
@@ -99,21 +106,40 @@ public class BufferedAudioOutput {
         checkAlError();
     }
 
-    public void addTrackedPosition(Supplier<Vec3d> pos) {
-        trackedPositions.add(pos);
+    public void addTrackedPosition(TrackedPosition pos) {
         ALC11.alcMakeContextCurrent(context);
+        trackedPositions.add(pos);
         genSources();
         genBuffers();
     }
 
-    public void removeTrackedPosition(Supplier<Vec3d> pos) {
-        trackedPositions.remove(pos);
+    public void removeTrackedPosition(TrackedPosition pos) {
         ALC11.alcMakeContextCurrent(context);
+        trackedPositions.remove(pos);
         genSources();
         genBuffers();
+    }
+
+    public void updateListener() {
+        ALC11.alcMakeContextCurrent(context);
+        if(mc.cameraEntity == null) {
+            EmuMod.LOGGER.error("Camera not present");
+            return;
+        }
+        Vec3d pos = mc.cameraEntity.getLastRenderPos();
+        //Vec3d vel = mc.player.getVelocity();
+        Vec3d lookVec = mc.cameraEntity.getRotationVecClient();
+        float[] orientation = {
+                (float)lookVec.x, (float)lookVec.y, (float)lookVec.z,
+                0.0f, 1.0f, 0.0f
+        };
+        AL11.alListener3f(AL11.AL_POSITION, (float) pos.x, (float) pos.y, (float) pos.z);
+        //AL11.alListener3f(AL11.AL_VELOCITY, (float) vel.x, (float) vel.y, (float) vel.z);
+        AL11.alListenerfv(AL11.AL_ORIENTATION, orientation);
     }
 
     public void playAudio(short[] audioData) {
+        ALC11.alcMakeContextCurrent(context);
         for(int source : sources) {
             playAudio(source, audioData);
         }
@@ -151,6 +177,7 @@ public class BufferedAudioOutput {
     }
 
     public void cleanup() {
+        ALC11.alcMakeContextCurrent(context);
         if(sources != null) {
             for (int source : sources) {
                 AL11.alSourceStop(source);
