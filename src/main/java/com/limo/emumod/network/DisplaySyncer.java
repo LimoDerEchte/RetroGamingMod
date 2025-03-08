@@ -2,7 +2,7 @@ package com.limo.emumod.network;
 
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.bridge.NativeDisplay;
-import com.limo.emumod.bridge.NativeGameBoy;
+import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.util.VideoCompression;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -37,7 +37,7 @@ public class DisplaySyncer {
 
     private static void sendUpdates(MinecraftServer server) throws IOException {
         // Gameboy Screens
-        for(Map.Entry<UUID, NativeGameBoy> entry : GameboyItem.running.entrySet()) {
+        for(Map.Entry<UUID, NativeGenericConsole> entry : GameboyItem.running.entrySet()) {
             NativeDisplay display = entry.getValue().createDisplay();
             if(!display.hasChanged())
                 return;

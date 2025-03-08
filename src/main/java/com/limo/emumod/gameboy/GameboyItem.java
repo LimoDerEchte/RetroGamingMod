@@ -1,6 +1,6 @@
 package com.limo.emumod.gameboy;
 
-import com.limo.emumod.bridge.NativeGameBoy;
+import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
@@ -28,7 +28,7 @@ import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GameboyItem extends Item {
     public static long lastInteractionTime;
-    public static final Map<UUID, NativeGameBoy> running = new HashMap<>();
+    public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
     public static ItemStack link;
 
     public GameboyItem(RegistryKey<Item> type) {

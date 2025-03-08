@@ -1,6 +1,6 @@
 package com.limo.emumod.cartridge;
 
-import com.limo.emumod.bridge.NativeGameBoy;
+import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
@@ -75,7 +75,11 @@ public class LinkedCartridgeItem extends Item {
 
     private void run(UUID id) {
         if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this) {
-            NativeGameBoy gb = new NativeGameBoy(EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this);
+            boolean gba = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this;
+            NativeGenericConsole gb = new NativeGenericConsole(
+                    gba ? 240 : 160,
+                    gba ? 160 : 144
+            );
             gb.load(id);
             GameboyItem.running.put(id, gb);
         }
