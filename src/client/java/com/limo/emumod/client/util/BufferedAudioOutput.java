@@ -13,7 +13,7 @@ public class BufferedAudioOutput {
     private long context;
     private int[] buffers;
     private int source;
-    private static final int BUFFER_COUNT = 3;
+    private static final int BUFFER_COUNT = 5;
     private static final int SAMPLE_RATE = 44100;
 
     public BufferedAudioOutput() {

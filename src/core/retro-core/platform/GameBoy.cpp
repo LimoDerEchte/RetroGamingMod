@@ -46,7 +46,7 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
         if (pitch > 4096) {
             pitch = 4096;
         }
-        memcpy(gb->audio, data, 2 * pitch);
+        memcpy(gb->audio, data, 4 * pitch);
         gb->audioSize = 2 * pitch;
         gb->audioChanged = true;
     });
