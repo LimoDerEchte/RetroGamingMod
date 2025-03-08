@@ -28,21 +28,26 @@ struct KickPacket {
         data.assign(msg, msg + strlen(msg));
     }
 
-    static std::string* unpack(const ENetPacket* packet) {
-        if (packet->dataLength < 5) {
+    explicit KickPacket(const unsigned char* ptr, const size_t size) {
+        data.assign(ptr, ptr + size);
+    }
+
+    static KickPacket* unpack(const ENetPacket* packet) {
+        if (packet->dataLength < 9) {
             std::cerr << "[RetroServer] Kick packet too small" << std::endl;
             return nullptr;
         }
-        const auto size = reinterpret_cast<int>(&packet->data[1]);
-        return new std::string(packet->data[5], size);
+        size_t size = 0;
+        memcpy(&size, &packet->data[1], sizeof(size_t));
+        return new KickPacket(&packet->data[9], size);
     }
 
     [[nodiscard]] ENetPacket* pack() const {
-        int8_t packed[data.size() + 5]{};
+        int8_t packed[data.size() + 9]{};
         const auto sizeB = reinterpret_cast<int8_t*>(data.size());
         packed[0] = type;
-        memcpy(&packed[1], &sizeB, 4);
-        memcpy(&packed[5], &data[0], data.size());
+        memcpy(&packed[1], &sizeB, sizeof(size_t));
+        memcpy(&packed[9], &data[0], data.size());
         return enet_packet_create(packed, sizeof(packed), ENET_PACKET_FLAG_RELIABLE);
     }
 };
