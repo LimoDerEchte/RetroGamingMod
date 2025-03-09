@@ -17,4 +17,12 @@ struct NativeDisplay {
         buf = existingBuf;
         changed = existingChanged;
     }
+
+    NativeDisplay(const int width, const int height): width(width),
+        height(height) {
+        std::lock_guard lock(mutex);
+        bufSize = width * height;
+        buf = new uint16_t[bufSize];
+        changed = new bool;
+    }
 };

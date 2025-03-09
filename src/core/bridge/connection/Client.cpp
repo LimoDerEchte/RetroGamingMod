@@ -18,13 +18,25 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_connect(
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_disconnect(JNIEnv *, jclass, const jlong ptr) {
-    const auto server = reinterpret_cast<RetroClient*>(ptr);
-    server->dispose();
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    client->dispose();
 }
 
 JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAuthenticated(JNIEnv *, jclass, const jlong ptr) {
-    const auto server = reinterpret_cast<RetroClient*>(ptr);
-    return server->isAuthenticated();
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    return client->isAuthenticated();
+}
+
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    client->registerDisplay(uuid, width, height);
+}
+
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    client->unregisterDisplay(uuid);
 }
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token) {
@@ -53,7 +65,7 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token) {
     }).detach();
     // Auth Packet
     int8_t pak[33]{};
-    memset(pak, PACKET_AUTH, 1);
+    pak[0] = PACKET_AUTH;
     memcpy(&pak[1], token, 32);
     enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
 }
@@ -65,6 +77,14 @@ void RetroClient::dispose() {
         client = nullptr;
     }
     enet_deinitialize();
+}
+
+void RetroClient::registerDisplay(const jUUID* uuid, const int width, const int height) {
+    displays.insert_or_assign(uuid->combine(), new NativeDisplay(width, height));
+}
+
+void RetroClient::unregisterDisplay(const jUUID* uuid) {
+    displays.erase(uuid->combine());
 }
 
 void RetroClient::mainLoop() {
@@ -121,8 +141,15 @@ void RetroClient::onMessage(const ENetPacket *packet) {
         }
         case PACKET_UPDATE_DISPLAY: {
             std::cerr << "[RetroClient] Received update display packet" << std::endl;
-
-            // TODO: Update Display
+            const auto parsed = Int16ArrayPacket::unpack(packet);
+            const auto it = displays.find(parsed->ref.combine());
+            if (it == displays.end()) {
+                return;
+            }
+            memcpy(it->second->buf, &parsed->data[0], parsed->data.size() * 2);
+            [](bool& ref) {
+                ref = true;
+            }(*it->second->changed);
         }
         case PACKET_UPDATE_AUDIO: {
             std::cerr << "[RetroClient] Received update audio packet" << std::endl;
