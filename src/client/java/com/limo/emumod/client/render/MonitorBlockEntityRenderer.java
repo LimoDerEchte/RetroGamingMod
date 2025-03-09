@@ -1,6 +1,7 @@
 package com.limo.emumod.client.render;
 
 import com.limo.emumod.client.network.ClientHandler;
+import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
 import net.minecraft.client.render.RenderLayer;
@@ -41,20 +42,18 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         }
         UUID file = entity.fileId;
         Identifier id = idCache.get(entity.getPos());
-        if(ClientHandler.displayBuffer.containsKey(file)) {
-            NativeImageBackedTexture tex = textureCache.get(entity.getPos());
-            NativeImage newTex = ClientHandler.displayBuffer.get(file);
-            NativeImageRatio r = ratioCache.get(entity.getPos());
-            if(!r.matches(newTex)) {
-                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
-                ratioCache.put(entity.getPos(), r);
-                NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(r.getImage());
-                textureCache.put(entity.getPos(), newAlloc);
-                mc.getTextureManager().registerTexture(id, newAlloc);
-            }
-            r.readFrom(newTex);
-            tex.upload();
+        NativeImageBackedTexture tex = textureCache.get(entity.getPos());
+        NativeImage newTex = ScreenManager.getDisplay(file);
+        NativeImageRatio r = ratioCache.get(entity.getPos());
+        if(!r.matches(newTex)) {
+            r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
+            ratioCache.put(entity.getPos(), r);
+            NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(r.getImage());
+            textureCache.put(entity.getPos(), newAlloc);
+            mc.getTextureManager().registerTexture(id, newAlloc);
         }
+        r.readFrom(newTex);
+        tex.upload();
         // Render
         matrices.push();
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(id));

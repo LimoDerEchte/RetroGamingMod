@@ -1,6 +1,6 @@
 package com.limo.emumod.client.screen;
 
-import com.limo.emumod.client.network.ClientHandler;
+import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.ControlHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -57,10 +57,8 @@ public class GameboyScreen extends Screen {
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_2",
                 "https://github.com/mgba-emu/mgba/blob/master/LICENSE"), 10, height - 15, Color.WHITE.getRGB(), true);
         // Update Texture
-        if(ClientHandler.displayBuffer.containsKey(fileId)) {
-            Objects.requireNonNull(frameTexture.getImage()).copyFrom(ClientHandler.displayBuffer.get(fileId));
-            frameTexture.upload();
-        }
+        Objects.requireNonNull(frameTexture.getImage()).copyFrom(ScreenManager.getDisplay(fileId));
+        frameTexture.upload();
         // Render Actual Stuff
         context.getMatrices().push();
         context.getMatrices().scale(scale, scale, scale);

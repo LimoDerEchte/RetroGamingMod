@@ -5,19 +5,25 @@ import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.network.NetworkId;
+import com.limo.emumod.network.S2C;
 import com.limo.emumod.util.RequirementManager;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 
 import java.io.File;
 import java.util.UUID;
+
+import static com.limo.emumod.network.ServerHandler.mcs;
 
 public class EmuItems {
     public static final Item CARTRIDGE = register(new CartridgeItem(), ItemId.Registry.CARTRIDGE);
@@ -74,5 +80,8 @@ public class EmuItems {
         NativeGenericConsole con = new NativeGenericConsole(width, height);
         con.load(core, file);
         GenericHandheldItem.running.put(file, con);
+        PlayerLookup.all(mcs).forEach(player -> {
+            ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height));
+        });
     }
 }

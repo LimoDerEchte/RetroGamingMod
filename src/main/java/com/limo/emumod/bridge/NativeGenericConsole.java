@@ -41,10 +41,20 @@ public class NativeGenericConsole {
         updateInput(pointer, input);
     }
 
+    public int getWidth() {
+        return getWidth(pointer);
+    }
+
+    public int getHeight() {
+        return getHeight(pointer);
+    }
+
     private native static long init(int width, int height);
     private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
     private native static void updateInput(long pointer, short input);
     private native static long createDisplay(long pointer);
     private native static long createAudio(long pointer);
+    private native static int getWidth(long pointer);
+    private native static int getHeight(long pointer);
 }

@@ -1,6 +1,5 @@
 package com.limo.emumod.client.network;
 
-import com.limo.emumod.EmuMod;
 import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.screen.CartridgeScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
@@ -8,31 +7,33 @@ import com.limo.emumod.client.screen.GameboyScreen;
 import com.limo.emumod.client.util.BufferedAudioOutput;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
-import com.limo.emumod.util.AudioCompression;
-import com.limo.emumod.util.VideoCompression;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.TrackedPosition;
 import net.minecraft.util.math.Vec3d;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.limo.emumod.client.EmuModClient.CLIENT;
 import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
-    public static Map<UUID, NativeImage> displayBuffer = new HashMap<>();
     public static HashMap<UUID, BufferedAudioOutput> audioBuffer = new HashMap<>();
+
+    private static String ip() {
+        String address = Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).getConnection().getAddressAsString(true);
+        if(address.equals("local") || address.isEmpty())
+            return "127.0.0.1";
+        return address;
+    }
 
     public static void init() {
         // ENet Stuff
         ClientPlayNetworking.registerGlobalReceiver(S2C.ENetTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            CLIENT = new NativeClient("127.0.0.1", payload.port(), payload.token());
+            CLIENT = new NativeClient(ip(), payload.port(), payload.token());
         }));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             if(CLIENT != null) {
@@ -58,25 +59,13 @@ public class ClientHandler {
                 screen.close();
         }));
         // Other Stuff
-        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            if(!displayBuffer.containsKey(payload.uuid()))
-                displayBuffer.put(payload.uuid(), switch (payload.type()) {
-                    case NetworkId.DisplaySize.w160h144 -> new NativeImage(160, 144, false);
-                    case NetworkId.DisplaySize.w240h160 -> new NativeImage(240, 160, false);
-                    default -> throw new AssertionError();
-            });
-            NativeImage img = displayBuffer.get(payload.uuid());
-            try {
-                int[] display = VideoCompression.decompress(payload.data());
-                int height = img.getHeight();
-                int width = img.getWidth();
-                for(int y = 0; y < height; y++) {
-                    for(int x = 0; x < width; x++) {
-                        img.setColorArgb(x, y, display[y * width + x]);
-                    }
-                }
-            } catch (IOException e) {
-                EmuMod.LOGGER.error("Failed to decompress display image", e);
+        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+            int width = payload.width();
+            int height = payload.height();
+            if(width == 0 || height == 0) {
+                ScreenManager.unregisterDisplay(payload.uuid());
+            } else {
+                ScreenManager.registerDisplay(payload.uuid(), width, height);
             }
         }));
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {

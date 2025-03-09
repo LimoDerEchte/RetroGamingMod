@@ -55,6 +55,22 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createD
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createAudio
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     com_limo_emumod_bridge_NativeGenericConsole
+ * Method:    getWidth
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGenericConsole
+ * Method:    getHeight
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getHeight
+  (JNIEnv *, jclass, jlong);
+
 #ifdef __cplusplus
 }
 #endif

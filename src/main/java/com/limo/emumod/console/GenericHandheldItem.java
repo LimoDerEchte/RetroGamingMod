@@ -3,6 +3,7 @@ package com.limo.emumod.console;
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.network.S2C;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.limo.emumod.network.ServerHandler.mcs;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
@@ -67,6 +69,9 @@ public class GenericHandheldItem extends Item {
                 stack.remove(GAME);
                 stack.remove(FILE_ID);
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
+                PlayerLookup.all(mcs).forEach(player -> {
+                    ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, 0, 0));
+                });
             } else {
                 if(link != null) {
                     link = null;
@@ -81,8 +86,7 @@ public class GenericHandheldItem extends Item {
                 user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
                 return ActionResult.PASS;
             }
-            ServerPlayNetworking.send((ServerPlayerEntity) user,
-                    new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID)));
+            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID)));
         }
         return ActionResult.PASS;
     }
