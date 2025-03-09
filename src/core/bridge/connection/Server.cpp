@@ -44,7 +44,8 @@ RetroServer::RetroServer(const int port) {
         return;
     }
     running = true;
-    std::thread([&] { mainLoop(); }).detach();
+    std::thread([&] { mainReceiverLoop(); }).detach();
+    std::thread([&] { mainKeepAliveLoop(); }).detach();
     std::thread([&] { mainVideoSenderLoop(30); }).detach();
     std::cout << "[RetroServer] Started ENet server on port " << port << std::endl;
 }
@@ -70,7 +71,7 @@ void RetroServer::dispose() {
     std::cout << "[RetroServer] Stopped ENet server" << std::endl;
 }
 
-void RetroServer::mainLoop() {
+void RetroServer::mainReceiverLoop() {
     if (server == nullptr)
         return;
     while (running) {
@@ -98,6 +99,23 @@ void RetroServer::mainLoop() {
                 break;
             }
         }
+    }
+}
+
+void RetroServer::mainKeepAliveLoop() {
+    const auto delay = std::chrono::seconds(5);
+    auto next = std::chrono::high_resolution_clock::now();
+    while (running) {
+        mutex.lock();
+        for (const RetroServerClient* client : *clients) {
+            if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
+                continue;
+            constexpr int8_t id = PACKET_KEEP_ALIVE;
+            enet_peer_send(client->peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
+        }
+        mutex.unlock();
+        next += delay;
+        std::this_thread::sleep_until(next);
     }
 }
 
@@ -164,7 +182,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
             std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
-                    enet_peer_send(peer, 0, enet_packet_create(new char[]{PACKET_AUTH_ACK}, 1, ENET_PACKET_FLAG_RELIABLE));
+                    enet_peer_send(peer, 0, enet_packet_create(new char[]{ PACKET_AUTH_ACK }, 1, ENET_PACKET_FLAG_RELIABLE));
                     return true;
                 }
                 return false;
@@ -176,6 +194,10 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
                 std::cout << "[RetroServer] Successfully authorized connection (" << client->peer->incomingPeerID << ")" << std::endl;
             }
             mutex.unlock();
+            break;
+        }
+        case PACKET_KEEP_ALIVE: {
+            std::cout << "[RetroServer] Received Keep Alive from " << client->peer->incomingPeerID << std::endl;
             break;
         }
         case PACKET_UPDATE_CONTROLS: {

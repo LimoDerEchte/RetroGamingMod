@@ -73,6 +73,7 @@ void GenericConsole::load(const char *retroCore, const char *core, const char *r
 
 void GenericConsole::dispose() {
     std::cout << "[RetroGamingCore] Disposing bridge instance " << std::endl;
+    GenericConsoleRegistry::unregisterConsole(this);
     std::lock_guard lock(mutex);
     retroCoreHandle = nullptr;
     if (retroCoreProcess != nullptr) {
@@ -84,7 +85,6 @@ void GenericConsole::dispose() {
         sharedMemoryHandle->destroy<GenericShared>("SharedData");
     }
     bip::shared_memory_object::remove(id);
-    GenericConsoleRegistry::unregisterConsole(this);
 }
 
 NativeDisplay *GenericConsole::getDisplay() const {

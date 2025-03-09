@@ -15,6 +15,7 @@ enum PacketType {
     PACKET_AUTH                 = 0x00,
     PACKET_AUTH_ACK             = 0x01,
     PACKET_KICK                 = 0x02,
+    PACKET_KEEP_ALIVE           = 0x03,
     // S2C
     PACKET_UPDATE_DISPLAY       = 0x20,
     PACKET_UPDATE_AUDIO         = 0x21,
@@ -30,16 +31,6 @@ struct CharArrayPacket {
     explicit CharArrayPacket(PacketType type, const unsigned char* ptr, size_t size);
 
     static CharArrayPacket* unpack(const ENetPacket* packet);
-    [[nodiscard]] ENetPacket* pack() const;
-};
-
-struct Int8ArrayPacket {
-    PacketType type;
-    std::vector<int8_t> data;
-
-    explicit Int8ArrayPacket(PacketType type, const unsigned char* ptr, size_t size);
-
-    static Int8ArrayPacket* unpack(const ENetPacket* packet);
     [[nodiscard]] ENetPacket* pack() const;
 };
 

@@ -29,7 +29,8 @@ public:
     [[nodiscard]] char* genToken();
     void dispose();
 
-    void mainLoop();
+    void mainReceiverLoop();
+    void mainKeepAliveLoop();
     void mainVideoSenderLoop(int fps);
     void onConnect(ENetPeer* peer) const;
     void onDisconnect(ENetPeer* peer) const;

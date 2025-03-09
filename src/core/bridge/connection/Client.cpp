@@ -146,6 +146,11 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             std::cout << "[RetroClient] Connection token accepted by server" << std::endl;
             break;
         }
+        case PACKET_KEEP_ALIVE: {
+            constexpr int8_t id = PACKET_KEEP_ALIVE;
+            enet_peer_send(peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
+            break;
+        }
         case PACKET_KICK: {
             const auto kick = CharArrayPacket::unpack(packet);
             if (kick == nullptr) {
@@ -156,7 +161,6 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_DISPLAY: {
-            std::cerr << "[RetroClient] PENIS" << std::endl;
             const auto parsed = Int16ArrayPacket::unpack(packet);
             if (parsed == nullptr) {
                 std::cerr << "[RetroClient] Received invalid display packet" << std::endl;
