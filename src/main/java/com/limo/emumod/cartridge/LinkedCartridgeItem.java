@@ -17,14 +17,22 @@ import net.minecraft.world.World;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
+    private final Supplier<ItemStack> linkItem;
+    private final Runnable clearLinkItem;
+    private final Consumer<UUID> start;
 
-    public LinkedCartridgeItem(RegistryKey<Item> key) {
+    public LinkedCartridgeItem(RegistryKey<Item> key, Supplier<ItemStack> linkItem, Runnable clearLinkItem, Consumer<UUID> start) {
         super(new Settings().maxCount(1).registryKey(key));
+        this.linkItem = linkItem;
+        this.clearLinkItem = clearLinkItem;
+        this.start = start;
     }
 
     @Override
@@ -37,7 +45,7 @@ public class LinkedCartridgeItem extends Item {
         if(world.isClient())
             return super.use(world, user, hand);
         ItemStack stack = user.getStackInHand(hand);
-        ItemStack link = findLinkItem();
+        ItemStack link = linkItem.get();
         if(link != null && link.getCount() > 0 && hasGame(stack)) {
             UUID id = stack.getComponents().get(FILE_ID);
             File file = FileUtil.idToFile(id, "cart");
@@ -49,40 +57,13 @@ public class LinkedCartridgeItem extends Item {
                 link.applyComponentsFrom(ComponentMap.builder()
                         .add(GAME, stack.getComponents().get(GAME))
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
-                clearLinkItem();
+                clearLinkItem.run();
                 stack.setCount(0);
                 user.sendMessage(Text.translatable("item.emumod.gameboy.insert"), true);
-                run(id);
+                start.accept(id);
             }
         }
         return ActionResult.PASS;
-    }
-
-    private ItemStack findLinkItem() {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this)
-            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY ? GameboyItem.link : ItemStack.EMPTY;
-        if(EmuItems.GAMEBOY_COLOR_CARTRIDGE == this)
-            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY_COLOR ? GameboyItem.link : ItemStack.EMPTY;
-        if(EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
-            return GameboyItem.link != null && GameboyItem.link.getItem() == EmuItems.GAMEBOY_ADVANCE ? GameboyItem.link : ItemStack.EMPTY;
-        return ItemStack.EMPTY;
-    }
-
-    private void clearLinkItem() {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this)
-            GameboyItem.link = null;
-    }
-
-    private void run(UUID id) {
-        if(EmuItems.GAMEBOY_CARTRIDGE == this || EmuItems.GAMEBOY_COLOR_CARTRIDGE == this || EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this) {
-            boolean gba = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE == this;
-            NativeGenericConsole gb = new NativeGenericConsole(
-                    gba ? 240 : 160,
-                    gba ? 160 : 144
-            );
-            gb.load(id);
-            GameboyItem.running.put(id, gb);
-        }
     }
 
     public static void gameTooltip(ItemStack stack, List<Text> tooltip) {
