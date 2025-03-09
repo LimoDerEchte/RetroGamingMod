@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <mutex>
 #include <vector>
 #include <enet/enet.h>
 
@@ -18,19 +19,21 @@ struct RetroServerClient {
 class RetroServer {
     ENetHost* server;
     bool running = false;
+    std::mutex mutex;
     std::vector<RetroServerClient*>* clients = new std::vector<RetroServerClient*>(SERVER_MAX_CLIENTS);
     std::vector<std::array<char, 32>>* tokens = new std::vector<std::array<char, 32>>();
 
 public:
     explicit RetroServer(int port);
 
-    [[nodiscard]] char* genToken() const;
+    [[nodiscard]] char* genToken();
     void dispose();
 
-    void mainLoop() const;
+    void mainLoop();
+    void mainVideoSenderLoop(int fps);
     void onConnect(ENetPeer* peer) const;
     void onDisconnect(ENetPeer* peer) const;
-    void onMessage(ENetPeer* peer, const ENetPacket* packet) const;
+    void onMessage(ENetPeer* peer, const ENetPacket* packet);
 
     static void kick(ENetPeer *peer, const char *message);
     RetroServerClient* findClientByPeer(const ENetPeer* peer) const;

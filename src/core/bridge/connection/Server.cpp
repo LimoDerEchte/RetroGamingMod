@@ -10,6 +10,7 @@
 #include <headers/com_limo_emumod_bridge_NativeServer.h>
 
 #include "NetworkDefinitions.hpp"
+#include "platform/GenericConsole.hpp"
 #include "util/NativeUtil.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port) {
@@ -28,6 +29,7 @@ JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(
 }
 
 RetroServer::RetroServer(const int port) {
+    std::lock_guard lock(mutex);
     if (enet_initialize() != 0) {
         std::cerr << "[RetroServer] Failed to initialize ENet" << std::endl;
         return;
@@ -42,13 +44,13 @@ RetroServer::RetroServer(const int port) {
         return;
     }
     running = true;
-    std::thread([&] {
-        mainLoop();
-    }).detach();
+    std::thread([&] { mainLoop(); }).detach();
+    std::thread([&] { mainVideoSenderLoop(30); }).detach();
     std::cout << "[RetroServer] Started ENet server on port " << port << std::endl;
 }
 
-char* RetroServer::genToken() const {
+char* RetroServer::genToken() {
+    std::lock_guard lock(mutex);
     const auto data = new char[32];
     GenerateID(data);
     std::array<char, 32> stdArr = {};
@@ -58,6 +60,7 @@ char* RetroServer::genToken() const {
 }
 
 void RetroServer::dispose() {
+    std::lock_guard lock(mutex);
     running = false;
     if (server != nullptr) {
         enet_host_destroy(server);
@@ -67,7 +70,7 @@ void RetroServer::dispose() {
     std::cout << "[RetroServer] Stopped ENet server" << std::endl;
 }
 
-void RetroServer::mainLoop() const {
+void RetroServer::mainLoop() {
     if (server == nullptr)
         return;
     while (running) {
@@ -98,6 +101,32 @@ void RetroServer::mainLoop() const {
     }
 }
 
+void RetroServer::mainVideoSenderLoop(const int fps) {
+    const auto delay = std::chrono::nanoseconds(1000000000 / fps);
+    auto next = std::chrono::high_resolution_clock::now();
+    while (running) {
+        GenericConsoleRegistry::withConsoles([this](const auto console) {
+            if (!console->retroCoreHandle->displayChanged)
+                return;
+            const auto packet = Int16ArrayPacket(
+                PACKET_UPDATE_DISPLAY,
+                *console->uuid,
+                reinterpret_cast<const unsigned char*>(console->retroCoreHandle->display),
+                console->width * console->height
+            ).pack();
+            mutex.lock();
+            for (const RetroServerClient* client : *clients) {
+                if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
+                    continue;
+                enet_peer_send(client->peer, 0, packet);
+            }
+            mutex.unlock();
+        });
+        next += delay;
+        std::this_thread::sleep_until(next);
+    }
+}
+
 void RetroServer::onConnect(ENetPeer *peer) const {
     const auto client = new RetroServerClient(peer);
     clients->push_back(client);
@@ -109,7 +138,7 @@ void RetroServer::onDisconnect(ENetPeer *peer) const {
     });
 }
 
-void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
+void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
     if (packet == nullptr) {
         std::cerr << "[RetroServer] Received packet is nullptr from " << peer->incomingPeerID << std::endl;
         return;
@@ -130,6 +159,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
                 std::cerr << "[RetroServer] Received auth packet after auth from " << peer->incomingPeerID << std::endl;
                 return;
             }
+            mutex.lock();
             std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
@@ -144,6 +174,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
             } else {
                 std::cout << "[RetroServer] Successfully authorized connection (" << client->peer->incomingPeerID << ")" << std::endl;
             }
+            mutex.unlock();
             break;
         }
         case PACKET_UPDATE_CONTROLS: {

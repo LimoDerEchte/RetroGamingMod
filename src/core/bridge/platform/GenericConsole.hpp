@@ -3,12 +3,13 @@
 //
 
 #pragma once
+#include <boost/process.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
 #include "util/NativeDisplay.hpp"
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/process.hpp>
 
 #include "util/NativeAudio.hpp"
+#include "util/NativeUtil.hpp"
 
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
@@ -18,14 +19,16 @@ class GenericConsole {
     NativeDisplay* nativeDisplay = nullptr;
     NativeAudio* nativeAudio = nullptr;
 
-    char id[32] = {};
-    const int width, height;
-    GenericShared* retroCoreHandle = nullptr;
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
 
 public:
-    explicit GenericConsole(int width, int height);
+    char id[32] = {};
+    const int width, height;
+    GenericShared* retroCoreHandle = nullptr;
+    const jUUID* uuid;
+
+    explicit GenericConsole(int width, int height, const jUUID* uuid);
 
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
@@ -33,4 +36,14 @@ public:
     [[nodiscard]] NativeAudio *getAudio() const;
 
     void input(int16_t input);
+};
+
+class GenericConsoleRegistry {
+    static std::vector<GenericConsole*> consoles;
+    static std::mutex consoleMutex;
+
+public:
+    static void registerConsole(GenericConsole *console);
+    static void unregisterConsole(GenericConsole *console);
+    static void withConsoles(const std::function<void(GenericConsole*)>& func);
 };

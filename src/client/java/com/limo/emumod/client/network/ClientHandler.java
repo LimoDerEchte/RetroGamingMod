@@ -25,7 +25,7 @@ public class ClientHandler {
 
     private static String ip() {
         String address = Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).getConnection().getAddressAsString(true);
-        if(address.equals("local") || address.isEmpty())
+        if(address.startsWith("local") || address.isEmpty())
             return "127.0.0.1";
         return address;
     }

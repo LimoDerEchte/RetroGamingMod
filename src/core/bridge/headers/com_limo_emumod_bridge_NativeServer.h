@@ -31,14 +31,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer
 JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken
   (JNIEnv *, jclass, jlong);
 
-/*
- * Class:     com_limo_emumod_bridge_NativeServer
- * Method:    poll
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_poll
-  (JNIEnv *, jclass, jlong);
-
 #ifdef __cplusplus
 }
 #endif

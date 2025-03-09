@@ -77,11 +77,10 @@ public class EmuItems {
     }
 
     private static void runGenericHandheld(File core, UUID file, int width, int height) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height);
-        con.load(core, file);
+        NativeGenericConsole con = new NativeGenericConsole(width, height, file);
+        con.load(core);
         GenericHandheldItem.running.put(file, con);
-        PlayerLookup.all(mcs).forEach(player -> {
-            ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height));
-        });
+        PlayerLookup.all(mcs).forEach(player ->
+                ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
     }
 }

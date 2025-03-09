@@ -42,6 +42,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 }
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
+    std::cout << "[RetroClient] Connecting to ENet server on " << ip << ":" << port << std::endl;
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
         return;

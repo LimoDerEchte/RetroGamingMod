@@ -8,8 +8,8 @@
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
 int main() {
-    GenericConsole gameboy(160, 144);
-    GenericConsole gameboy2(160, 144);
+    GenericConsole gameboy(160, 144, new jUUID{0,0});
+    GenericConsole gameboy2(160, 144, new jUUID{1,1});
     gameboy.load(
         "/home/limo/IdeaProjects/EmulatorModV2/src/core/cmake-build-debug/retro-core/retro-core",
         "/home/limo/Downloads/mgba_libretro.so",

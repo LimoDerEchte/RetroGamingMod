@@ -17,10 +17,6 @@ public class NativeServer {
         stopServer(handle);
     }
 
-    public void poll() {
-        poll(handle);
-    }
-
     public String createToken() {
         return requestToken(handle);
     }
@@ -28,5 +24,4 @@ public class NativeServer {
     private static native long startServer(int port);
     private static native void stopServer(long ptr);
     private static native String requestToken(long ptr);
-    private static native void poll(long ptr);
 }

@@ -10,8 +10,12 @@
 
 #include "util/NativeUtil.hpp"
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jint width, const jint height) {
-    return reinterpret_cast<jlong>(new GenericConsole(width, height));
+std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
+std::mutex GenericConsoleRegistry::consoleMutex;
+
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height) {
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    return reinterpret_cast<jlong>(new GenericConsole(width, height, uuid));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, jstring) {
@@ -39,8 +43,19 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createA
     return reinterpret_cast<jlong>(gameboy->getAudio());
 }
 
-GenericConsole::GenericConsole(const int width, const int height): width(width), height(height) {
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth(JNIEnv *, jclass, const jlong ptr) {
+    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
+    return gameboy->width;
+}
+
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getHeight(JNIEnv *, jclass, const jlong ptr) {
+    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
+    return gameboy->height;
+}
+
+GenericConsole::GenericConsole(const int width, const int height, const jUUID* uuid): width(width), height(height), uuid(uuid) {
     GenerateID(id);
+    GenericConsoleRegistry::registerConsole(this);
 }
 
 void GenericConsole::load(const char *retroCore, const char *core, const char *rom) {
@@ -69,6 +84,7 @@ void GenericConsole::dispose() {
         sharedMemoryHandle->destroy<GenericShared>("SharedData");
     }
     bip::shared_memory_object::remove(id);
+    GenericConsoleRegistry::unregisterConsole(this);
 }
 
 NativeDisplay *GenericConsole::getDisplay() const {
@@ -86,3 +102,19 @@ void GenericConsole::input(const int16_t input) {
     }
 }
 
+void GenericConsoleRegistry::registerConsole(GenericConsole *console) {
+    std::lock_guard guard(consoleMutex);
+    consoles.emplace_back(console);
+}
+
+void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
+    std::lock_guard guard(consoleMutex);
+    consoles.erase(std::ranges::remove(consoles, console).begin(), consoles.end());
+}
+
+void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole *)>& func) {
+    std::lock_guard guard(consoleMutex);
+    for (const auto &console : consoles) {
+        func(console);
+    }
+}

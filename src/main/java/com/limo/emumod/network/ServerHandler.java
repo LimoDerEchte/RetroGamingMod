@@ -39,9 +39,8 @@ public class ServerHandler {
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             AudioSyncer.stop();
-            GenericHandheldItem.running.forEach((ignore, nat) -> {
-                nat.stop();
-            });
+            GenericHandheldItem.running.values().forEach(NativeGenericConsole::stop);
+            GenericHandheldItem.running.clear();
             if(SERVER != null) {
                 SERVER.stop();
                 SERVER = null;

@@ -8,14 +8,16 @@ import java.util.UUID;
 
 public class NativeGenericConsole {
     private final long pointer;
+    private final UUID file;
     private NativeDisplay nativeDisplay;
     private NativeAudio nativeAudio;
 
-    public NativeGenericConsole(int width, int height) {
-        pointer = init(width, height);
+    public NativeGenericConsole(int width, int height, UUID file) {
+        this.file = file;
+        pointer = init(NativeUtil.nativeUUID(file), width, height);
     }
 
-    public void load(File core, UUID file) {
+    public void load(File core) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
         start(pointer, RequirementManager.core.getAbsolutePath(), core.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
@@ -49,12 +51,14 @@ public class NativeGenericConsole {
         return getHeight(pointer);
     }
 
-    private native static long init(int width, int height);
+    private native static long init(long uuid, int width, int height);
     private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
+
     private native static void updateInput(long pointer, short input);
     private native static long createDisplay(long pointer);
     private native static long createAudio(long pointer);
+
     private native static int getWidth(long pointer);
     private native static int getHeight(long pointer);
 }
