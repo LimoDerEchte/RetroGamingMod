@@ -21,6 +21,19 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeUtil_leastSignificantB
     return uuid->leastSignificantBits;
 }
 
+bool operator==(const jUUID& lhs, const jUUID& rhs) {
+    return lhs.mostSignificantBits == rhs.mostSignificantBits &&
+           lhs.leastSignificantBits == rhs.leastSignificantBits;
+}
+
+template<>
+struct std::hash<jUUID> {
+    size_t operator()(const jUUID& uuid) const noexcept {
+        return hash<long>()(uuid.mostSignificantBits) ^
+               (hash<long>()(uuid.leastSignificantBits) << 1);
+    }
+};
+
 void GenerateID(char* id, const int length) {
     constexpr char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     constexpr int charsetSize = sizeof(charset) - 1;

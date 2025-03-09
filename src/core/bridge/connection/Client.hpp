@@ -3,11 +3,16 @@
 //
 
 #pragma once
+#include <unordered_map>
 #include <enet/enet.h>
+
+#include "util/NativeDisplay.hpp"
+#include "util/NativeUtil.hpp"
 
 class RetroClient {
     ENetHost* client;
     ENetPeer* peer;
+    std::unordered_map<jUUID, NativeDisplay*> displays;
     bool running = false;
     bool authenticated = false;
 
