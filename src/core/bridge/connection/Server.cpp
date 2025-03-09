@@ -110,7 +110,7 @@ void RetroServer::mainVideoSenderLoop(const int fps) {
                 return;
             const auto packet = Int16ArrayPacket(
                 PACKET_UPDATE_DISPLAY,
-                *console->uuid,
+                console->uuid,
                 reinterpret_cast<const unsigned char*>(console->retroCoreHandle->display),
                 console->width * console->height
             ).pack();
@@ -121,6 +121,7 @@ void RetroServer::mainVideoSenderLoop(const int fps) {
                 enet_peer_send(client->peer, 0, packet);
             }
             mutex.unlock();
+            delete[] packet;
         });
         next += delay;
         std::this_thread::sleep_until(next);

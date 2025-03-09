@@ -16,10 +16,6 @@ public class NativeClient {
         disconnect(handle);
     }
 
-    public void poll() {
-        poll(handle);
-    }
-
     public boolean isAuthenticated() {
         return isAuthenticated(handle);
     }
@@ -38,5 +34,4 @@ public class NativeClient {
     private static native boolean isAuthenticated(long ptr);
     private static native long registerScreen(long ptr, long uuid, int width, int height);
     private static native void unregisterScreen(long ptr, long uuid);
-    private static native void poll(long ptr);
 }

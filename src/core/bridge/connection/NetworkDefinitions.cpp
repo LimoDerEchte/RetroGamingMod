@@ -7,12 +7,6 @@
 #include <cstring>
 #include <iostream>
 
-jUUID packetParseUUID(const void *ptr) {
-    auto res = jUUID();
-    memcpy(&res, ptr, sizeof(jUUID));
-    return res;
-}
-
 CharArrayPacket::CharArrayPacket(const PacketType type, const char* msg) : type(type) {
     data.assign(msg, msg + strlen(msg));
 }
@@ -65,27 +59,33 @@ ENetPacket* Int8ArrayPacket::pack() const {
     return enet_packet_create(packed, sizeof(packed), 0);
 }
 
-Int16ArrayPacket::Int16ArrayPacket(const PacketType type, const jUUID ref, const unsigned char *ptr, const size_t size) : type(type), ref(ref) {
-    data.assign(ptr, ptr + size);
+Int16ArrayPacket::Int16ArrayPacket(const PacketType type, const jUUID* ref, const unsigned char *ptr, const size_t size) : type(type), ref(ref), size(size) {
+    data = new int16_t[size];
+    memcpy(data, ptr, size * 2);
 }
 
 Int16ArrayPacket * Int16ArrayPacket::unpack(const ENetPacket *packet) {
     const auto type = static_cast<PacketType>(packet->data[0]);
-    if (packet->dataLength < 73) {
+    if (packet->dataLength < 25) {
         std::cerr << "[RetroPacket] Int16arr packet too small (" << type << ")" << std::endl;
         return nullptr;
     }
     size_t size = 0;
-    memcpy(&size, &packet->data[65], sizeof(size_t));
-    return new Int16ArrayPacket(type, packetParseUUID(&packet->data[1]), &packet->data[73], size);
+    const auto uuid = new jUUID();
+    memcpy(uuid, &packet->data[1], sizeof(jUUID));
+    memcpy(&size, &packet->data[17], sizeof(size_t));
+    return new Int16ArrayPacket(type, uuid, &packet->data[25], size);
 }
 
 ENetPacket * Int16ArrayPacket::pack() const{
-    int8_t* packed[data.size() * 2 + 73]{};
-    const auto sizeB = reinterpret_cast<int16_t*>(data.size());
+    const auto packetSize = size * 2 + 25;
+    const auto packed = new int8_t[packetSize]{};
+    const auto sizeB = reinterpret_cast<int16_t*>(size);
     memcpy(&packed[0], &type, 1);
-    memcpy(&packed[1], &ref, sizeof(jUUID));
-    memcpy(&packed[65], &sizeB, sizeof(size_t));
-    memcpy(&packed[73], &data[0], data.size() * 2);
-    return enet_packet_create(packed, sizeof(packed), 0);
+    memcpy(&packed[1], ref, sizeof(jUUID));
+    memcpy(&packed[17], &sizeB, sizeof(size_t));
+    memcpy(&packed[25], data, size * 2);
+    const auto packet = enet_packet_create(packed, packetSize, 0);
+    delete[] packed;
+    return packet;
 }

@@ -156,19 +156,22 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_DISPLAY: {
-            std::cout << "[RetroClient] Received update display packet" << std::endl;
+            std::cerr << "[RetroClient] PENIS" << std::endl;
             const auto parsed = Int16ArrayPacket::unpack(packet);
             if (parsed == nullptr) {
+                std::cerr << "[RetroClient] Received invalid display packet" << std::endl;
                 return;
             }
-            const auto it = displays.find(parsed->ref.combine());
+            const auto it = displays.find(parsed->ref->combine());
             if (it == displays.end()) {
+                std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
                 return;
             }
-            memcpy(it->second->buf, &parsed->data[0], parsed->data.size() * 2);
+            memcpy(it->second->buf, parsed->data, parsed->size * 2);
             [](bool& ref) {
                 ref = true;
             }(*it->second->changed);
+            delete[] parsed;
             break;
         }
         case PACKET_UPDATE_AUDIO: {

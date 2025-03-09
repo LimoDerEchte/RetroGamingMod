@@ -22,8 +22,6 @@ enum PacketType {
     PACKET_UPDATE_CONTROLS      = 0x60,
 };
 
-jUUID packetParseUUID(const void* ptr);
-
 struct CharArrayPacket {
     PacketType type;
     std::vector<char> data;
@@ -47,10 +45,11 @@ struct Int8ArrayPacket {
 
 struct Int16ArrayPacket {
     PacketType type;
-    jUUID ref;
-    std::vector<int16_t> data;
+    const jUUID* ref;
+    void* data;
+    const size_t size;
 
-    explicit Int16ArrayPacket(PacketType type, jUUID ref, const unsigned char* ptr, size_t size);
+    explicit Int16ArrayPacket(PacketType type, const jUUID* ref, const unsigned char* ptr, size_t size);
 
     static Int16ArrayPacket* unpack(const ENetPacket* packet);
     [[nodiscard]] ENetPacket* pack() const;
