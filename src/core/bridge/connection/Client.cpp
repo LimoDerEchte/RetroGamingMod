@@ -27,10 +27,12 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
     return client->isAuthenticated();
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    client->registerDisplay(uuid, width, height);
+    const auto display = new NativeDisplay(width, height);
+    client->registerDisplay(uuid, display);
+    return reinterpret_cast<jlong>(display);
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
@@ -75,8 +77,8 @@ void RetroClient::dispose() {
     std::cout << "[RetroClient] Disconnected from ENet server" << std::endl;
 }
 
-void RetroClient::registerDisplay(const jUUID* uuid, const int width, const int height) {
-    displays.insert_or_assign(uuid->combine(), new NativeDisplay(width, height));
+void RetroClient::registerDisplay(const jUUID* uuid, const NativeDisplay* display) {
+    displays.insert_or_assign(uuid->combine(), display);
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {

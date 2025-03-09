@@ -12,7 +12,7 @@
 class RetroClient {
     ENetHost* client;
     ENetPeer* peer;
-    std::unordered_map<long, NativeDisplay*> displays;
+    std::unordered_map<long, const NativeDisplay*> displays;
     bool running = false;
     bool authenticated = false;
     const char* token;
@@ -22,7 +22,7 @@ public:
 
     void dispose();
 
-    void registerDisplay(const jUUID* uuid, int width, int height);
+    void registerDisplay(const jUUID* uuid, const NativeDisplay* display);
     void unregisterDisplay(const jUUID* uuid);
 
     void mainLoop();

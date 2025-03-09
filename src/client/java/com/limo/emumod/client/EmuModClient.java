@@ -2,6 +2,7 @@ package com.limo.emumod.client;
 
 import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.network.ClientHandler;
+import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.render.MonitorBlockEntityRenderer;
 import com.limo.emumod.client.util.ClientFilePath;
 import com.limo.emumod.registry.EmuBlockEntities;
@@ -17,6 +18,7 @@ public class EmuModClient implements ClientModInitializer {
     public void onInitializeClient() {
         mc = MinecraftClient.getInstance();
         ClientFilePath.init();
+        ScreenManager.init();
         ClientHandler.init();
 
         BlockEntityRendererFactories.register(EmuBlockEntities.MONITOR, MonitorBlockEntityRenderer::new);

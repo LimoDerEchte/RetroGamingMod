@@ -1,5 +1,6 @@
 package com.limo.emumod.client.bridge;
 
+import com.limo.emumod.bridge.NativeDisplay;
 import com.limo.emumod.bridge.NativeUtil;
 
 import java.util.UUID;
@@ -23,8 +24,9 @@ public class NativeClient {
         return isAuthenticated(handle);
     }
 
-    public void registerScreen(UUID uuid, int width, int height) {
-        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height);
+    public NativeDisplay registerScreen(UUID uuid, int width, int height) {
+        long ptr = registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height);
+        return new NativeDisplay(ptr);
     }
 
     public void unregisterScreen(UUID uuid) {
@@ -34,7 +36,7 @@ public class NativeClient {
     private static native long connect(String ip, int port, String token);
     private static native void disconnect(long ptr);
     private static native boolean isAuthenticated(long ptr);
-    private static native void registerScreen(long ptr, long uuid, int width, int height);
+    private static native long registerScreen(long ptr, long uuid, int width, int height);
     private static native void unregisterScreen(long ptr, long uuid);
     private static native void poll(long ptr);
 }

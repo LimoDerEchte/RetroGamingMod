@@ -30,6 +30,17 @@ public class ClientHandler {
     public static HashMap<UUID, BufferedAudioOutput> audioBuffer = new HashMap<>();
 
     public static void init() {
+        // ENet Stuff
+        ClientPlayNetworking.registerGlobalReceiver(S2C.ENetTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+            CLIENT = new NativeClient("127.0.0.1", payload.port(), payload.token());
+        }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            if(CLIENT != null) {
+                CLIENT.disconnect();
+                CLIENT = null;
+            }
+        });
+        // Screen Stuff
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
                 ctx.client().setScreen(switch (payload.type()) {
                     case NetworkId.ScreenType.CARTRIDGE -> new CartridgeScreen();
@@ -46,15 +57,7 @@ public class ClientHandler {
             if(mc.currentScreen instanceof CartridgeScreen screen && screen.handle == payload.handle())
                 screen.close();
         }));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.ENetTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            CLIENT = new NativeClient("127.0.0.1", payload.port(), payload.token());
-        }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            if(CLIENT != null) {
-                CLIENT.disconnect();
-                CLIENT = null;
-            }
-        });
+        // Other Stuff
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!displayBuffer.containsKey(payload.uuid()))
                 displayBuffer.put(payload.uuid(), switch (payload.type()) {
