@@ -22,6 +22,8 @@ add_library(bridge SHARED
         connection/Client.hpp
         connection/NetworkDefinitions.hpp
         connection/NetworkDefinitions.cpp
+        util/NativeUtil.cpp
+        util/NativeUtil.hpp
 )
 
 target_link_libraries(bridge Boost::interprocess unofficial::enet::enet)
