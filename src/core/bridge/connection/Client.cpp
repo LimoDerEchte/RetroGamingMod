@@ -27,7 +27,7 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
     return server->isAuthenticated();
 }
 
-RetroClient::RetroClient(const char *ip, const int port, const char *token): displays() {
+RetroClient::RetroClient(const char *ip, const int port, const char *token) {
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
         return;
@@ -121,6 +121,7 @@ void RetroClient::onMessage(const ENetPacket *packet) {
         }
         case PACKET_UPDATE_DISPLAY: {
             std::cerr << "[RetroClient] Received update display packet" << std::endl;
+
             // TODO: Update Display
         }
         case PACKET_UPDATE_AUDIO: {

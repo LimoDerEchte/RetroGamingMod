@@ -7,12 +7,11 @@
 #include <enet/enet.h>
 
 #include "util/NativeDisplay.hpp"
-#include "util/NativeUtil.hpp"
 
 class RetroClient {
     ENetHost* client;
     ENetPeer* peer;
-    std::unordered_map<jUUID, NativeDisplay*> displays;
+    std::unordered_map<long, NativeDisplay> displays;
     bool running = false;
     bool authenticated = false;
 

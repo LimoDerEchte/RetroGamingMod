@@ -7,6 +7,12 @@
 #include <cstring>
 #include <iostream>
 
+jUUID packetParseUUID(const void *ptr) {
+    auto res = jUUID();
+    memcpy(&res, ptr, sizeof(jUUID));
+    return res;
+}
+
 CharArrayPacket::CharArrayPacket(const PacketType type, const char* msg) : type(type) {
     data.assign(msg, msg + strlen(msg));
 }
@@ -59,7 +65,7 @@ ENetPacket* Int8ArrayPacket::pack() const {
     return enet_packet_create(packed, sizeof(packed), 0);
 }
 
-Int16ArrayPacket::Int16ArrayPacket(const PacketType type, const unsigned char *ptr, const size_t size) : type(type) {
+Int16ArrayPacket::Int16ArrayPacket(const PacketType type, const jUUID ref, const unsigned char *ptr, const size_t size) : type(type), ref(ref) {
     data.assign(ptr, ptr + size);
 }
 
@@ -70,15 +76,16 @@ Int16ArrayPacket * Int16ArrayPacket::unpack(const ENetPacket *packet) {
         return nullptr;
     }
     size_t size = 0;
-    memcpy(&size, &packet->data[1], sizeof(size_t));
-    return new Int16ArrayPacket(type, &packet->data[9], size);
+    memcpy(&size, &packet->data[65], sizeof(size_t));
+    return new Int16ArrayPacket(type, packetParseUUID(&packet->data[1]), &packet->data[73], size);
 }
 
 ENetPacket * Int16ArrayPacket::pack() const{
-    int8_t* packed[data.size() * 2 + 9]{};
+    int8_t* packed[data.size() * 2 + 73]{};
     const auto sizeB = reinterpret_cast<int16_t*>(data.size());
     memcpy(&packed[0], &type, 1);
-    memcpy(&packed[1], &sizeB, sizeof(size_t));
-    memcpy(&packed[9], &data[0], data.size() * 2);
+    memcpy(&packed[1], &ref, sizeof(jUUID));
+    memcpy(&packed[65], &sizeB, sizeof(size_t));
+    memcpy(&packed[73], &data[0], data.size() * 2);
     return enet_packet_create(packed, sizeof(packed), 0);
 }

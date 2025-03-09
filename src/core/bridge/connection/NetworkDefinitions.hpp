@@ -6,6 +6,8 @@
 #include <vector>
 #include <enet/enet.h>
 
+#include "util/NativeUtil.hpp"
+
 #define SERVER_MAX_CLIENTS 100
 
 enum PacketType {
@@ -19,6 +21,8 @@ enum PacketType {
     // C2S
     PACKET_UPDATE_CONTROLS      = 0x60,
 };
+
+jUUID packetParseUUID(const void* ptr);
 
 struct CharArrayPacket {
     PacketType type;
@@ -43,9 +47,10 @@ struct Int8ArrayPacket {
 
 struct Int16ArrayPacket {
     PacketType type;
+    jUUID ref;
     std::vector<int16_t> data;
 
-    explicit Int16ArrayPacket(PacketType type, const unsigned char* ptr, size_t size);
+    explicit Int16ArrayPacket(PacketType type, jUUID ref, const unsigned char* ptr, size_t size);
 
     static Int16ArrayPacket* unpack(const ENetPacket* packet);
     [[nodiscard]] ENetPacket* pack() const;
