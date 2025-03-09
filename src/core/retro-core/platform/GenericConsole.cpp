@@ -32,11 +32,7 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
             for (unsigned x = 0; x < width; ++x) {
                 const uint8_t* pixel = pixelData + y * pitch + x * 2;
                 const uint16_t rgb565 = pixel[0] | pixel[1] << 8;
-                const uint8_t r = (rgb565 >> 11 & 0x1F) << 3;
-                const uint8_t g = (rgb565 >> 5 & 0x3F) << 2;
-                const uint8_t b = (rgb565 & 0x1F) << 3;
-                constexpr uint8_t a = 0xFF;
-                gb->display[y * width + x] = a << 24 | r << 16 | g << 8 | b;
+                gb->display[y * width + x] = rgb565;
                 gb->displayChanged = true;
             }
         }
