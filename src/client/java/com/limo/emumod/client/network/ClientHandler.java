@@ -1,6 +1,7 @@
 package com.limo.emumod.client.network;
 
 import com.limo.emumod.EmuMod;
+import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.screen.CartridgeScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
@@ -10,6 +11,7 @@ import com.limo.emumod.network.S2C;
 import com.limo.emumod.util.AudioCompression;
 import com.limo.emumod.util.VideoCompression;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.entity.TrackedPosition;
@@ -20,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.limo.emumod.client.EmuModClient.CLIENT;
 import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
@@ -43,6 +46,15 @@ public class ClientHandler {
             if(mc.currentScreen instanceof CartridgeScreen screen && screen.handle == payload.handle())
                 screen.close();
         }));
+        ClientPlayNetworking.registerGlobalReceiver(S2C.ENetTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+            CLIENT = new NativeClient("127.0.0.1", payload.port(), payload.token());
+        }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            if(CLIENT != null) {
+                CLIENT.disconnect();
+                CLIENT = null;
+            }
+        });
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             if(!displayBuffer.containsKey(payload.uuid()))
                 displayBuffer.put(payload.uuid(), switch (payload.type()) {

@@ -51,6 +51,20 @@ public class S2C {
         }
     }
 
+    public record ENetTokenPayload(int port, String token) implements CustomPayload {
+        public static final Id<ENetTokenPayload> ID = new Id<>(NetworkId.ENET_TOKEN);
+        public static final PacketCodec<RegistryByteBuf, ENetTokenPayload> CODEC = PacketCodec.tuple(
+                PacketCodecs.INTEGER, ENetTokenPayload::port,
+                PacketCodecs.STRING, ENetTokenPayload::token,
+                ENetTokenPayload::new
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
     public record UpdateDisplayDataPayload(UUID uuid, byte type, byte[] data) implements CustomPayload {
         public static final Id<UpdateDisplayDataPayload> ID = new Id<>(NetworkId.UPDATE_DISPLAY_DATA);
         public static final PacketCodec<RegistryByteBuf, UpdateDisplayDataPayload> CODEC = PacketCodec.tuple(
@@ -84,6 +98,7 @@ public class S2C {
         PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenGameScreenPayload.ID, OpenGameScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ENetTokenPayload.ID, ENetTokenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateDisplayDataPayload.ID, UpdateDisplayDataPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateAudioDataPayload.ID, UpdateAudioDataPayload.CODEC);
     }

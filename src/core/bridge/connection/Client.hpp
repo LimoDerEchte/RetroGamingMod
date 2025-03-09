@@ -15,6 +15,7 @@ class RetroClient {
     std::unordered_map<long, NativeDisplay*> displays;
     bool running = false;
     bool authenticated = false;
+    const char* token;
 
 public:
     RetroClient(const char* ip, int port, const char* token);

@@ -23,8 +23,8 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer(JNIEn
 
 JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(JNIEnv *env, jclass, const jlong ptr) {
     const auto server = reinterpret_cast<RetroServer*>(ptr);
-    const auto token = reinterpret_cast<const jchar*>(server->genToken().data());
-    return env->NewString(token, 32);
+    const auto token = server->genToken();
+    return env->NewStringUTF(std::string(token, 32).c_str());
 }
 
 RetroServer::RetroServer(const int port) {
@@ -45,13 +45,16 @@ RetroServer::RetroServer(const int port) {
     std::thread([&] {
         mainLoop();
     }).detach();
+    std::cout << "[RetroServer] Started ENet server on port " << port << std::endl;
 }
 
-std::array<char, 32> RetroServer::genToken() const {
-    std::array<char, 32> stdArr = {0};
-    GenerateID(stdArr.data());
+char* RetroServer::genToken() const {
+    const auto data = new char[32];
+    GenerateID(data);
+    std::array<char, 32> stdArr = {};
+    memcpy(stdArr.data(), data, 32);
     tokens->push_back(stdArr);
-    return stdArr;
+    return data;
 }
 
 void RetroServer::dispose() {
@@ -61,6 +64,7 @@ void RetroServer::dispose() {
         server = nullptr;
     }
     enet_deinitialize();
+    std::cout << "[RetroServer] Stopped ENet server" << std::endl;
 }
 
 void RetroServer::mainLoop() const {
@@ -76,15 +80,19 @@ void RetroServer::mainLoop() const {
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE: {
                 std::cerr << "[RetroServer] Event received an ENET_EVENT_TYPE_NONE" << std::endl;
+                break;
             }
             case ENET_EVENT_TYPE_CONNECT: {
                 onConnect(event.peer);
+                break;
             }
             case ENET_EVENT_TYPE_DISCONNECT: {
                 onDisconnect(event.peer);
+                break;
             }
             case ENET_EVENT_TYPE_RECEIVE: {
                 onMessage(event.peer, event.packet);
+                break;
             }
         }
     }
@@ -97,13 +105,18 @@ void RetroServer::onConnect(ENetPeer *peer) const {
 
 void RetroServer::onDisconnect(ENetPeer *peer) const {
     std::erase_if(*clients, [peer](const RetroServerClient* client) {
-        return client->peer == peer;
+        return client != nullptr && client->peer == peer;
     });
 }
 
 void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
+    if (packet == nullptr) {
+        std::cerr << "[RetroServer] Received packet is nullptr from " << peer->incomingPeerID << std::endl;
+        return;
+    }
     if (packet->dataLength == 0) {
         std::cerr << "[RetroServer] Received empty packet from " << peer->incomingPeerID << std::endl;
+        return;
     }
     const auto client = findClientByPeer(peer);
     const auto type = static_cast<PacketType>(packet->data[0]);
@@ -113,6 +126,10 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
     }
     switch (type) {
         case PACKET_AUTH: {
+            if (client->isAuthenticated) {
+                std::cerr << "[RetroServer] Received auth packet after auth from " << peer->incomingPeerID << std::endl;
+                return;
+            }
             std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
@@ -123,20 +140,27 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) const {
             });
             if (!client->isAuthenticated) {
                 kick(peer, "Invalid token");
+                std::cerr << "[RetroServer] Kicking connection with invalid token (" << client->peer->incomingPeerID << ")" << std::endl;
+            } else {
+                std::cout << "[RetroServer] Successfully authorized connection (" << client->peer->incomingPeerID << ")" << std::endl;
             }
+            break;
         }
         case PACKET_UPDATE_CONTROLS: {
             std::cerr << "[RetroServer] Received update controls packet" << std::endl;
             // TODO: Update Controls
+            break;
         }
         case PACKET_AUTH_ACK:
         case PACKET_KICK:
         case PACKET_UPDATE_DISPLAY:
         case PACKET_UPDATE_AUDIO: {
             std::cerr << "[RetroServer] Received S2C packet on server" << std::endl;
+            break;
         }
         default: {
             std::cerr << "[RetroServer] Unknown C2S packet type" << std::hex << type << std::endl;
+            break;
         }
     }
 }

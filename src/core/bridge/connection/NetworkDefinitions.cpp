@@ -71,7 +71,7 @@ Int16ArrayPacket::Int16ArrayPacket(const PacketType type, const jUUID ref, const
 
 Int16ArrayPacket * Int16ArrayPacket::unpack(const ENetPacket *packet) {
     const auto type = static_cast<PacketType>(packet->data[0]);
-    if (packet->dataLength < 9) {
+    if (packet->dataLength < 73) {
         std::cerr << "[RetroPacket] Int16arr packet too small (" << type << ")" << std::endl;
         return nullptr;
     }

@@ -39,7 +39,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     client->unregisterDisplay(uuid);
 }
 
-RetroClient::RetroClient(const char *ip, const int port, const char *token) {
+RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
         return;
@@ -63,11 +63,6 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token) {
     std::thread([&] {
         mainLoop();
     }).detach();
-    // Auth Packet
-    int8_t pak[33]{};
-    pak[0] = PACKET_AUTH;
-    memcpy(&pak[1], token, 32);
-    enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
 }
 
 void RetroClient::dispose() {
@@ -77,6 +72,7 @@ void RetroClient::dispose() {
         client = nullptr;
     }
     enet_deinitialize();
+    std::cout << "[RetroClient] Disconnected from ENet server" << std::endl;
 }
 
 void RetroClient::registerDisplay(const jUUID* uuid, const int width, const int height) {
@@ -100,36 +96,52 @@ void RetroClient::mainLoop() {
         switch (event.type) {
             case ENET_EVENT_TYPE_NONE: {
                 std::cerr << "[RetroClient] Event received an ENET_EVENT_TYPE_NONE" << std::endl;
+                break;
             }
             case ENET_EVENT_TYPE_CONNECT: {
                 onConnect();
+                break;
             }
             case ENET_EVENT_TYPE_DISCONNECT: {
                 onDisconnect();
+                break;
             }
             case ENET_EVENT_TYPE_RECEIVE: {
                 onMessage(event.packet);
+                break;
             }
         }
     }
 }
 
 void RetroClient::onConnect() const {
-    std::cerr << "[RetroClient] Connection established on " << peer->address.port << std::endl;
+    std::cout << "[RetroClient] Connection established to " << peer->address.port << std::endl;
+    // Auth Packet
+    int8_t pak[33]{};
+    pak[0] = PACKET_AUTH;
+    memcpy(&pak[1], token, 32);
+    enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
+    std::cout << "[RetroClient] Authorizing with token " << token << std::endl;
 }
 
 void RetroClient::onDisconnect() {
-    std::cerr << "[RetroClient] Disconnected on " << peer->address.port << std::endl;
     dispose();
 }
 
 void RetroClient::onMessage(const ENetPacket *packet) {
+    if (packet == nullptr) {
+        std::cerr << "[RetroClient] Received packet is nullptr" << std::endl;
+        return;
+    }
     if (packet->dataLength == 0) {
         std::cerr << "[RetroClient] Received empty packet from server" << std::endl;
+        return;
     }
     switch (const auto type = static_cast<PacketType>(packet->data[0])) {
         case PACKET_AUTH_ACK: {
             authenticated = true;
+            std::cout << "[RetroClient] Connection token accepted by server" << std::endl;
+            break;
         }
         case PACKET_KICK: {
             const auto kick = CharArrayPacket::unpack(packet);
@@ -138,10 +150,14 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             }
             const char* str = &kick->data[0];
             std::cerr << "[RetroClient] Received kick packet: " << std::string(str, strlen(str)) << std::endl;
+            break;
         }
         case PACKET_UPDATE_DISPLAY: {
-            std::cerr << "[RetroClient] Received update display packet" << std::endl;
+            std::cout << "[RetroClient] Received update display packet" << std::endl;
             const auto parsed = Int16ArrayPacket::unpack(packet);
+            if (parsed == nullptr) {
+                return;
+            }
             const auto it = displays.find(parsed->ref.combine());
             if (it == displays.end()) {
                 return;
@@ -150,17 +166,21 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             [](bool& ref) {
                 ref = true;
             }(*it->second->changed);
+            break;
         }
         case PACKET_UPDATE_AUDIO: {
-            std::cerr << "[RetroClient] Received update audio packet" << std::endl;
+            std::cout << "[RetroClient] Received update audio packet" << std::endl;
             // TODO: Update Audio
+            break;
         }
         case PACKET_AUTH:
         case PACKET_UPDATE_CONTROLS: {
             std::cerr << "[RetroClient] Received C2S packet on client" << std::endl;
+            break;
         }
         default: {
             std::cerr << "[RetroClient] Unknown C2S packet type" << std::hex << type << std::endl;
+            break;
         }
     }
 }

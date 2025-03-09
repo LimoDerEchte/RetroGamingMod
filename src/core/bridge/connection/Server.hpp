@@ -24,7 +24,7 @@ class RetroServer {
 public:
     explicit RetroServer(int port);
 
-    [[nodiscard]] std::array<char, 32> genToken() const;
+    [[nodiscard]] char* genToken() const;
     void dispose();
 
     void mainLoop() const;
@@ -38,9 +38,10 @@ public:
 
 inline RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
     for (const auto element : *clients) {
-        if (element->peer == peer) {
-            return element;
+        if (element == nullptr || element->peer != peer) {
+            continue;
         }
+        return element;
     }
     return nullptr;
 }

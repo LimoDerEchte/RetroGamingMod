@@ -3,6 +3,8 @@ package com.limo.emumod.network;
 import net.minecraft.util.Identifier;
 
 public class NetworkId {
+    public static final Identifier ENET_TOKEN = Identifier.of("emumod", "enet_token");
+
     public static final Identifier OPEN_SCREEN = Identifier.of("emumod", "open_screen");
     public static final Identifier OPEN_GAME_SCREEN = Identifier.of("emumod", "open_game_screen");
     public static final Identifier CLOSE_SCREEN = Identifier.of("emumod", "close_screen");
