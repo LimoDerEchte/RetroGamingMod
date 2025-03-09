@@ -10,7 +10,7 @@
 #include <headers/com_limo_emumod_bridge_NativeServer.h>
 
 #include "NetworkDefinitions.hpp"
-#include "util/util.hpp"
+#include "util/NativeUtil.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port) {
     return reinterpret_cast<jlong>(new RetroServer(port));

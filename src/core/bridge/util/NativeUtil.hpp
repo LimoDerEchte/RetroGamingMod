@@ -8,3 +8,5 @@ struct  jUUID {
     long mostSignificantBits;
     long leastSignificantBits;
 };
+
+void GenerateID(char* id, const int length = 32);

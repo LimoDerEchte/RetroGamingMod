@@ -8,7 +8,7 @@
 #include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
 #include <jni.h>
 
-#include "util/util.hpp"
+#include "util/NativeUtil.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jint width, const jint height) {
     return reinterpret_cast<jlong>(new GenericConsole(width, height));

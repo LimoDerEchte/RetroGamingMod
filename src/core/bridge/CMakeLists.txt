@@ -12,7 +12,6 @@ add_library(bridge SHARED
         util/NativeDisplay.cpp
         platform/GenericConsole.cpp
         platform/GenericConsole.hpp
-        util/util.hpp
         util/NativeDisplay.hpp
         util/NativeAudio.cpp
         util/NativeAudio.hpp

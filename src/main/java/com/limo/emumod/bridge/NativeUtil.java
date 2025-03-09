@@ -1,11 +1,16 @@
 package com.limo.emumod.bridge;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class NativeUtil {
+    private static final Map<UUID, Long> knownUuids = new HashMap<>();
 
     public static long nativeUUID(UUID uuid) {
-        return nativeUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+        if(!knownUuids.containsKey(uuid))
+            knownUuids.put(uuid, nativeUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
+        return knownUuids.get(uuid);
     }
 
     public static UUID nativeUUID(long uuid) {
