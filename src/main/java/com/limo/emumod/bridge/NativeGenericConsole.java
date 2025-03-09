@@ -15,10 +15,10 @@ public class NativeGenericConsole {
         pointer = init(width, height);
     }
 
-    public void load(UUID file) {
+    public void load(File core, UUID file) {
         File rom = FileUtil.idToFile(file, "cart");
         File save = FileUtil.idToFile(file, "save");
-        start(pointer, RequirementManager.core.getAbsolutePath(), RequirementManager.mGBA.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
+        start(pointer, RequirementManager.core.getAbsolutePath(), core.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
     }
 
     public void stop() {

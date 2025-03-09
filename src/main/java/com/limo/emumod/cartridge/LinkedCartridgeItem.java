@@ -1,5 +1,6 @@
 package com.limo.emumod.cartridge;
 
+import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.minecraft.component.ComponentMap;
@@ -16,19 +17,17 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
-    private final Supplier<ItemStack> linkItem;
+    public Item linkItem;
     private final Runnable clearLinkItem;
     private final Consumer<UUID> start;
 
-    public LinkedCartridgeItem(RegistryKey<Item> key, Supplier<ItemStack> linkItem, Runnable clearLinkItem, Consumer<UUID> start) {
+    public LinkedCartridgeItem(RegistryKey<Item> key, Runnable clearLinkItem, Consumer<UUID> start) {
         super(new Settings().maxCount(1).registryKey(key));
-        this.linkItem = linkItem;
         this.clearLinkItem = clearLinkItem;
         this.start = start;
     }
@@ -43,14 +42,16 @@ public class LinkedCartridgeItem extends Item {
         if(world.isClient())
             return super.use(world, user, hand);
         ItemStack stack = user.getStackInHand(hand);
-        ItemStack link = linkItem.get();
-        if(link != null && link.getCount() > 0 && hasGame(stack)) {
+        ItemStack link = GenericHandheldItem.link != null && GenericHandheldItem.link.getItem() == linkItem ?
+                GenericHandheldItem.link : ItemStack.EMPTY;
+        if(link.getCount() > 0 && hasGame(stack)) {
             UUID id = stack.getComponents().get(FILE_ID);
             File file = FileUtil.idToFile(id, "cart");
             if(!file.exists()) {
                 stack.setCount(0);
                 user.getInventory().insertStack(new ItemStack(EmuItems.BROKEN_CARTRIDGE));
-                user.sendMessage(Text.translatable("item.emumod.handheld.file_deleted").formatted(Formatting.RED), true);
+                user.sendMessage(Text.translatable("item.emumod.handheld.file_deleted")
+                        .formatted(Formatting.RED), true);
             } else {
                 link.applyComponentsFrom(ComponentMap.builder()
                         .add(GAME, stack.getComponents().get(GAME))
