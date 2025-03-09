@@ -1,7 +1,5 @@
 package com.limo.emumod.cartridge;
 
-import com.limo.emumod.bridge.NativeGenericConsole;
-import com.limo.emumod.gameboy.GameboyItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.minecraft.component.ComponentMap;
@@ -52,14 +50,14 @@ public class LinkedCartridgeItem extends Item {
             if(!file.exists()) {
                 stack.setCount(0);
                 user.getInventory().insertStack(new ItemStack(EmuItems.BROKEN_CARTRIDGE));
-                user.sendMessage(Text.translatable("item.emumod.gameboy.file_deleted").formatted(Formatting.RED), true);
+                user.sendMessage(Text.translatable("item.emumod.handheld.file_deleted").formatted(Formatting.RED), true);
             } else {
                 link.applyComponentsFrom(ComponentMap.builder()
                         .add(GAME, stack.getComponents().get(GAME))
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
                 clearLinkItem.run();
                 stack.setCount(0);
-                user.sendMessage(Text.translatable("item.emumod.gameboy.insert"), true);
+                user.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);
                 start.accept(id);
             }
         }

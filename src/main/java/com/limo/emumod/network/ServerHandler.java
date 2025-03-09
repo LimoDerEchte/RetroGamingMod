@@ -1,7 +1,7 @@
 package com.limo.emumod.network;
 
 import com.limo.emumod.cartridge.CartridgeItem;
-import com.limo.emumod.gameboy.GameboyItem;
+import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -31,7 +31,7 @@ public class ServerHandler {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             DisplaySyncer.stop();
             AudioSyncer.stop();
-            GameboyItem.running.forEach((ignore, nat) -> {
+            GenericHandheldItem.running.forEach((ignore, nat) -> {
                 nat.stop();
             });
         });
@@ -79,8 +79,8 @@ public class ServerHandler {
         });
         ServerPlayNetworking.registerGlobalReceiver(C2S.UpdateGameControls.ID, (payload, ctx) -> {
             // Gameboys
-            if(GameboyItem.running.containsKey(payload.uuid())) {
-                GameboyItem.running.get(payload.uuid()).updateInput(payload.input());
+            if(GenericHandheldItem.running.containsKey(payload.uuid())) {
+                GenericHandheldItem.running.get(payload.uuid()).updateInput(payload.input());
             }
         });
     }

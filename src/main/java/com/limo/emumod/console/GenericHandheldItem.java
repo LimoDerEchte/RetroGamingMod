@@ -1,10 +1,8 @@
-package com.limo.emumod.gameboy;
+package com.limo.emumod.console;
 
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
-import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
-import com.limo.emumod.registry.EmuItems;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,13 +24,17 @@ import java.util.UUID;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
-public class GameboyItem extends Item {
+public class GenericHandheldItem extends Item {
     public static long lastInteractionTime;
     public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
     public static ItemStack link;
+    private final byte screenType;
+    private final Item cartridgeType;
 
-    public GameboyItem(RegistryKey<Item> type) {
+    public GenericHandheldItem(RegistryKey<Item> type, byte screenType, Item cartridgeType) {
         super(new Settings().maxCount(1).registryKey(type));
+        this.screenType = screenType;
+        this.cartridgeType = cartridgeType;
     }
 
     @Override
@@ -53,9 +55,7 @@ public class GameboyItem extends Item {
         if(user.isSneaking() && System.currentTimeMillis() > lastInteractionTime + 1000) {
             lastInteractionTime = System.currentTimeMillis();
             if(LinkedCartridgeItem.hasGame(stack)) {
-                ItemStack cart = new ItemStack(stack.getItem() ==
-                        EmuItems.GAMEBOY_ADVANCE ? EmuItems.GAMEBOY_ADVANCE_CARTRIDGE : stack.getItem() ==
-                        EmuItems.GAMEBOY_COLOR ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE);
+                ItemStack cart = new ItemStack(cartridgeType);
                 cart.applyComponentsFrom(ComponentMap.builder()
                         .add(GAME, stack.getComponents().get(GAME))
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
@@ -66,26 +66,23 @@ public class GameboyItem extends Item {
                 running.remove(stack.getComponents().get(FILE_ID));
                 stack.remove(GAME);
                 stack.remove(FILE_ID);
-                user.sendMessage(Text.translatable("item.emumod.gameboy.eject"), true);
+                user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
             } else {
                 if(link != null) {
                     link = null;
-                    user.sendMessage(Text.translatable("item.emumod.gameboy.cancel_link"), true);
+                    user.sendMessage(Text.translatable("item.emumod.handheld.cancel_link"), true);
                 } else {
                     link = user.getStackInHand(hand);
-                    user.sendMessage(Text.translatable("item.emumod.gameboy.start_link"), true);
+                    user.sendMessage(Text.translatable("item.emumod.handheld.start_link"), true);
                 }
             }
         } else {
             if(!stack.hasChangedComponent(FILE_ID)) {
-                user.sendMessage(Text.translatable("item.emumod.gameboy.no_game"), true);
+                user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
                 return ActionResult.PASS;
             }
-            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
-                    stack.getItem() == EmuItems.GAMEBOY_ADVANCE ? NetworkId.ScreenType.GAMEBOY_ADVANCE :
-                    stack.getItem() == EmuItems.GAMEBOY_COLOR ? NetworkId.ScreenType.GAMEBOY_COLOR :
-                    NetworkId.ScreenType.GAMEBOY, stack.getComponents().get(FILE_ID)
-            ));
+            ServerPlayNetworking.send((ServerPlayerEntity) user,
+                    new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID)));
         }
         return ActionResult.PASS;
     }
