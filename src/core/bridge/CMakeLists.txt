@@ -25,7 +25,7 @@ add_library(bridge SHARED
         util/NativeUtil.hpp
 )
 
-target_link_libraries(bridge Boost::interprocess unofficial::enet::enet)
+target_link_libraries(bridge Boost::interprocess Boost::process unofficial::enet::enet)
 
 # Post Build
 add_custom_command(TARGET bridge POST_BUILD
