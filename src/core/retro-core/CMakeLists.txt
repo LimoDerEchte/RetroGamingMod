@@ -4,6 +4,10 @@ include_directories(
         ../shared
 )
 
+if(WIN32)
+    include_directories(/mingw64/include/)
+endif()
+
 add_executable(retro-core main.cpp
         ../shared/SharedStructs.hpp
         ../lib/libretro-common/include/libretro.h

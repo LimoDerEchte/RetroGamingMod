@@ -1,5 +1,9 @@
 
-find_package(JNI REQUIRED)
+if(WIN32)
+    set(JNI_INCLUDE_DIRS ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+else()
+    find_package(JNI REQUIRED)
+endif()
 
 include_directories(
         .
