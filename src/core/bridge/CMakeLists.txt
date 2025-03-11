@@ -23,12 +23,7 @@ target_include_directories(bridge PRIVATE
         ${JNI_INCLUDE_DIRS}
 )
 
-target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet)
-
-# FFmpeg
-target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_directories(bridge PRIVATE ${FFMPEG_LIBRARY_DIRS})
-target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
+target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet PkgConfig::dav1d)
 
 # Post Build
 add_custom_command(TARGET bridge POST_BUILD

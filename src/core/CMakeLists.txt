@@ -11,7 +11,8 @@ find_package(JNI REQUIRED)
 find_package(boost_interprocess CONFIG REQUIRED)
 find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
-find_package(FFMPEG REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
 
 # Actual Projects
 add_subdirectory(bridge)
