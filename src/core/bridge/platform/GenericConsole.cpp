@@ -28,9 +28,9 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop(JNI
     gameboy->dispose();
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateInput(JNIEnv *, jclass, const jlong ptr, const jshort input) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateInput(JNIEnv *, jclass, const jlong ptr, const jint port, const jshort input) {
     const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
-    gameboy->input(input);
+    gameboy->input(port, input);
 }
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createDisplay(JNIEnv *, jclass, const jlong ptr) {
@@ -95,10 +95,10 @@ NativeAudio *GenericConsole::getAudio() const {
     return nativeAudio;
 }
 
-void GenericConsole::input(const int16_t input) {
+void GenericConsole::input(const int port, const int16_t input) {
     std::lock_guard lock(mutex);
     if (retroCoreHandle != nullptr) {
-        retroCoreHandle->controls = input;
+        retroCoreHandle->controls[port] = input;
     }
 }
 

@@ -36,7 +36,7 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
                 gb->displayChanged = true;
             }
         }
-        g_instance->inputData = gb->controls;
+        memcpy(&g_instance->inputData[0], &gb->controls[0], sizeof(gb->controls));
     });
     g_instance->setAudioCallback([gb](const int16_t* data, size_t pitch) {
         if (pitch > 4096) {

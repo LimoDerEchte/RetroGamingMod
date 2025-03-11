@@ -26,10 +26,11 @@ public class C2S {
         }
     }
 
-    public record UpdateGameControls(UUID uuid, short input) implements CustomPayload {
+    public record UpdateGameControls(UUID uuid, int port, short input) implements CustomPayload {
         public static final Id<UpdateGameControls> ID = new Id<>(NetworkId.UPDATE_CONTROLS);
         public static final PacketCodec<RegistryByteBuf, UpdateGameControls> CODEC = PacketCodec.tuple(
                 Uuids.PACKET_CODEC, UpdateGameControls::uuid,
+                PacketCodecs.VAR_INT, UpdateGameControls::port,
                 PacketCodecs.SHORT, UpdateGameControls::input,
                 UpdateGameControls::new
         );

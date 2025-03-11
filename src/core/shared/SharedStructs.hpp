@@ -11,5 +11,5 @@ struct GenericShared {
     int16_t audio[8192] = {};
     size_t audioSize = 0;
     // Host to Client
-    int16_t controls = 0;
+    int16_t controls[4]{};
 };

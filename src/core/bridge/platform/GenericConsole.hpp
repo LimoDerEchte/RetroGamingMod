@@ -35,7 +35,7 @@ public:
     [[nodiscard]] NativeDisplay *getDisplay() const;
     [[nodiscard]] NativeAudio *getAudio() const;
 
-    void input(int16_t input);
+    void input(int port, int16_t input);
 };
 
 class GenericConsoleRegistry {

@@ -34,10 +34,10 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole
  * Method:    updateInput
- * Signature: (JS)V
+ * Signature: (JIS)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateInput
-  (JNIEnv *, jclass, jlong, jshort);
+  (JNIEnv *, jclass, jlong, jint, jshort);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole

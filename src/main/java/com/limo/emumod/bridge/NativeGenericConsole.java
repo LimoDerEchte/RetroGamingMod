@@ -1,5 +1,6 @@
 package com.limo.emumod.bridge;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
 
@@ -39,8 +40,12 @@ public class NativeGenericConsole {
         return nativeAudio;
     }
 
-    public void updateInput(short input) {
-        updateInput(pointer, input);
+    public void updateInput(int port, short input) {
+        if(port < 0 || port > 4) {
+            EmuMod.LOGGER.warn("Invalid controls port number: {}", port);
+            return;
+        }
+        updateInput(pointer, port, input);
     }
 
     public int getWidth() {
@@ -55,7 +60,7 @@ public class NativeGenericConsole {
     private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
 
-    private native static void updateInput(long pointer, short input);
+    private native static void updateInput(long pointer, int port, short input);
     private native static long createDisplay(long pointer);
     private native static long createAudio(long pointer);
 

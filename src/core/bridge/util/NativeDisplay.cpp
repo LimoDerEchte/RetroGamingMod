@@ -27,7 +27,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeDisplay_update(JNIEnv *
     [](bool &ref) {
         ref = false;
     }(*nativeDisplay->changed);
-    int jDisplay[nativeDisplay->bufSize];
+    jint jDisplay[nativeDisplay->bufSize];
     for (unsigned y = 0; y < nativeDisplay->height; ++y) {
         for (unsigned x = 0; x < nativeDisplay->width; ++x) {
             const auto rgb565 = nativeDisplay->buf[y * nativeDisplay->width + x];

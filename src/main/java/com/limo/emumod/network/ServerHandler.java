@@ -98,7 +98,7 @@ public class ServerHandler {
         ServerPlayNetworking.registerGlobalReceiver(C2S.UpdateGameControls.ID, (payload, ctx) -> {
             // Gameboys
             if(GenericHandheldItem.running.containsKey(payload.uuid())) {
-                GenericHandheldItem.running.get(payload.uuid()).updateInput(payload.input());
+                GenericHandheldItem.running.get(payload.uuid()).updateInput(payload.port(), payload.input());
             }
         });
     }

@@ -41,7 +41,7 @@ public class GameboyScreen extends Screen {
 
     public GameboyScreen(boolean isGbc, UUID fileId) {
         super(Text.of("Gameboy"));
-        this.controlHandler = new ControlHandler(inputMap, fileId);
+        this.controlHandler = new ControlHandler(inputMap, fileId, 0);
         this.frameTexture = new NativeImageBackedTexture(160, 144, false);
         this.screenTexture = Identifier.of("emumod", "gb_screen_" + texIncrement++);
         MinecraftClient.getInstance().getTextureManager().registerTexture(screenTexture, frameTexture);
