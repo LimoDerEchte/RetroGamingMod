@@ -1,13 +1,4 @@
 
-include_directories(
-        .
-        ../shared
-)
-
-if(WIN32)
-    include_directories(/mingw64/include/)
-endif()
-
 add_executable(retro-core main.cpp
         ../shared/SharedStructs.hpp
         ../lib/libretro-common/include/libretro.h
@@ -17,7 +8,12 @@ add_executable(retro-core main.cpp
         platform/GenericConsole.hpp
 )
 
-target_link_libraries(retro-core Boost::interprocess)
+target_include_directories(retro-core PRIVATE
+        .
+        ../shared
+)
+
+target_link_libraries(retro-core PRIVATE Boost::interprocess)
 
 # Post Build
 add_custom_command(TARGET retro-core POST_BUILD

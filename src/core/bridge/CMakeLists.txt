@@ -1,16 +1,4 @@
 
-if(WIN32)
-    set(JNI_INCLUDE_DIRS ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
-else()
-    find_package(JNI REQUIRED)
-endif()
-
-include_directories(
-        .
-        ../shared
-        ${JNI_INCLUDE_DIRS}
-)
-
 add_library(bridge SHARED
         ../shared/SharedStructs.hpp
         util/NativeDisplay.cpp
@@ -29,7 +17,18 @@ add_library(bridge SHARED
         util/NativeUtil.hpp
 )
 
-target_link_libraries(bridge Boost::interprocess Boost::process unofficial::enet::enet)
+target_include_directories(bridge PRIVATE
+        .
+        ../shared
+        ${JNI_INCLUDE_DIRS}
+)
+
+target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet)
+
+# FFmpeg
+target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_link_directories(bridge PRIVATE ${FFMPEG_LIBRARY_DIRS})
+target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
 
 # Post Build
 add_custom_command(TARGET bridge POST_BUILD
