@@ -10,8 +10,6 @@
 
 class LibRetroCore {
 public:
-    int16_t inputData[4] = {};
-
     explicit LibRetroCore(std::string corePath);
     ~LibRetroCore();
     bool loadCore();
@@ -19,6 +17,7 @@ public:
     void runCore() const;
     void setVideoFrameCallback(const std::function<void(const int*, unsigned, unsigned, size_t)> &callback);
     void setAudioCallback(std::function<void(const int16_t*, size_t)> const &callback);
+    void setInputCallback(std::function<int16_t(unsigned port, unsigned id)> const &callback);
     void dispose() const;
 
     LibRetroCore(const LibRetroCore&) = delete;
@@ -29,6 +28,7 @@ private:
     void* coreHandle;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
     std::function<void(const int16_t*, size_t)> audioCallback;
+    std::function<int16_t(unsigned port, unsigned id)> inputCallback;
 
     typedef void (*retro_init_t)();
     typedef void (*retro_deinit_t)();
@@ -43,6 +43,8 @@ private:
     typedef void (*retro_set_audio_sample_batch_t)(size_t (*)(const int16_t *data, size_t frames));
     typedef void (*retro_get_system_info_t)(retro_system_info *info);
     typedef void (*retro_get_system_av_info_t)(retro_system_av_info *info);
+    typedef void *(*retro_get_memory_data_t)(unsigned id);
+    typedef size_t (*retro_get_memory_size_t)(unsigned id);
 
     retro_init_t retro_init;
     retro_deinit_t retro_deinit;
@@ -57,6 +59,8 @@ private:
     retro_set_audio_sample_batch_t retro_set_audio_sample_batch;
     retro_get_system_info_t retro_get_system_info;
     retro_get_system_av_info_t retro_get_system_av_info;
+    retro_get_memory_data_t retro_get_memory_data;
+    retro_get_memory_size_t retro_get_memory_size;
 
     static void videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch);
     static bool environmentCallback(unsigned cmd, void* data);

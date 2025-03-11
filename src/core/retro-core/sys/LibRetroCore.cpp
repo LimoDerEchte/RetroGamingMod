@@ -11,22 +11,20 @@ static retro_system_info g_system_info = {nullptr};
 static retro_system_av_info g_av_info = {};
 
 static void log_printf(retro_log_level level, const char *fmt, ...) {
+    /* Ignore logs to prevent spamming for now
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
-    va_end(args);
+    va_end(args);*/
 }
 
 LibRetroCore::LibRetroCore(std::string corePath)
-    : corePath(std::move(corePath)), coreHandle(nullptr),
-      retro_init(nullptr), retro_deinit(nullptr),
-      retro_run(nullptr), retro_load_game(nullptr),
-      retro_unload_game(nullptr), retro_set_video_refresh(nullptr),
-      retro_set_environment(nullptr), retro_set_input_poll(nullptr),
-      retro_set_input_state(nullptr), retro_set_audio_sample(nullptr),
-      retro_set_audio_sample_batch(nullptr), retro_get_system_info(nullptr),
-      retro_get_system_av_info(nullptr)
+    : corePath(std::move(corePath)), coreHandle(nullptr), retro_init(nullptr), retro_deinit(nullptr),
+      retro_run(nullptr), retro_load_game(nullptr), retro_unload_game(nullptr), retro_set_video_refresh(nullptr),
+      retro_set_environment(nullptr), retro_set_input_poll(nullptr), retro_set_input_state(nullptr),
+      retro_set_audio_sample(nullptr), retro_set_audio_sample_batch(nullptr), retro_get_system_info(nullptr),
+      retro_get_system_av_info(nullptr), retro_get_memory_data(nullptr), retro_get_memory_size(nullptr)
 {
     g_instance = this;
 }
@@ -60,6 +58,8 @@ bool LibRetroCore::loadCore() {
     retro_set_audio_sample_batch = (retro_set_audio_sample_batch_t) dlsym(coreHandle, "retro_set_audio_sample_batch");
     retro_get_system_info = (retro_get_system_info_t) dlsym(coreHandle, "retro_get_system_info");
     retro_get_system_av_info = (retro_get_system_av_info_t) dlsym(coreHandle, "retro_get_system_av_info");
+    retro_get_memory_data = (retro_get_memory_data_t) dlsym(coreHandle, "retro_get_memory_data");
+    retro_get_memory_size = (retro_get_memory_size_t) dlsym(coreHandle, "retro_get_memory_size");
 
     if (!retro_init || !retro_deinit || !retro_run || !retro_load_game || !retro_unload_game ||
         !retro_set_video_refresh || !retro_set_environment || !retro_set_input_poll ||
@@ -133,6 +133,10 @@ void LibRetroCore::setAudioCallback(const std::function<void(const int16_t*, siz
     audioCallback = callback;
 }
 
+void LibRetroCore::setInputCallback(const std::function<int16_t(unsigned port, unsigned id)> &callback) {
+    inputCallback = callback;
+}
+
 void LibRetroCore::dispose() const {
     retro_unload_game();
     retro_deinit();
@@ -182,7 +186,9 @@ void LibRetroCore::inputPollCallback() {
 }
 
 int16_t LibRetroCore::inputStateCallback(const unsigned port, unsigned device, unsigned index, const unsigned id) {
-    return g_instance->inputData[port] & 1 << id ? 0x7FFF : 0;
+    if (!g_instance->inputCallback)
+        return 0;
+    return g_instance->inputCallback(port, id);
 }
 
 void LibRetroCore::audioSampleCallback(int16_t left, int16_t right) {

@@ -1,6 +1,5 @@
 package com.limo.emumod.client.render;
 
-import com.limo.emumod.client.network.ClientHandler;
 import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
@@ -76,13 +75,13 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         Matrix4f modelMatrix = matrices.peek().getPositionMatrix();
         MatrixStack.Entry normalMatrix = matrices.peek();
 
-        vertexConsumer.vertex(modelMatrix, 1/16f, 3/8f, 2.999f/16f).color(255, 255, 255, 255)
+        vertexConsumer.vertex(modelMatrix, 1/16f, 3/8f, 2.99f/16f).color(255, 255, 255, 255)
                 .texture(1.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 15/16f, 3/8f, 2.999f/16f).color(255, 255, 255, 255)
+        vertexConsumer.vertex(modelMatrix, 15/16f, 3/8f, 2.99f/16f).color(255, 255, 255, 255)
                 .texture(0.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 15/16f, 1f, 2.999f/16f).color(255, 255, 255, 255)
+        vertexConsumer.vertex(modelMatrix, 15/16f, 1f, 2.99f/16f).color(255, 255, 255, 255)
                 .texture(0.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 1/16f, 1f, 2.999f/16f).color(255, 255, 255, 255)
+        vertexConsumer.vertex(modelMatrix, 1/16f, 1f, 2.99f/16f).color(255, 255, 255, 255)
                 .texture(1.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
         matrices.pop();
     }

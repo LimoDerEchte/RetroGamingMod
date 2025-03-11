@@ -36,7 +36,6 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
                 gb->displayChanged = true;
             }
         }
-        memcpy(&g_instance->inputData[0], &gb->controls[0], sizeof(gb->controls));
     });
     g_instance->setAudioCallback([gb](const int16_t* data, size_t pitch) {
         if (pitch > 4096) {
@@ -45,6 +44,9 @@ int GB::load(bip::managed_shared_memory* mem, const char *core, const char *rom)
         memcpy(gb->audio, data, 4 * pitch);
         gb->audioSize = 2 * pitch;
         gb->audioChanged = true;
+    });
+    g_instance->setInputCallback([gb](const unsigned port, const unsigned id) {
+        return gb->controls[port] & 1 << id ? 0x7FFF : 0;
     });
     std::cout << "[RetroGamingCore] Starting generic core" << std::endl;
     g_instance->runCore();
