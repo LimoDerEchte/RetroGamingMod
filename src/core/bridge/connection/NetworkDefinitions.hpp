@@ -34,14 +34,14 @@ struct CharArrayPacket {
     [[nodiscard]] ENetPacket* pack() const;
 };
 
-struct Int16ArrayPacket {
-    PacketType type;
+struct Int8ArrayPacket {
+    const PacketType type;
     const jUUID* ref;
-    void* data;
+    const uint8_t* data;
     const size_t size;
 
-    explicit Int16ArrayPacket(PacketType type, const jUUID* ref, const unsigned char* ptr, size_t size);
+    explicit Int8ArrayPacket(PacketType type, const jUUID* ref, const uint8_t* ptr, size_t size);
 
-    static Int16ArrayPacket* unpack(const ENetPacket* packet);
+    static Int8ArrayPacket* unpack(const ENetPacket* packet);
     [[nodiscard]] ENetPacket* pack() const;
 };
