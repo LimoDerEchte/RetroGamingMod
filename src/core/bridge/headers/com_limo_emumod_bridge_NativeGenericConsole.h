@@ -41,22 +41,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateIn
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    createDisplay
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createDisplay
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    createAudio
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createAudio
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
  * Method:    getWidth
  * Signature: (J)I
  */
