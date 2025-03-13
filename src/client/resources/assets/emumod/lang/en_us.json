@@ -15,6 +15,7 @@
   "item.emumod.game_gear": "Game Gear",
 
   "item.emumod.monitor": "Monitor",
+  "item.emumod.large_tv": "Large TV",
 
   "item.emumod.tooltip.game": "Game: %s",
   "item.emumod.tooltip.file": "File: %s",

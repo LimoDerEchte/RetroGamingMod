@@ -3,6 +3,7 @@ package com.limo.emumod.client.render;
 import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
+import com.limo.emumod.registry.EmuBlocks;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -45,7 +46,11 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         NativeImage newTex = ScreenManager.getDisplay(file);
         NativeImageRatio r = ratioCache.get(entity.getPos());
         if(!r.matches(newTex)) {
-            r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
+            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
+                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
+            } else {
+                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 44, 25);
+            }
             ratioCache.put(entity.getPos(), r);
             NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(r.getImage());
             textureCache.put(entity.getPos(), newAlloc);
@@ -55,7 +60,6 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         tex.upload();
         // Render
         matrices.push();
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(id));
         switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
             case EAST -> {
                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
@@ -70,19 +74,31 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
                 matrices.translate(-1, 0, -1);
             }
         }
-
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
-        Matrix4f modelMatrix = matrices.peek().getPositionMatrix();
-        MatrixStack.Entry normalMatrix = matrices.peek();
-
-        vertexConsumer.vertex(modelMatrix, 1/16f, 3/8f, 2.99f/16f).color(255, 255, 255, 255)
-                .texture(1.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 15/16f, 3/8f, 2.99f/16f).color(255, 255, 255, 255)
-                .texture(0.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 15/16f, 1f, 2.99f/16f).color(255, 255, 255, 255)
-                .texture(0.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
-        vertexConsumer.vertex(modelMatrix, 1/16f, 1f, 2.99f/16f).color(255, 255, 255, 255)
-                .texture(1.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(id));
+        if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
+            renderFace(1, 6, 15, 16, 3, vertexConsumer, overlay, light, matrices);
+        } else {
+            renderFace(-14, 2, 30, 27, 7, vertexConsumer, overlay, light, matrices);
+        }
         matrices.pop();
+    }
+
+    private static void renderFace(int x1, int y1, int x2, int y2, float z, VertexConsumer consumer, int overlay, int light, MatrixStack stack) {
+        Matrix4f modelMatrix = stack.peek().getPositionMatrix();
+        MatrixStack.Entry normalMatrix = stack.peek();
+        float _x1 = x1 / 16F;
+        float _y1 = y1 / 16F;
+        float _x2 = x2 / 16F;
+        float _y2 = y2 / 16F;
+        float _z = (z - 0.01F) / 16F;
+        consumer.vertex(modelMatrix, _x1, _y1, _z).color(255, 255, 255, 255).texture
+                (1.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(modelMatrix, _x2, _y1, _z).color(255, 255, 255, 255).texture
+                (0.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(modelMatrix, _x2, _y2, _z).color(255, 255, 255, 255).texture
+                (0.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(modelMatrix, _x1, _y2, _z).color(255, 255, 255, 255).texture
+                (1.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
     }
 }
