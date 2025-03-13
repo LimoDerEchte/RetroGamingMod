@@ -2,23 +2,33 @@ package com.limo.emumod.util;
 
 import com.limo.emumod.EmuMod;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class RequirementManager {
     private static final String baseUrl = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/";
 
+    public static File bridge = FileUtil.getRequiredFile("libbridge.so");
     public static File core = FileUtil.getRequiredFile("retro-core");
-    public static File mGBA;
+
+    public static File mGBA = FileUtil.getRequiredFile("mgba_libretro.so");
 
     public static void init() {
-        mGBA = FileUtil.getRequiredFile("mgba_libretro.so");
+        // Required Libraries
+        checkFileLocal(bridge, false);
+        checkFileLocal(core, true);
+        // LibRetro Cores
         checkFile(mGBA);
+        // Load Bridge Lib
+        System.load(bridge.getAbsolutePath());
     }
 
     private static void checkFile(File file) {
@@ -39,5 +49,30 @@ public class RequirementManager {
         } catch (IOException e) {
             EmuMod.LOGGER.error("Failed to download core", e);
         } catch (URISyntaxException ignore) { }
+    }
+
+    private static void checkFileLocal(File file, boolean setExec) {
+        if(file.exists())
+            return;
+        URL url = RequirementManager.class.getResource("/lib/" + file.getName());
+        if(url == null) {
+            EmuMod.LOGGER.error("Failed to find vital library");
+            return;
+        }
+        try(InputStream is = url.openStream(); OutputStream os = new FileOutputStream(file)) {
+            while(is.available() > 0) {
+                os.write(is.read());
+            }
+            os.flush();
+            if(setExec) {
+                Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file.toPath(), LinkOption.NOFOLLOW_LINKS);
+                permissions.add(PosixFilePermission.OWNER_EXECUTE);
+                permissions.add(PosixFilePermission.GROUP_EXECUTE);
+                permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+                Files.setPosixFilePermissions(file.toPath(), permissions);
+            }
+        } catch (IOException e) {
+            EmuMod.LOGGER.error("Failed to extract vital library", e);
+        }
     }
 }

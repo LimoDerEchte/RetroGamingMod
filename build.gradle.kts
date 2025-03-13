@@ -78,4 +78,11 @@ tasks.jar {
     from("LICENSE") {
         rename { "${it}_${project.property("archives_base_name")}" }
     }
+    from(fileTree("run/retroGamingRequired") {
+        include("**/*bridge.*")
+        include("**/*retro-core*")
+    }) {
+        into("lib")
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
