@@ -7,7 +7,7 @@ It's as simple as downloading the jar. All necessary libraries are downloaded on
 ### Where do the emulators run?
 The emulators all run fully on the server and sync display and audio data to clients. This allows for watching other players play.
 ### How was this made possible?
-My previous attempt at this used coffee gb, a java gameboy emulator, which was kinda inefficient. Now I am using a custom core using JNI and do all emulation through an executable instancing libretro cores.
+My previous attempt at this used coffee gb, a java gameboy emulator, which was kinda inefficient. Now I am using a custom core using JNI and do all emulation through an executable instancing libretro cores. This allows me to implement a wide variety of retro consoles.
 
 ## Emulators
 ### Handheld
