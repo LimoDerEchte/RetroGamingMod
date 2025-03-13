@@ -55,18 +55,23 @@ public class ServerHandler {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes;
             Item item;
+            String fileExtension;
             switch (payload.type()) {
                 case 0 -> {
                     nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
-                    item = payload.data()[0x143] != 0 ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE;
+                    boolean isGBC = payload.data()[0x143] != 0;
+                    item = isGBC ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE;
+                    fileExtension = isGBC? "gbc" : "gb";
                 }
                 case 1 -> {
                     nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
                     item = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE;
+                    fileExtension = "gba";
                 }
                 case 2 -> {
                     nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
                     item = EmuItems.GAME_GEAR_CARTRIDGE;
+                    fileExtension = "gg";
                 }
                 default -> {
                     ctx.player().sendMessage(Text.literal("Invalid request"), true);
@@ -76,7 +81,7 @@ public class ServerHandler {
             UUID fileUuid = UUID.randomUUID();
             String game = new String(nameBytes).replace("\u0000", "");
             ctx.server().execute(() -> {
-                File rom = FileUtil.idToFile(fileUuid, "cart");
+                File rom = FileUtil.idToFile(fileUuid, fileExtension);
                 try(FileOutputStream fos = new FileOutputStream(rom)) {
                     fos.write(payload.data());
                     fos.flush();

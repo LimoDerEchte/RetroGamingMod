@@ -15,7 +15,7 @@
   "item.emumod.monitor": "Monitor",
 
   "item.emumod.tooltip.game": "Game: %s",
-  "item.emumod.tooltip.file": "File: %s.cart",
+  "item.emumod.tooltip.file": "File: %s",
 
   "item.emumod.handheld.start_link": "Cartridge insertion started",
   "item.emumod.handheld.cancel_link": "Cartridge insertion was cancelled",

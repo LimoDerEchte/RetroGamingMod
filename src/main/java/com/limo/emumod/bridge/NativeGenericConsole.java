@@ -10,16 +10,18 @@ import java.util.UUID;
 public class NativeGenericConsole {
     private final long pointer;
     private final UUID file;
-    private NativeDisplay nativeDisplay;
-    private NativeAudio nativeAudio;
+    private final String fileType;
+    //private NativeDisplay nativeDisplay;
+    //private NativeAudio nativeAudio;
 
-    public NativeGenericConsole(int width, int height, UUID file) {
+    public NativeGenericConsole(int width, int height, UUID file, String fileType) {
         this.file = file;
+        this.fileType = fileType;
         pointer = init(NativeUtil.nativeUUID(file), width, height);
     }
 
     public void load(File core) {
-        File rom = FileUtil.idToFile(file, "cart");
+        File rom = FileUtil.idToFile(file, fileType);
         File save = FileUtil.idToFile(file, "save");
         start(pointer, RequirementManager.core.getAbsolutePath(), core.getAbsolutePath(), rom.getAbsolutePath(), save.getAbsolutePath());
     }

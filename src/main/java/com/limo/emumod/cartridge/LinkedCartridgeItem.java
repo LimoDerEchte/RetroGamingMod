@@ -23,11 +23,13 @@ import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
     public Item linkItem;
+    private final String fileType;
     private final Runnable clearLinkItem;
     private final Consumer<UUID> start;
 
-    public LinkedCartridgeItem(RegistryKey<Item> key, Runnable clearLinkItem, Consumer<UUID> start) {
+    public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, Consumer<UUID> start) {
         super(new Settings().maxCount(1).registryKey(key));
+        this.fileType = fileType;
         this.clearLinkItem = clearLinkItem;
         this.start = start;
     }
@@ -46,7 +48,7 @@ public class LinkedCartridgeItem extends Item {
                 GenericHandheldItem.link : ItemStack.EMPTY;
         if(link.getCount() > 0 && hasGame(stack)) {
             UUID id = stack.getComponents().get(FILE_ID);
-            File file = FileUtil.idToFile(id, "cart");
+            File file = FileUtil.idToFile(id, fileType);
             if(!file.exists()) {
                 stack.setCount(0);
                 user.getInventory().insertStack(new ItemStack(EmuItems.BROKEN_CARTRIDGE));

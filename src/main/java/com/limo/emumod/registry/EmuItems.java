@@ -29,14 +29,14 @@ public class EmuItems {
     public static final Item CARTRIDGE = register(new CartridgeItem(), ItemId.Registry.CARTRIDGE);
     public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
 
-    public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE, () -> GenericHandheldItem.link = null,
-            file -> runGenericHandheld(RequirementManager.mGBA, file, 160, 144)), ItemId.Registry.GAMEBOY_CARTRIDGE);
-    public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE, () -> GenericHandheldItem.link = null,
-            file -> runGenericHandheld(RequirementManager.mGBA, file, 160, 144)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
-    public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE, () -> GenericHandheldItem.link = null,
-            file -> runGenericHandheld(RequirementManager.mGBA, file, 240, 160)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
-    public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE, () -> GenericHandheldItem.link = null,
-            file -> runGenericHandheld(RequirementManager.gearSystem, file, 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
+    public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE, "gb", () -> GenericHandheldItem.link = null,
+            file -> runGenericHandheld(RequirementManager.mGBA, file, "gb", 160, 144)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+    public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE, "gbc", () -> GenericHandheldItem.link = null,
+            file -> runGenericHandheld(RequirementManager.mGBA, file, "gbc", 160, 144)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+    public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE, "gba", () -> GenericHandheldItem.link = null,
+            file -> runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+    public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE, "gg", () -> GenericHandheldItem.link = null,
+            file -> runGenericHandheld(RequirementManager.gearSystem, file, "gg", 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -82,8 +82,8 @@ public class EmuItems {
         });
     }
 
-    private static void runGenericHandheld(File core, UUID file, int width, int height) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, file);
+    private static void runGenericHandheld(File core, UUID file, String fileType, int width, int height) {
+        NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
         con.load(core);
         GenericHandheldItem.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
