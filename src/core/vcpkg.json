@@ -5,6 +5,6 @@
     "boost-interprocess",
     "boost-process",
     "enet",
-    "dav1d"
+    "ffmpeg"
   ]
 }
