@@ -34,11 +34,9 @@ public class ServerHandler {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             mcs = server;
             FileUtil.init();
-            new Thread(() -> AudioSyncer.run(server)).start();
             SERVER = new NativeServer(NetworkUtils.findLocalPort());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            AudioSyncer.stop();
             GenericHandheldItem.running.values().forEach(NativeGenericConsole::stop);
             GenericHandheldItem.running.clear();
             if(SERVER != null) {

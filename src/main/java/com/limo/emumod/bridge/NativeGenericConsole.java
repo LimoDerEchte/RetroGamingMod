@@ -28,17 +28,17 @@ public class NativeGenericConsole {
         stop(pointer);
     }
 
-    public NativeDisplay createDisplay() {
-        if(nativeDisplay == null)
-            nativeDisplay = new NativeDisplay(createDisplay(pointer));
-        return nativeDisplay;
-    }
+    //public NativeDisplay createDisplay() {
+    //    if(nativeDisplay == null)
+    //        nativeDisplay = new NativeDisplay(createDisplay(pointer));
+    //    return nativeDisplay;
+    //}
 
-    public NativeAudio createAudio() {
-        if(nativeAudio == null)
-            nativeAudio = new NativeAudio(createAudio(pointer));
-        return nativeAudio;
-    }
+    //public NativeAudio createAudio() {
+    //    if(nativeAudio == null)
+    //        nativeAudio = new NativeAudio(createAudio(pointer));
+    //    return nativeAudio;
+    //}
 
     public void updateInput(int port, short input) {
         if(port < 0 || port > 4) {
@@ -61,8 +61,8 @@ public class NativeGenericConsole {
     private native static void stop(long pointer);
 
     private native static void updateInput(long pointer, int port, short input);
-    private native static long createDisplay(long pointer);
-    private native static long createAudio(long pointer);
+    //private native static long createDisplay(long pointer);
+    //private native static long createAudio(long pointer);
 
     private native static int getWidth(long pointer);
     private native static int getHeight(long pointer);
