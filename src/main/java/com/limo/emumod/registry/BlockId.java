@@ -11,9 +11,11 @@ public class BlockId {
 
     public static class Id {
         public static final Identifier MONITOR = Identifier.of("emumod", "monitor");
+        public static final Identifier LARGE_TV = Identifier.of("emumod", "large_tv");
     }
 
     public static class Registry {
         public static final RegistryKey<Block> MONITOR = RegistryKey.of(RegistryKeys.BLOCK, Id.MONITOR);
+        public static final RegistryKey<Block> LARGE_TV = RegistryKey.of(RegistryKeys.BLOCK, Id.LARGE_TV);
     }
 }

@@ -3,8 +3,8 @@
 	"parent": "block/block",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "emumod:block/tv_large",
-		"particle": "emumod:block/tv_large"
+		"0": "emumod:block/large_tv",
+		"particle": "emumod:block/large_tv"
 	},
 	"elements": [
 		{

@@ -40,6 +40,7 @@ public class ItemId {
         public static final RegistryKey<Item> GAME_GEAR = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR);
 
         public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
+        public static final RegistryKey<Item> LARGE_TV = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.LARGE_TV);
 
         public static final RegistryKey<ItemGroup> MAIN_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP, Id.MAIN_GROUP);
     }

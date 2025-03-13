@@ -47,7 +47,10 @@ public class EmuItems {
     public static final Item GAME_GEAR = register(new GenericHandheldItem(ItemId.Registry.GAME_GEAR,
             NetworkId.ScreenType.GAME_GEAR, GAME_GEAR_CARTRIDGE), ItemId.Registry.GAME_GEAR);
 
-    public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8).registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
+    public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8)
+            .registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
+    public static final Item LARGE_TV = register(new BlockItem(EmuBlocks.LARGE_TV, new Item.Settings().maxCount(8)
+            .registryKey(ItemId.Registry.LARGE_TV)), ItemId.Registry.LARGE_TV);
 
     public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.emumod.main"))
@@ -79,6 +82,7 @@ public class EmuItems {
             group.add(GAME_GEAR);
 
             group.add(MONITOR);
+            group.add(LARGE_TV);
         });
     }
 
