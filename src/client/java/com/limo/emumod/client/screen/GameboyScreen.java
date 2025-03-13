@@ -18,8 +18,8 @@ import java.util.UUID;
 
 public class GameboyScreen extends Screen {
     private static int texIncrement = 0;
-    private static final Identifier GAMEBOY_TEXTURE = Identifier.of("emumod", "textures/gui/gameboy.png");
-    private static final Identifier GAMEBOY_COLOR_TEXTURE = Identifier.of("emumod", "textures/gui/gameboy_color.png");
+    private static final Identifier GAMEBOY_TEXTURE = Identifier.of("emumod", "textures/item/gameboy.png");
+    private static final Identifier GAMEBOY_COLOR_TEXTURE = Identifier.of("emumod", "textures/item/gameboy_color.png");
     private static final int scale = 1;
     private static final Map<Integer, Short> inputMap = Map.of(
             GLFW.GLFW_KEY_I, (short) 0b1, // B
@@ -64,7 +64,8 @@ public class GameboyScreen extends Screen {
         context.getMatrices().scale(scale, scale, scale);
         // Background
         context.drawTexture(RenderLayer::getGuiTextured, isGbc ? GAMEBOY_COLOR_TEXTURE : GAMEBOY_TEXTURE,
-                (width / 2 - 512 / 2) / scale, (height / 2 - 144 - 64) / scale, 0, 0, 512, 512, 512, 512);
+                (width / 2 - 512 / 2) / scale, (height / 2 - 144 - 64) / scale, 0, 0, 512, 512,
+                32, 32, 32, 32);
         // Frame
         context.drawTexture(RenderLayer::getGuiTextured, screenTexture, (width / 2 - 80) / scale,
                 (height / 2 - 144) / scale, 0, 0, 160, 144, 160, 144);
