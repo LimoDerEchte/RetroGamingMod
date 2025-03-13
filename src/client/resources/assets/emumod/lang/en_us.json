@@ -7,10 +7,12 @@
   "item.emumod.gameboy_cartridge": "Gameboy Cartridge",
   "item.emumod.gameboy_color_cartridge": "Gameboy Color Cartridge",
   "item.emumod.gameboy_advance_cartridge": "Gameboy Advance Cartridge",
+  "item.emumod.game_gear_cartridge": "Game Gear Cartridge",
 
   "item.emumod.gameboy": "Gameboy",
   "item.emumod.gameboy_color": "Gameboy Color",
   "item.emumod.gameboy_advance": "Gameboy Advance",
+  "item.emumod.game_gear": "Game Gear",
 
   "item.emumod.monitor": "Monitor",
 
