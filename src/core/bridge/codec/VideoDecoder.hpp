@@ -10,21 +10,17 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
-#include <libavutil/opt.h>
 }
 
-#define FPS 30
-#define BITRATE 250000
-
-class VideoEncoderRGB565 {
+class VideoDecoderARGB {
     AVCodecContext* codec_ctx = nullptr;
     AVFrame* frame = nullptr;
     AVPacket* pkt = nullptr;
     const int width, height;
 
 public:
-    VideoEncoderRGB565(int width, int height);
-    ~VideoEncoderRGB565();
+    VideoDecoderARGB(int width, int height);
+    ~VideoDecoderARGB();
 
-    std::vector<uint8_t> encode(uint16_t* data) const;
+    bool decode(const std::vector<uint8_t>& encoded_data, uint32_t* output_buffer) const;
 };

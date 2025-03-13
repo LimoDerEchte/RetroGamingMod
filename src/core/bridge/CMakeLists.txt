@@ -17,6 +17,8 @@ add_library(bridge SHARED
         util/NativeUtil.hpp
         codec/VideoEncoder.cpp
         codec/VideoEncoder.hpp
+        codec/VideoDecoder.cpp
+        codec/VideoDecoder.hpp
 )
 
 target_include_directories(bridge PRIVATE

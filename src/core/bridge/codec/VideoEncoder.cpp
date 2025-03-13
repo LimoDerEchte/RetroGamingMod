@@ -22,8 +22,8 @@ VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : widt
     codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
     codec_ctx->max_b_frames = 0;
 
-    // av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", 0);
-    // av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
+    av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", 0);
+    av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
 
     if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
         std::cerr << "Could not open H.264 codec\n";
@@ -35,6 +35,12 @@ VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : widt
     frame->height = height;
     av_frame_get_buffer(frame, 32);
     pkt = av_packet_alloc();
+}
+
+VideoEncoderRGB565::~VideoEncoderRGB565() {
+    avcodec_free_context(&codec_ctx);
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
 }
 
 std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
