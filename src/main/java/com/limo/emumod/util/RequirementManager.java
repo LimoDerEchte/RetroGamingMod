@@ -20,7 +20,7 @@ public class RequirementManager {
     public static File core;
 
     public static File mGBA;
-    public static File genesisPlusGX;
+    public static File gearSystem;
 
     public static void init() {
         detectPlatform();
@@ -29,7 +29,7 @@ public class RequirementManager {
         checkFileLocal(core, true);
         // LibRetro Cores
         checkFile(mGBA);
-        checkFile(genesisPlusGX);
+        checkFile(gearSystem);
         // Load Bridge Lib
         System.load(bridge.getAbsolutePath());
     }
@@ -40,7 +40,7 @@ public class RequirementManager {
         core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
         // LibRetro Cores
         mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
-        genesisPlusGX = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "genesis_plus_gx_libretro"));
+        gearSystem = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearsystem_libretro"));
         // Update platform download base url
         String arch = PlatformDetector.is64Bit() ? "x86_64" : "x86";
         String platform = PlatformDetector.isWindows() ? "windows" : "linux";

@@ -2,9 +2,11 @@
   "schemaVersion": 1,
   "id": "emumod",
   "version": "${version}",
-  "name": "EmuMod",
+  "name": "RetroGamingMod",
   "description": "A mod for playing retro games in in-game emulators",
-  "authors": [],
+  "authors": [
+    "Limo"
+  ],
   "contact": {},
   "license": "All-Rights-Reserved",
   "icon": "assets/emumod/icon.png",
