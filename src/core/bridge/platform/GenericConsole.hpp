@@ -6,6 +6,7 @@
 #include <boost/process.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
+#include "codec/VideoEncoder.hpp"
 #include "util/NativeDisplay.hpp"
 
 #include "util/NativeAudio.hpp"
@@ -15,14 +16,15 @@ namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    std::mutex mutex{};
     NativeDisplay* nativeDisplay = nullptr;
     NativeAudio* nativeAudio = nullptr;
+    VideoEncoderRGB565* videoEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
 
 public:
+    std::mutex mutex{};
     char id[32] = {};
     const int width, height;
     GenericShared* retroCoreHandle = nullptr;
@@ -32,6 +34,7 @@ public:
 
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
+    std::vector<uint8_t> createFrame();
     [[nodiscard]] NativeDisplay *getDisplay() const;
     [[nodiscard]] NativeAudio *getAudio() const;
 

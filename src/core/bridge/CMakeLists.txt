@@ -15,6 +15,8 @@ add_library(bridge SHARED
         connection/NetworkDefinitions.cpp
         util/NativeUtil.cpp
         util/NativeUtil.hpp
+        codec/VideoEncoder.cpp
+        codec/VideoEncoder.hpp
 )
 
 target_include_directories(bridge PRIVATE

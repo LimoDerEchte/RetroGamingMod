@@ -87,6 +87,14 @@ void GenericConsole::dispose() {
     bip::shared_memory_object::remove(id);
 }
 
+std::vector<uint8_t> GenericConsole::createFrame() {
+    std::lock_guard lock(mutex);
+    if (videoEncoder == nullptr) {
+        videoEncoder = new VideoEncoderRGB565(width, height);
+    }
+    return videoEncoder->encode(getDisplay()->buf);
+}
+
 NativeDisplay *GenericConsole::getDisplay() const {
     return nativeDisplay;
 }
@@ -115,6 +123,8 @@ void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
 void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole *)>& func) {
     std::lock_guard guard(consoleMutex);
     for (const auto &console : consoles) {
+        console->mutex.lock();
         func(console);
+        console->mutex.unlock();
     }
 }

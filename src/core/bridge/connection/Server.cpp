@@ -126,11 +126,10 @@ void RetroServer::mainVideoSenderLoop(const int fps) {
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
-            const auto packet = Int16ArrayPacket(
-                PACKET_UPDATE_DISPLAY,
-                console->uuid,
-                reinterpret_cast<const unsigned char*>(console->retroCoreHandle->display),
-                console->width * console->height
+            const std::vector<uint8_t> frame = console->createFrame();
+            const auto packet = Int8ArrayPacket(
+                PACKET_UPDATE_DISPLAY, console->uuid,
+                frame.data(), frame.size()
             ).pack();
             mutex.lock();
             for (const RetroServerClient* client : *clients) {
