@@ -64,6 +64,10 @@ public class ServerHandler {
                     nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
                     item = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE;
                 }
+                case 2 -> {
+                    nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
+                    item = EmuItems.GAME_GEAR_CARTRIDGE;
+                }
                 default -> {
                     ctx.player().sendMessage(Text.literal("Invalid request"), true);
                     return;

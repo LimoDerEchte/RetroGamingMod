@@ -35,6 +35,8 @@ public class EmuItems {
             file -> runGenericHandheld(RequirementManager.mGBA, file, 160, 144)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE, () -> GenericHandheldItem.link = null,
             file -> runGenericHandheld(RequirementManager.mGBA, file, 240, 160)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+    public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE, () -> GenericHandheldItem.link = null,
+            file -> runGenericHandheld(RequirementManager.genesisPlusGX, file, 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -42,6 +44,8 @@ public class EmuItems {
             NetworkId.ScreenType.GAMEBOY_COLOR, GAMEBOY_COLOR_CARTRIDGE), ItemId.Registry.GAMEBOY_COLOR);
     public static final Item GAMEBOY_ADVANCE = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY_ADVANCE,
             NetworkId.ScreenType.GAMEBOY_ADVANCE, GAMEBOY_ADVANCE_CARTRIDGE), ItemId.Registry.GAMEBOY_ADVANCE);
+    public static final Item GAME_GEAR = register(new GenericHandheldItem(ItemId.Registry.GAME_GEAR,
+            NetworkId.ScreenType.GAMEBOY_COLOR, GAME_GEAR_CARTRIDGE), ItemId.Registry.GAME_GEAR);
 
     public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8).registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
 
@@ -63,6 +67,7 @@ public class EmuItems {
         ((LinkedCartridgeItem)GAMEBOY_CARTRIDGE).linkItem = GAMEBOY;
         ((LinkedCartridgeItem)GAMEBOY_COLOR_CARTRIDGE).linkItem = GAMEBOY_COLOR;
         ((LinkedCartridgeItem)GAMEBOY_ADVANCE_CARTRIDGE).linkItem = GAMEBOY_ADVANCE;
+        ((LinkedCartridgeItem)GAME_GEAR_CARTRIDGE).linkItem = GAME_GEAR;
         // Item Group
         ItemGroupEvents.modifyEntriesEvent(ItemId.Registry.MAIN_GROUP).register(group -> {
             group.add(CARTRIDGE);
@@ -71,6 +76,7 @@ public class EmuItems {
             group.add(GAMEBOY);
             group.add(GAMEBOY_COLOR);
             group.add(GAMEBOY_ADVANCE);
+            group.add(GAME_GEAR);
 
             group.add(MONITOR);
         });

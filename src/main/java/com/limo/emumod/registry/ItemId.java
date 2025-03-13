@@ -15,10 +15,12 @@ public class ItemId {
         public static final Identifier GAMEBOY_CARTRIDGE = Identifier.of("emumod", "gameboy_cartridge");
         public static final Identifier GAMEBOY_COLOR_CARTRIDGE = Identifier.of("emumod", "gameboy_color_cartridge");
         public static final Identifier GAMEBOY_ADVANCE_CARTRIDGE = Identifier.of("emumod", "gameboy_advance_cartridge");
+        public static final Identifier GAME_GEAR_CARTRIDGE = Identifier.of("emumod", "game_gear_cartridge");
 
         public static final Identifier GAMEBOY = Identifier.of("emumod", "gameboy");
         public static final Identifier GAMEBOY_COLOR = Identifier.of("emumod", "gameboy_color");
         public static final Identifier GAMEBOY_ADVANCE = Identifier.of("emumod", "gameboy_advance");
+        public static final Identifier GAME_GEAR = Identifier.of("emumod", "game_gear");
 
         public static final Identifier MAIN_GROUP = Identifier.of("emumod", "main_group");
     }
@@ -30,10 +32,12 @@ public class ItemId {
         public static final RegistryKey<Item> GAMEBOY_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_CARTRIDGE);
         public static final RegistryKey<Item> GAMEBOY_COLOR_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_COLOR_CARTRIDGE);
         public static final RegistryKey<Item> GAMEBOY_ADVANCE_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE_CARTRIDGE);
+        public static final RegistryKey<Item> GAME_GEAR_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR_CARTRIDGE);
 
         public static final RegistryKey<Item> GAMEBOY = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY);
         public static final RegistryKey<Item> GAMEBOY_COLOR = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_COLOR);
         public static final RegistryKey<Item> GAMEBOY_ADVANCE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE);
+        public static final RegistryKey<Item> GAME_GEAR = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR);
 
         public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
 
