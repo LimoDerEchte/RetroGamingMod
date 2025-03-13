@@ -76,7 +76,6 @@ void GenericConsole::dispose() {
 }
 
 std::vector<uint8_t> GenericConsole::createFrame() {
-    std::lock_guard lock(mutex);
     if (videoEncoder == nullptr) {
         videoEncoder = new VideoEncoderRGB565(width, height);
     }

@@ -51,7 +51,7 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
     ret = avcodec_receive_frame(codec_ctx, frame);
     if (ret < 0) {
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-            return false; // Need more data or end of stream
+            return false;
         }
         std::cerr << "Error receiving frame from decoder\n";
         return false;
