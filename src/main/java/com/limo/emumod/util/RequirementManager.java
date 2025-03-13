@@ -14,14 +14,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class RequirementManager {
-    private static final String baseUrl = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/";
+    private static String baseUrl = "https://buildbot.libretro.com/nightly/";
 
-    public static File bridge = FileUtil.getRequiredFile("libbridge.so");
-    public static File core = FileUtil.getRequiredFile("retro-core");
+    public static File bridge;
+    public static File core;
 
     public static File mGBA = FileUtil.getRequiredFile("mgba_libretro.so");
 
     public static void init() {
+        detectPlatform();
         // Required Libraries
         checkFileLocal(bridge, false);
         checkFileLocal(core, true);
@@ -29,6 +30,18 @@ public class RequirementManager {
         checkFile(mGBA);
         // Load Bridge Lib
         System.load(bridge.getAbsolutePath());
+    }
+
+    private static void detectPlatform() {;
+        // Required Libraries
+        bridge = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(true, "bridge"));
+        core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
+        // LibRetro Cores
+        mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
+        // Update platform download base url
+        String arch = PlatformDetector.is64Bit() ? "x86_64" : "x86";
+        String platform = PlatformDetector.isWindows() ? "windows" : "linux";
+        baseUrl += platform + "/" + arch + "/latest/";
     }
 
     private static void checkFile(File file) {
