@@ -2,6 +2,7 @@ package com.limo.emumod.client.network;
 
 import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.screen.CartridgeScreen;
+import com.limo.emumod.client.screen.GameGearScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
 import com.limo.emumod.client.util.BufferedAudioOutput;
@@ -52,6 +53,7 @@ public class ClientHandler {
                     case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.fileId());
                     case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.fileId());
                     case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.fileId());
+                    case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.fileId());
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {

@@ -21,5 +21,6 @@ public class NetworkId {
         public static final byte GAMEBOY            = 0x00;
         public static final byte GAMEBOY_COLOR      = 0x01;
         public static final byte GAMEBOY_ADVANCE    = 0x02;
+        public static final byte GAME_GEAR          = 0x03;
     }
 }
