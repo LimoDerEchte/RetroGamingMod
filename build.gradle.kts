@@ -24,13 +24,23 @@ loom {
 }
 
 repositories {
-    // None for now
+    maven {
+        name = "Shedaniel"
+        url = uri("https://maven.shedaniel.me/" )
+    }
+    maven {
+        name= "Terraformers"
+        url = uri("https://maven.terraformersmc.com/")
+    }
 }
 
 val minecraft_version: String by project
 val yarn_mappings: String by project
 val loader_version: String by project
+
 val fabric_version: String by project
+val modmenu_version: String by project
+val cloth_config_version: String by project
 
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")
@@ -38,6 +48,10 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
 
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    modImplementation("com.terraformersmc:modmenu:${modmenu_version}")
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
+        exclude("net.fabricmc.fabric-api")
+    }
 }
 
 tasks.processResources {
