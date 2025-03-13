@@ -16,8 +16,6 @@ namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    NativeDisplay* nativeDisplay = nullptr;
-    NativeAudio* nativeAudio = nullptr;
     VideoEncoderRGB565* videoEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
@@ -35,8 +33,6 @@ public:
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
     std::vector<uint8_t> createFrame();
-    [[nodiscard]] NativeDisplay *getDisplay() const;
-    [[nodiscard]] NativeAudio *getAudio() const;
 
     void input(int port, int16_t input);
 };

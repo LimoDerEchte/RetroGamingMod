@@ -20,10 +20,4 @@ int main() {
         "/home/limo/Downloads/mgba_libretro.so",
         "/home/limo/Documents/Test/Links Awakening.gb"
     );
-    const auto display = gameboy.getDisplay();
-    const auto display2 = gameboy2.getDisplay();
-    while (true) {}
-    gameboy.dispose();
-    gameboy2.dispose();
-    return 0;
 }

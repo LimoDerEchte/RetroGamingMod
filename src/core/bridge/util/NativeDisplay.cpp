@@ -16,7 +16,7 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeDisplay_bufSize(JNIEnv 
 JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeDisplay_hasChanged(JNIEnv *, jclass, const jlong display) {
     const auto nativeDisplay = reinterpret_cast<NativeDisplay*>(display);
     std::lock_guard lock(nativeDisplay->mutex);
-    return *nativeDisplay->changed;
+    return nativeDisplay->changed;
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeDisplay_update(JNIEnv *env, const jobject obj, const jlong display) {
@@ -24,22 +24,25 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeDisplay_update(JNIEnv *
     std::lock_guard lock(nativeDisplay->mutex);
     if (!nativeDisplay->changed)
         return;
-    [](bool &ref) {
-        ref = false;
-    }(*nativeDisplay->changed);
-    jint jDisplay[nativeDisplay->bufSize];
-    for (unsigned y = 0; y < nativeDisplay->height; ++y) {
-        for (unsigned x = 0; x < nativeDisplay->width; ++x) {
-            const auto rgb565 = nativeDisplay->buf[y * nativeDisplay->width + x];
-            const uint8_t r = (rgb565 >> 11 & 0x1F) << 3;
-            const uint8_t g = (rgb565 >> 5 & 0x3F) << 2;
-            const uint8_t b = (rgb565 & 0x1F) << 3;
-            constexpr uint8_t a = 0xFF;
-            jDisplay[y * nativeDisplay->width + x] = a << 24 | r << 16 | g << 8 | b;
-        }
-    }
+    nativeDisplay->changed = false;
     const auto clazz = env->GetObjectClass(obj);
     const auto field = env->GetFieldID(clazz, "buf", "[I");
     const auto data = reinterpret_cast<jintArray>(env->GetObjectField(obj, field));
-    env->SetIntArrayRegion(data, 0, static_cast<jsize>(nativeDisplay->bufSize), jDisplay);
+    env->SetIntArrayRegion(data, 0, static_cast<jsize>(nativeDisplay->bufSize), reinterpret_cast<jint*>(nativeDisplay->buf));
+}
+
+NativeDisplay::NativeDisplay(const int width, const int height) : width(width), height(height) {
+    std::lock_guard lock(mutex);
+    bufSize = width * height;
+    buf = new uint32_t[bufSize];
+    changed = new bool;
+}
+
+void NativeDisplay::receive(const uint8_t *data, const size_t size) {
+    std::lock_guard lock(mutex);
+    if (decoder == nullptr) {
+        decoder = new VideoDecoderARGB(width, height);
+    }
+    decoder->decode(std::vector(data, data + size), buf);
+    changed = true;
 }

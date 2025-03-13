@@ -33,16 +33,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateIn
     gameboy->input(port, input);
 }
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createDisplay(JNIEnv *, jclass, const jlong ptr) {
-    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
-    return reinterpret_cast<jlong>(gameboy->getDisplay());
-}
-
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_createAudio(JNIEnv *, jclass, const jlong ptr) {
-    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
-    return reinterpret_cast<jlong>(gameboy->getAudio());
-}
-
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
     return gameboy->width;
@@ -67,8 +57,6 @@ void GenericConsole::load(const char *retroCore, const char *core, const char *r
     std::cout << "[RetroGamingCore] Created shared memory " << strId << std::endl;
     retroCoreProcess = new bp::child(retroCore, bp::args({"gn", strId, core, rom}));
     retroCoreProcess->detach();
-    nativeDisplay = new NativeDisplay(width, height, &retroCoreHandle->displayChanged, retroCoreHandle->display);
-    nativeAudio = new NativeAudio(&retroCoreHandle->audioChanged, retroCoreHandle->audio, &retroCoreHandle->audioSize);
 }
 
 void GenericConsole::dispose() {
@@ -92,15 +80,7 @@ std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
         videoEncoder = new VideoEncoderRGB565(width, height);
     }
-    return videoEncoder->encode(getDisplay()->buf);
-}
-
-NativeDisplay *GenericConsole::getDisplay() const {
-    return nativeDisplay;
-}
-
-NativeAudio *GenericConsole::getAudio() const {
-    return nativeAudio;
+    return videoEncoder->encode(retroCoreHandle->display);
 }
 
 void GenericConsole::input(const int port, const int16_t input) {
