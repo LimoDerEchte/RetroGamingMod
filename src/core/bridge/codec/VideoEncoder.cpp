@@ -44,22 +44,32 @@ VideoEncoderRGB565::~VideoEncoderRGB565() {
 }
 
 std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
+    std::cerr << "DBG 1" << std::endl;
     std::vector<uint8_t> encoded_data;
     if (pkt == nullptr || frame == nullptr) {
         std::cerr << "Called encode before initialization";
         return encoded_data;
     }
-    SwsContext* sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565,
-        width, height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
+    std::cerr << "DBG 2" << std::endl;
+    SwsContext* sws_ctx = nullptr;
+    sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565, width, height,
+        AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
+    if (sws_ctx == nullptr) {
+        std::cerr << "Could not initialize sws context" << std::endl;
+        return encoded_data;
+    }
+    std::cerr << "DBG 3" << std::endl;
     uint8_t* src_slices[1] = { reinterpret_cast<uint8_t*>(data) };
     const int src_stride[1] = { 2 * width };
     sws_scale(sws_ctx, src_slices, src_stride, 0, height, frame->data, frame->linesize);
+    std::cerr << "DBG 4" << std::endl;
     if (avcodec_send_frame(codec_ctx, frame) == 0) {
         while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
             encoded_data.assign(pkt->data, pkt->data + pkt->size);
             av_packet_unref(pkt);
         }
     }
+    std::cerr << "DBG 5" << std::endl;
     sws_freeContext(sws_ctx);
     return encoded_data;
 }
