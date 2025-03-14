@@ -7,6 +7,6 @@
 
 namespace bip = boost::interprocess;
 
-namespace GB {
+namespace GenericConsole {
     int load(bip::managed_shared_memory* mem, const char *core, const char *rom);
 }

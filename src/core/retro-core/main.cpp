@@ -20,7 +20,7 @@ int main(const int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     if (platform == "gn") {
-        return GB::load(segment, core, rom);
+        return GenericConsole::load(segment, core, rom);
     }
     std::cerr << "This should NEVER be called by a user (unknown platform " << platform << ")" << std::endl;
     return EXIT_FAILURE;
