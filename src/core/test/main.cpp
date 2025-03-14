@@ -26,34 +26,36 @@ void test_video() {
     auto* data = new uint16_t[pixelCount];
     auto* res = new uint32_t[pixelCount];
 
-    // Fill with a simple pattern
-    for (int i = 0; i < pixelCount; i++) {
-        data[i] = (i % 2) ? 0xFFFF : 0;
-    }
-    log("Test data created");
-
-    // Encode with error checking
-    const auto encoded = encoder->encode(data);
-    if (encoded.empty()) {
-        log("ERROR: Encoding failed or produced no data");
-        delete[] data;
-        delete[] res;
-        delete encoder;
-        delete decoder;
-        return;
-    }
-    log("Data encoded successfully: " + std::to_string(encoded.size()) + " bytes");
-
-    // Clean up
-    if (bool decodeResult = decoder->decode(encoded, res); !decodeResult) {
-        log("ERROR: Decoding failed");
-    } else {
-        log("Data decoded successfully");
-        std::cout << "Sample decoded values: ";
-        for (int i = 0; i < std::min(6, pixelCount); i++) {
-            std::cout << std::uppercase << std::hex << res[i] << " ";
+    for (int i = 0; i < 5; i++) {
+        // Fill with a simple pattern
+        for (int i1 = 0; i1 < pixelCount; i1++) {
+            data[i1] = (i1 % 2) ? 0xFFFF : 0;
         }
-        std::cout << std::endl;
+        log("Test data created");
+
+        // Encode with error checking
+        const auto encoded = encoder->encode(data);
+        if (encoded.empty()) {
+            log("ERROR: Encoding failed or produced no data");
+            delete[] data;
+            delete[] res;
+            delete encoder;
+            delete decoder;
+            return;
+        }
+        log("Data encoded successfully: " + std::to_string(encoded.size()) + " bytes");
+
+        // Clean up
+        if (const bool decodeResult = decoder->decode(encoded, res); !decodeResult) {
+            log("ERROR: Decoding failed");
+        } else {
+            log("Data decoded successfully");
+            std::cout << "Sample decoded values: ";
+            for (int i2 = 0; i2 < pixelCount; i2++) {
+                std::cout << std::uppercase << std::hex << res[i2] << " ";
+            }
+            std::cout << std::endl;
+        }
     }
     delete[] data;
     delete[] res;
