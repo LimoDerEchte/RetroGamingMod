@@ -49,7 +49,7 @@ std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
         std::cerr << "Called encode before initialization";
         return encoded_data;
     }
-    SwsContext* sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB24,
+    SwsContext* sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565,
         width, height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
     uint8_t* src_slices[1] = { reinterpret_cast<uint8_t*>(data) };
     const int src_stride[1] = { 2 * width };
