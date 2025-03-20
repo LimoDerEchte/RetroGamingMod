@@ -17,8 +17,8 @@ int success = 0;
 
 void test_video() {
     // Try larger dimensions - many encoders have minimum size requirements
-    constexpr int width = 16;
-    constexpr int height = 16;
+    constexpr int width = 160;
+    constexpr int height = 144;
 
     const auto encoder = new VideoEncoderRGB565(width, height);
     log("Encoder created");
@@ -30,7 +30,7 @@ void test_video() {
     auto* data = new uint16_t[pixelCount];
     auto* res = new uint32_t[pixelCount];
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         // Fill with a simple pattern
         for (int i1 = 0; i1 < pixelCount; i1++) {
             data[i1] = (i1 % 2) ? 0xFFFF : 0;
@@ -83,7 +83,7 @@ void test_video_multithread() {
         }).detach();
     }
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    std::cout << std::endl << std::endl << success << std::endl;
+    std::cout << std::endl << std::endl << std::dec << success << std::endl;
 }
 
 int main() {

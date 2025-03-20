@@ -9,7 +9,7 @@
 VideoDecoderARGB::VideoDecoderARGB(const int width, const int height) : width(width), height(height) {
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!codec) {
-        std::cerr << "H.264 decoder not found\n";
+        std::cerr << "[VideoDecoder] H.264 decoder not found\n";
         exit(1);
     }
 
@@ -19,7 +19,7 @@ VideoDecoderARGB::VideoDecoderARGB(const int width, const int height) : width(wi
     codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
-        std::cerr << "Could not open H.264 decoder\n";
+        std::cerr << "[VideoDecoder] Could not open H.264 decoder\n";
         exit(1);
     }
 
@@ -34,8 +34,9 @@ VideoDecoderARGB::~VideoDecoderARGB() {
 }
 
 bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t* output_buffer) const {
+    std::cerr << "DBG DEC " << width << "x" << height << std::endl;
     if (pkt == nullptr || frame == nullptr) {
-        std::cerr << "Called decode before initialization\n";
+        std::cerr << "[VideoDecoder] Called decode before initialization\n";
         return false;
     }
     av_packet_unref(pkt);
@@ -44,7 +45,7 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
 
     int ret = avcodec_send_packet(codec_ctx, pkt);
     if (ret < 0) {
-        std::cerr << "Error sending packet for decoding\n";
+        std::cerr << "[VideoDecoder] Error sending packet for decoding\n";
         return false;
     }
 
@@ -53,7 +54,7 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return false;
         }
-        std::cerr << "Error receiving frame from decoder\n";
+        std::cerr << "[VideoDecoder] Error receiving frame from decoder\n";
         return false;
     }
 
@@ -63,7 +64,7 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
         SWS_BILINEAR, nullptr, nullptr, nullptr
     );
     if (!sws_ctx) {
-        std::cerr << "Could not initialize scaling context\n";
+        std::cerr << "[VideoDecoder] Could not initialize scaling context\n";
         return false;
     }
 
@@ -71,5 +72,6 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
     const int dst_stride[1] = { width * 4 };
     sws_scale(sws_ctx, frame->data, frame->linesize, 0, height, dst_slices, dst_stride);
     sws_freeContext(sws_ctx);
+    std::cerr << "DBG DEC FIN" << std::endl;
     return true;
 }

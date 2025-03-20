@@ -9,7 +9,7 @@
 VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : width(width), height(height) {
     const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     if (!codec) {
-        std::cerr << "H.264 codec not found\n";
+        std::cerr << "[VideoEncoder] H.264 codec not found\n";
         exit(1);
     }
     codec_ctx = avcodec_alloc_context3(codec);
@@ -26,7 +26,7 @@ VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : widt
     av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
 
     if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
-        std::cerr << "Could not open H.264 codec\n";
+        std::cerr << "[VideoEncoder] Could not open H.264 codec\n";
         exit(1);
     }
     frame = av_frame_alloc();
@@ -44,18 +44,20 @@ VideoEncoderRGB565::~VideoEncoderRGB565() {
 }
 
 std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
+    std::cerr << "DBG ENC " << width << "x" << height << std::endl;
     std::cerr << "DBG 1" << std::endl;
     std::vector<uint8_t> encoded_data;
     if (pkt == nullptr || frame == nullptr) {
-        std::cerr << "Called encode before initialization";
+        std::cerr << "[VideoEncoder] Called encode before initialization";
         return encoded_data;
     }
     std::cerr << "DBG 2" << std::endl;
     SwsContext* sws_ctx = nullptr;
     sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565, width, height,
         AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
+    std::cerr << "DBG 2.5" << std::endl;
     if (sws_ctx == nullptr) {
-        std::cerr << "Could not initialize sws context" << std::endl;
+        std::cerr << "[VideoEncoder] Could not initialize sws context" << std::endl;
         return encoded_data;
     }
     std::cerr << "DBG 3" << std::endl;
@@ -71,5 +73,6 @@ std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
     }
     std::cerr << "DBG 5" << std::endl;
     sws_freeContext(sws_ctx);
+    std::cerr << "DBG ENC FIN" << std::endl;
     return encoded_data;
 }
