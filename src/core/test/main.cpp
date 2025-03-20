@@ -4,12 +4,16 @@
 
 #include <iostream>
 #include <ostream>
+#include <thread>
 #include <codec/VideoDecoder.hpp>
 #include <codec/VideoEncoder.hpp>
 
 #include "connection/NetworkDefinitions.hpp"
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
+
+std::mutex mutex = {};
+int success = 0;
 
 void test_video() {
     // Try larger dimensions - many encoders have minimum size requirements
@@ -60,6 +64,10 @@ void test_video() {
                 std::cout << std::uppercase << std::hex << res[i2] << " ";
             }
             std::cout << std::endl;
+
+            mutex.lock();
+            success++;
+            mutex.unlock();
         }
     }
     delete[] data;
@@ -68,6 +76,16 @@ void test_video() {
     delete decoder;
 }
 
+void test_video_multithread() {
+    for (int i = 0; i < 10; ++i) {
+        std::thread([] {
+            test_video();
+        }).detach();
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::cout << std::endl << std::endl << success << std::endl;
+}
+
 int main() {
-    test_video();
+    test_video_multithread();
 }
