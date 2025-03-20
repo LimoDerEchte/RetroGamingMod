@@ -45,8 +45,13 @@ void test_video() {
         }
         log("Data encoded successfully: " + std::to_string(encoded.size()) + " bytes");
 
+        const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, new jUUID{0,0}, encoded.data(), encoded.size()).pack();
+        log("Data encoded packet: " + std::to_string(packet->dataLength) + " bytes");
+
+        const auto unpacked = Int8ArrayPacket::unpack(packet);
+
         // Clean up
-        if (const bool decodeResult = decoder->decode(encoded, res); !decodeResult) {
+        if (const bool decodeResult = decoder->decode(std::vector(unpacked->data, unpacked->data + unpacked->size), res); !decodeResult) {
             log("ERROR: Decoding failed");
         } else {
             log("Data decoded successfully");
