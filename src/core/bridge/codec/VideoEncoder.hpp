@@ -8,7 +8,6 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 }
 
@@ -28,4 +27,5 @@ public:
     ~VideoEncoderRGB565();
 
     std::vector<uint8_t> encode(uint16_t* data);
+    void reset();
 };

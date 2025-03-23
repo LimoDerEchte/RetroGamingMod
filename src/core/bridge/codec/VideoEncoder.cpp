@@ -7,6 +7,7 @@
 #include <iostream>
 extern "C" {
 #include <libavutil/opt.h>
+#include <libavutil/imgutils.h>
 }
 
 VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : width(width), height(height) {
@@ -34,10 +35,20 @@ VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : widt
         exit(1);
     }
     frame = av_frame_alloc();
+    if (!frame) {
+        std::cerr << "[VideoEncoder] Failed to allocate frame\n";
+        exit(1);
+    }
     frame->format = AV_PIX_FMT_YUV420P;
     frame->width = width;
     frame->height = height;
-    av_frame_get_buffer(frame, 32);
+    int ret = av_frame_get_buffer(frame, 0);
+    if (ret < 0) {
+        char errbuf[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
+        std::cerr << "[VideoEncoder] Could not allocate frame buffers: " << errbuf << "\n";
+        exit(1);
+    }
     pkt = av_packet_alloc();
     if (!pkt) {
         std::cerr << "[VideoEncoder] Failed to allocate packet\n";
@@ -62,7 +73,6 @@ VideoEncoderRGB565::~VideoEncoderRGB565() {
 
 std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) {
     std::cerr << "DBG ENC " << width << "x" << height << std::endl;
-    std::cerr << "DBG 1" << std::endl;
     std::vector<uint8_t> encoded_data;
     if (pkt == nullptr || frame == nullptr || sws_ctx == nullptr) {
         std::cerr << "[VideoEncoder] Called encode before initialization";
@@ -73,44 +83,44 @@ std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
         std::cerr << "[VideoEncoder] Could not make frame writable: " << errbuf << "\n";
+        reset();
         return encoded_data;
     }
     frame->pts = frame_count++;
-    std::cerr << "DBG 3" << std::endl;
     uint8_t* src_slices[1] = { reinterpret_cast<uint8_t*>(data) };
     const int src_stride[1] = { 2 * width };
-    sws_scale(sws_ctx, src_slices, src_stride, 0, height, frame->data, frame->linesize);
+    ret = sws_scale(sws_ctx, src_slices, src_stride, 0, height, frame->data, frame->linesize);
+    if (ret < 0) {
+        std::cerr << "[VideoEncoder] Error converting frame format\n";
+        reset();
+        return encoded_data;
+    }
     std::cerr << "DBG 4" << std::endl;
     ret = avcodec_send_frame(codec_ctx, frame);
     if (ret < 0) {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
         std::cerr << "[VideoEncoder] Error sending frame to encoder: " << errbuf << "\n";
-        //reset();
+        reset();
         return encoded_data;
     }
     std::cerr << "DBG 5" << std::endl;
-    while (true) {
-        ret = avcodec_receive_packet(codec_ctx, pkt);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-            // Need more frames or end of stream
-            break;
-        } else if (ret < 0) {
-            char errbuf[AV_ERROR_MAX_STRING_SIZE];
-            av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-            std::cerr << "[VideoEncoder] Error receiving packet: " << errbuf << "\n";
-            break;
-        }
-
-        // Copy packet data
-        encoded_data.assign(pkt->data, pkt->data + pkt->size);
-
-        // Free packet resources
-        av_packet_unref(pkt);
-
-        // We only want one packet per frame for streaming purposes
-        break;
+    ret = avcodec_receive_packet(codec_ctx, pkt);
+    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+    	return encoded_data;
+    } else if (ret < 0) {
+        char errbuf[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
+        std::cerr << "[VideoEncoder] Error receiving packet: " << errbuf << "\n";
+        reset();
+    	return encoded_data;
     }
+    encoded_data.assign(pkt->data, pkt->data + pkt->size);
+    av_packet_unref(pkt);
     std::cerr << "DBG ENC FIN" << std::endl;
     return encoded_data;
+}
+
+void VideoEncoderRGB565::reset() {
+    avcodec_flush_buffers(codec_ctx);
 }

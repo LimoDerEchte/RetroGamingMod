@@ -34,7 +34,6 @@ VideoDecoderARGB::~VideoDecoderARGB() {
 }
 
 bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t* output_buffer) const {
-    std::cerr << "DBG DEC " << width << "x" << height << std::endl;
     if (pkt == nullptr || frame == nullptr) {
         std::cerr << "[VideoDecoder] Called decode before initialization\n";
         return false;
@@ -72,6 +71,5 @@ bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t
     const int dst_stride[1] = { width * 4 };
     sws_scale(sws_ctx, frame->data, frame->linesize, 0, height, dst_slices, dst_stride);
     sws_freeContext(sws_ctx);
-    std::cerr << "DBG DEC FIN" << std::endl;
     return true;
 }
