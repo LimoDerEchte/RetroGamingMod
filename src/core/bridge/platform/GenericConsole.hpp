@@ -32,7 +32,7 @@ public:
 
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
-    std::vector<uint8_t> createFrame();
+    std::vector<uint8_t>* createFrame();
 
     void input(int port, int16_t input);
 };

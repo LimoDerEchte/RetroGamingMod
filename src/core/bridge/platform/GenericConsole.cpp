@@ -75,7 +75,7 @@ void GenericConsole::dispose() {
     bip::shared_memory_object::remove(id);
 }
 
-std::vector<uint8_t> GenericConsole::createFrame() {
+std::vector<uint8_t>* GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
         videoEncoder = new VideoEncoderRGB565(width, height);
     }

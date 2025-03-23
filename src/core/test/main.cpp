@@ -39,7 +39,7 @@ void test_video() {
 
         // Encode with error checking
         const auto encoded = encoder->encode(data);
-        if (encoded.empty()) {
+        if (encoded->empty()) {
             log("ERROR: Encoding failed or produced no data");
             delete[] data;
             delete[] res;
@@ -47,9 +47,9 @@ void test_video() {
             delete decoder;
             return;
         }
-        log("Data encoded successfully: " + std::to_string(encoded.size()) + " bytes");
+        log("Data encoded successfully: " + std::to_string(encoded->size()) + " bytes");
 
-        const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, new jUUID{0,0}, encoded.data(), encoded.size()).pack();
+        const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, new jUUID{0,0}, encoded->data(), encoded->size()).pack();
         log("Data encoded packet: " + std::to_string(packet->dataLength) + " bytes");
 
         const auto unpacked = Int8ArrayPacket::unpack(packet);

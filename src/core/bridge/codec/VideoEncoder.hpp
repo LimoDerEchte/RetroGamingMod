@@ -12,7 +12,7 @@ extern "C" {
 }
 
 #define FPS 30
-#define BITRATE 250000
+#define BITRATE 1000000
 
 class VideoEncoderRGB565 {
     AVCodecContext* codec_ctx = nullptr;
@@ -26,6 +26,6 @@ public:
     VideoEncoderRGB565(int width, int height);
     ~VideoEncoderRGB565();
 
-    std::vector<uint8_t> encode(uint16_t* data);
+    std::vector<uint8_t>* encode(uint16_t* data);
     void reset() const;
 };

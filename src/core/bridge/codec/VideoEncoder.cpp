@@ -27,10 +27,11 @@ VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : widt
     codec_ctx->gop_size = 30;
     codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
     codec_ctx->max_b_frames = 0;
+    codec_ctx->thread_count = 1;
 
-    av_opt_set(codec_ctx->priv_data, "preset", "medium", 0);
+    av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", 0);
     av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
-    av_opt_set(codec_ctx->priv_data, "profile", "main", 0);
+    av_opt_set(codec_ctx->priv_data, "profile", "baseline", 0);
 
     if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
         std::cerr << "[VideoEncoder] Could not open H.264 codec\n";
@@ -58,13 +59,13 @@ VideoEncoderRGB565::~VideoEncoderRGB565() {
     }
 }
 
-std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) {
+std::vector<uint8_t>* VideoEncoderRGB565::encode(uint16_t *data) {
     std::cerr << "DBG ENC " << width << "x" << height << std::endl;
     if (data == nullptr) {
         std::cerr << "[VideoEncoder] Failed to encode frame: null data" << std::endl;
         exit(1);
     }
-    std::vector<uint8_t> encoded_data;
+    auto encoded_data = new std::vector<uint8_t>;
     if (pkt == nullptr || sws_ctx == nullptr) {
         std::cerr << "[VideoEncoder] Called encode before initialization";
         return encoded_data;
@@ -118,8 +119,10 @@ std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) {
         reset();
         return encoded_data;
     }
-    encoded_data.assign(pkt->data, pkt->data + pkt->size);
+    encoded_data->resize(pkt->size);
+    memcpy(encoded_data->data(), pkt->data, pkt->size);
     av_packet_unref(pkt);
+    av_frame_unref(frame);
     std::cerr << "DBG ENC FIN" << std::endl;
     return encoded_data;
 }
