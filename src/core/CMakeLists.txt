@@ -1,4 +1,9 @@
 
+# Stuff
+set(CFLAGS -fsanitize=address -fno-omit-frame-pointer)
+set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
+set(LDFLAGS -fsanitize=address)
+
 # VCPKG Config
 set(VCPKG_TARGET_TRIPLET x64-linux-dynamic)
 

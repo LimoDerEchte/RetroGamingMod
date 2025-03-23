@@ -27,5 +27,5 @@ public:
     ~VideoEncoderRGB565();
 
     std::vector<uint8_t> encode(uint16_t* data);
-    void reset();
+    void reset() const;
 };

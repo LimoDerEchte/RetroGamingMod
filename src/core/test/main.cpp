@@ -30,7 +30,7 @@ void test_video() {
     auto* data = new uint16_t[pixelCount];
     auto* res = new uint32_t[pixelCount];
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
         // Fill with a simple pattern
         for (int i1 = 0; i1 < pixelCount; i1++) {
             data[i1] = (i1 % 2) ? 0xFFFF : 0;
@@ -59,12 +59,12 @@ void test_video() {
             log("ERROR: Decoding failed");
         } else {
             log("Data decoded successfully");
-            std::cout << "Sample decoded values: ";
+            /*std::cout << "Sample decoded values: ";
             for (int i2 = 0; i2 < pixelCount; i2++) {
                 std::cout << std::uppercase << std::hex << res[i2] << " ";
             }
             std::cout << std::endl;
-
+            */
             mutex.lock();
             success++;
             mutex.unlock();
@@ -77,7 +77,7 @@ void test_video() {
 }
 
 void test_video_multithread() {
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 50; ++i) {
         std::thread([] {
             test_video();
         }).detach();
