@@ -14,6 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
+import net.minecraft.util.NetworkUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,7 +34,10 @@ public class ServerHandler {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             mcs = server;
             FileUtil.init();
-            SERVER = new NativeServer(server.getServerPort());
+            int serverPort = server.getServerPort();
+            if(serverPort == -1)
+                serverPort = NetworkUtils.findLocalPort();
+            SERVER = new NativeServer(serverPort);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             GenericHandheldItem.running.values().forEach(NativeGenericConsole::stop);
