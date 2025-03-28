@@ -12,15 +12,19 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-class VideoDecoderARGB {
-    AVCodecContext* codec_ctx = nullptr;
-    AVFrame* frame = nullptr;
-    AVPacket* pkt = nullptr;
+class VideoDecoderInt16 {
     const int width, height;
+    std::vector<int16_t> previous_frame;
+
+    std::vector<int16_t> performInverseDeltaEncoding(const std::vector<int16_t>& delta_frame);
+    [[nodiscard]] std::vector<int16_t> decompressWithZlib(const std::vector<uint8_t>& compressed_data) const;
 
 public:
-    VideoDecoderARGB(int width, int height);
-    ~VideoDecoderARGB();
+    VideoDecoderInt16(int width, int height);
 
-    bool decode(const std::vector<uint8_t>& encoded_data, uint32_t* output_buffer) const;
+    std::vector<int16_t> decodeFrame(const std::vector<uint8_t>& encoded_data);
+    void reset();
+
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
 };

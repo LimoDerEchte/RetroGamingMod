@@ -14,7 +14,7 @@
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
-std::mutex mutex = {};
+/*std::mutex mutex = {};
 int success = 0;
 
 void test_video() {
@@ -66,7 +66,7 @@ void test_video() {
                 std::cout << std::uppercase << std::hex << res[i2] << " ";
             }
             std::cout << std::endl;
-            */
+
             mutex.lock();
             success++;
             mutex.unlock();
@@ -86,7 +86,7 @@ void test_video_multithread() {
     }
     std::this_thread::sleep_for(std::chrono::seconds(2));
     std::cout << std::endl << std::endl << std::dec << success << std::endl;
-}
+}*/
 
 bool compareFrames(const std::vector<int16_t>& original, const std::vector<int16_t>& decoded) {
     if (original.size() != decoded.size()) {

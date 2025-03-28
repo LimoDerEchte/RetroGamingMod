@@ -4,129 +4,77 @@
 
 #include "VideoEncoder.hpp"
 
-#include <iostream>
-extern "C" {
-#include <libavutil/opt.h>
-#include <libavutil/imgutils.h>
+#include <cstring>
+#include <stdexcept>
+#include <zconf.h>
+#include <zlib.h>
+
+std::vector<int16_t> VideoEncoderInt16::performDeltaEncoding(const std::vector<int16_t> &current_frame) {
+    std::vector<int16_t> delta_encoded(current_frame.size());
+    if (previous_frame.empty()) {
+        delta_encoded = current_frame;
+    } else {
+        int16_t prevVal = 0;
+        for (size_t i = 0; i < current_frame.size(); ++i) {
+            const auto frame_delta = static_cast<int16_t>(current_frame[i] - previous_frame[i]);
+            const auto packet_delta = static_cast<int16_t>(prevVal - frame_delta);
+            delta_encoded[i] = packet_delta;
+            prevVal = frame_delta;
+        }
+    }
+    previous_frame = current_frame;
+    return delta_encoded;
 }
 
-VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : width(width), height(height) {
-    av_log_set_level(AV_LOG_DEBUG);
+std::vector<uint8_t> VideoEncoderInt16::compressWithZlib(const std::vector<int16_t> &data, bool is_raw_frame) {
+    std::vector<uint8_t> input_buffer(data.size() * sizeof(int16_t));
+    memcpy(input_buffer.data(), data.data(), input_buffer.size());
 
-    const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    if (!codec) {
-        std::cerr << "[VideoEncoder] H.264 codec not found\n";
-        exit(1);
-    }
-    codec_ctx = avcodec_alloc_context3(codec);
-    codec_ctx->bit_rate = BITRATE;
-    codec_ctx->width = width;
-    codec_ctx->height = height;
-    codec_ctx->time_base = {1, FPS};
-    codec_ctx->framerate = {FPS, 1};
-    codec_ctx->gop_size = 30;
-    codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-    codec_ctx->max_b_frames = 0;
-    codec_ctx->thread_count = 1;
+    uLongf compressed_size = compressBound(input_buffer.size());
+    std::vector<uint8_t> compressed_buffer(compressed_size + 1);
 
-    av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", 0);
-    av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
-    av_opt_set(codec_ctx->priv_data, "profile", "baseline", 0);
+    const int zlib_result = compress2(
+        compressed_buffer.data() + 1,
+        &compressed_size,
+        input_buffer.data(),
+        input_buffer.size(),
+        Z_BEST_COMPRESSION
+    );
 
-    if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
-        std::cerr << "[VideoEncoder] Could not open H.264 codec\n";
-        exit(1);
+    if (zlib_result != Z_OK) {
+        throw std::runtime_error("Compression failed");
     }
-    pkt = av_packet_alloc();
-    if (!pkt) {
-        std::cerr << "[VideoEncoder] Failed to allocate packet\n";
-        exit(1);
-    }
-    sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565, width, height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
-    if (sws_ctx == nullptr) {
-        std::cerr << "[VideoEncoder] Could not initialize sws context" << std::endl;
-        exit(1);
-    }
+
+    compressed_buffer[0] = is_raw_frame ? 1 : 0;
+    compressed_buffer.resize(compressed_size + 1);
+    return compressed_buffer;
 }
 
-VideoEncoderRGB565::~VideoEncoderRGB565() {
-    avcodec_free_context(&codec_ctx);
-    av_frame_free(&frame);
-    av_packet_free(&pkt);
-    if (sws_ctx != nullptr) {
-        sws_freeContext(sws_ctx);
-        sws_ctx = nullptr;
-    }
+VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(width), height(height) {
 }
 
-std::vector<uint8_t>* VideoEncoderRGB565::encode(uint16_t *data) {
-    std::cerr << "DBG ENC " << width << "x" << height << std::endl;
-    if (data == nullptr) {
-        std::cerr << "[VideoEncoder] Failed to encode frame: null data" << std::endl;
-        exit(1);
+std::vector<uint8_t> VideoEncoderInt16::encodeFrame(const std::vector<int16_t> &frame) {
+    if (frame.size() != width * height) {
+        throw std::invalid_argument("Frame size does not match encoder dimensions");
     }
-    auto encoded_data = new std::vector<uint8_t>;
-    if (pkt == nullptr || sws_ctx == nullptr) {
-        std::cerr << "[VideoEncoder] Called encode before initialization";
-        return encoded_data;
+    frame_count++;
+    if (frame_count % RAW_FRAME_INTERVAL == 0) {
+        previous_frame = frame;
+        return compressWithZlib(frame, true);
     }
-    frame = av_frame_alloc();
-    if (!frame) {
-        std::cerr << "[VideoEncoder] Failed to allocate frame\n";
-        exit(1);
-    }
-    frame->format = AV_PIX_FMT_YUV420P;
-    frame->width = width;
-    frame->height = height;
-    if (const int ret = av_frame_get_buffer(frame, 32); ret < 0) {
-        char errBuf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(ret, errBuf, AV_ERROR_MAX_STRING_SIZE);
-        std::cerr << "[VideoEncoder] Could not allocate frame buffers: " << errBuf << "\n";
-        exit(1);
-    }
-    int ret = av_frame_make_writable(frame);
-    if (ret < 0) {
-        char errBuf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(ret, errBuf, AV_ERROR_MAX_STRING_SIZE);
-        std::cerr << "[VideoEncoder] Could not make frame writable: " << errBuf << "\n";
-        reset();
-        return encoded_data;
-    }
-    frame->pts = frame_count++;
-    uint8_t* src_slices[1] = { reinterpret_cast<uint8_t*>(data) };
-    const int src_stride[1] = { 2 * width };
-    ret = sws_scale(sws_ctx, src_slices, src_stride, 0, height, frame->data, frame->linesize);
-    if (ret < 0) {
-        std::cerr << "[VideoEncoder] Error converting frame format\n";
-        reset();
-        return encoded_data;
-    }
-    std::cerr << "DBG 4" << std::endl;
-    ret = avcodec_send_frame(codec_ctx, frame);
-    if (ret < 0) {
-        char errBuf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(ret, errBuf, AV_ERROR_MAX_STRING_SIZE);
-        std::cerr << "[VideoEncoder] Error sending frame to encoder: " << errBuf << "\n";
-        reset();
-        return encoded_data;
-    }
-    std::cerr << "DBG 5" << std::endl;
-    ret = avcodec_receive_packet(codec_ctx, pkt);
-    if (ret < 0) {
-        char errBuf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(ret, errBuf, AV_ERROR_MAX_STRING_SIZE);
-        std::cerr << "[VideoEncoder] Error receiving packet: " << errBuf << "\n";
-        reset();
-        return encoded_data;
-    }
-    encoded_data->resize(pkt->size);
-    memcpy(encoded_data->data(), pkt->data, pkt->size);
-    av_packet_unref(pkt);
-    av_frame_unref(frame);
-    std::cerr << "DBG ENC FIN" << std::endl;
-    return encoded_data;
+    const std::vector<int16_t> delta_encoded = performDeltaEncoding(frame);
+    return compressWithZlib(delta_encoded, false);
 }
 
-void VideoEncoderRGB565::reset() const {
-    avcodec_flush_buffers(codec_ctx);
+void VideoEncoderInt16::reset() {
+    previous_frame.clear();
+    frame_count = 0;
+}
+
+int VideoEncoderInt16::getWidth() const {
+    return width;
+}
+
+int VideoEncoderInt16::getHeight() const {
+    return height;
 }
