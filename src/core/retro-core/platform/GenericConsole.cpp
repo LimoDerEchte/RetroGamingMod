@@ -41,9 +41,14 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
         if (pitch > 4096) {
             pitch = 4096;
         }
-        memcpy(gb->audio, data, 4 * pitch);
-        gb->audioSize = 2 * pitch;
-        gb->audioChanged = true;
+        if (2 * pitch + gb->audioSize > 4096) {
+            memcpy(gb->audio, data, 4 * pitch);
+            gb->audioSize = 2 * pitch;
+        } else {
+            memcpy(&gb->audio[gb->audioSize / 2], data, 2 * pitch);
+            gb->audioSize += 2 * pitch;
+        }
+        gb->audioChanged = gb->audioSize > 4096;
     });
     g_instance->setInputCallback([gb](const unsigned port, const unsigned id) {
         return gb->controls[port] & 1 << id ? 0x7FFF : 0;

@@ -85,16 +85,20 @@ void RetroClient::dispose() {
 }
 
 void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
+    const auto playback = new AudioStreamPlayer();
+    playback->start();
     displays.insert_or_assign(uuid->combine(), display);
+    playbacks.insert_or_assign(uuid->combine(), playback);
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
     displays.erase(uuid->combine());
+    playbacks.erase(uuid->combine());
 }
 
 void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) const {
     int8_t content[3];
-    content[0] = port;
+    content[0] = static_cast<int8_t>(port);
     memcpy(&content[1], &controls, sizeof(controls));
     enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
 }
@@ -189,8 +193,18 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_AUDIO: {
-            std::cout << "[RetroClient] Received update audio packet" << std::endl;
-            // TODO: Update Audio
+            const auto parsed = Int8ArrayPacket::unpack(packet);
+            if (parsed == nullptr) {
+                std::cerr << "[RetroClient] Received invalid audio packet" << std::endl;
+                return;
+            }
+            const auto it = playbacks.find(parsed->ref->combine());
+            if (it == playbacks.end()) {
+                std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
+                return;
+            }
+            it->second->receive(parsed->data, parsed->size);
+            delete[] parsed;
             break;
         }
         case PACKET_AUTH:

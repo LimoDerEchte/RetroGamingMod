@@ -6,13 +6,17 @@
 #include <unordered_map>
 #include <enet/enet.h>
 
+#include "util/AudioSource.hpp"
 #include "util/NativeDisplay.hpp"
 #include "util/NativeUtil.hpp"
 
 class RetroClient {
     ENetHost* client;
     ENetPeer* peer;
+
     std::unordered_map<long, NativeDisplay*> displays;
+    std::unordered_map<long, AudioStreamPlayer*> playbacks;
+
     bool running = false;
     bool authenticated = false;
     const char* token;

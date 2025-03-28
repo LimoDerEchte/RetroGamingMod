@@ -91,7 +91,6 @@ std::vector<uint8_t> GenericConsole::createClip() {
 }
 
 void GenericConsole::input(const int port, const int16_t input) const {
-    std::cout << "[RetroGamingCore] Input: " << port << " " << std::uppercase << std::hex << input << std::endl;
     if (retroCoreHandle != nullptr) {
         retroCoreHandle->controls[port] = input;
     }
