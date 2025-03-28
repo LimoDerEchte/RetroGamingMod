@@ -1,5 +1,7 @@
 
-add_executable(bridge_test main.cpp)
+add_executable(bridge_test main.cpp
+        new_codec/VideoEncoder.hpp
+        new_codec/VideoDecoder.hpp)
 
 target_include_directories(bridge_test PRIVATE
         .
@@ -7,4 +9,4 @@ target_include_directories(bridge_test PRIVATE
         ../shared
 )
 
-target_link_libraries(bridge_test PRIVATE bridge)
+target_link_libraries(bridge_test PRIVATE bridge z)
