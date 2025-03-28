@@ -6,7 +6,16 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include <opus.h>
+
+#if __has_include(<libopus/opus.h>)
+    #include <libopus/opus.h>
+#elif __has_include(<opus/opus.h>)
+    #include <opus/opus.h>
+#elif __has_include(<opus.h>)
+    #include <opus.h>
+#else
+    #error "Opus header not found. Please install libopus-dev or specify the correct include path."
+#endif
 
 class AudioDecoderOpus {
     int sample_rate;

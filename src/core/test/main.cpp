@@ -7,6 +7,8 @@
 #include <codec/VideoDecoder.hpp>
 #include <codec/VideoEncoder.hpp>
 
+#include "codec/AudioDecoder.hpp"
+#include "codec/AudioEncoder.hpp"
 #include "connection/NetworkDefinitions.hpp"
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
@@ -150,7 +152,134 @@ void test_new_codec() {
     }
 }
 
+void test_audio_codec() {
+    try {
+        constexpr int sample_rate = 48000;
+        constexpr int channels = 2;
+        constexpr int frame_duration_ms = 20;  // Recommended Opus frame duration
+        constexpr int samples_per_frame = (sample_rate * frame_duration_ms) / 1000 * channels;
+        constexpr int count = 1000;
+
+        AudioEncoderOpus encoder(
+            48000,
+            channels,
+            AudioEncoderOpus::Complexity::Balanced
+        );
+        AudioDecoderOpus decoder(
+            48000,
+            channels
+        );
+
+        std::vector<std::vector<int16_t>> original_frames;
+        std::vector<std::vector<uint8_t>> encoded_frames;
+        std::vector<std::vector<int16_t>> decoded_frames;
+
+        size_t total_size = 0;
+
+        // Seed random number generator for consistent test
+        std::srand(42);
+
+        // Create frames with more robust audio-like data
+        for (int i = 0; i < count; ++i) {
+            std::vector<int16_t> frame(samples_per_frame);
+            for (size_t j = 0; j < frame.size(); ++j) {
+                // More complex synthetic audio generation
+                const double t = static_cast<double>(j) / sample_rate;
+
+                // Multiple sine waves with different frequencies
+                const double sine1 = std::sin(2 * M_PI * 440 * t);   // 440 Hz fundamental
+                const double sine2 = std::sin(2 * M_PI * 880 * t);   // First harmonic
+                const double sine3 = std::sin(2 * M_PI * 1320 * t); // Second harmonic
+
+                // Add some noise and randomness
+                const double noise = (std::rand() / static_cast<double>(RAND_MAX) - 0.5) * 0.1;
+
+                // Combine signals and scale
+                const double combined = (sine1 + 0.5 * sine2 + 0.25 * sine3 + noise);
+
+                frame[j] = static_cast<int16_t>(combined * 32767 * 0.5);
+            }
+
+            original_frames.push_back(frame);
+
+            try {
+                auto encoded_frame = encoder.encodeFrame(frame);
+                encoded_frames.push_back(encoded_frame);
+                total_size += encoded_frame.size();
+
+                auto decoded_frame = decoder.decodeFrame(encoded_frame);
+                decoded_frames.push_back(decoded_frame);
+            }
+            catch (const std::exception& e) {
+                std::cerr << "Encoding/Decoding error on frame " << i << ": " << e.what() << std::endl;
+            }
+        }
+
+        // More detailed analysis
+        size_t matching_frames = 0;
+        size_t total_samples_diff = 0;
+        size_t max_sample_diff = 0;
+        double max_frame_mse = 0.0;
+
+        for (size_t i = 0; i < original_frames.size(); ++i) {
+            const auto& orig = original_frames[i];
+            const auto& dec = decoded_frames[i];
+
+            if (orig.size() != dec.size()) {
+                std::cerr << "Frame size mismatch: " << orig.size() << " vs " << dec.size() << std::endl;
+                continue;
+            }
+
+            // Calculate Mean Squared Error (MSE) for the frame
+            double frame_mse = 0.0;
+            size_t frame_sample_diff = 0;
+            for (size_t j = 0; j < orig.size(); ++j) {
+                int32_t diff = std::abs(static_cast<int32_t>(orig[j]) - static_cast<int32_t>(dec[j]));
+                frame_mse += diff * diff;
+                frame_sample_diff += diff;
+                max_sample_diff = std::max(max_sample_diff, static_cast<size_t>(diff));
+            }
+
+            frame_mse /= orig.size();
+            frame_mse = std::sqrt(frame_mse);
+            max_frame_mse = std::max(max_frame_mse, frame_mse);
+
+            total_samples_diff += frame_sample_diff;
+
+            // More lenient matching for lossy audio codec
+            if (frame_mse < 500.0) {  // Adjusted threshold
+                matching_frames++;
+            }
+            else {
+                // Detailed logging for problematic frames
+                std::cerr << "Frame " << i << " reconstruction error: "
+                          << "MSE=" << frame_mse
+                          << ", Sample Diff=" << frame_sample_diff / orig.size()
+                          << std::endl;
+            }
+        }
+
+        std::cout << "Audio Codec Test Detailed Results:" << std::endl;
+        std::cout << "Frames matched: " << matching_frames
+                  << " out of " << original_frames.size()
+                  << " (" << (matching_frames * 100.0 / original_frames.size()) << "%)" << std::endl;
+        std::cout << "Total encoded size: " << total_size << " bytes" << std::endl;
+        std::cout << "Average samples difference: "
+                  << static_cast<double>(total_samples_diff) / (count * samples_per_frame)
+                  << std::endl;
+        std::cout << "Max sample difference: " << max_sample_diff << std::endl;
+        std::cout << "Max frame Mean Squared Error: " << max_frame_mse << std::endl;
+
+        encoder.reset();
+        decoder.reset();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Audio Codec Test Critical Error: " << e.what() << std::endl;
+    }
+}
+
 int main() {
-    test_new_codec();
+    //test_new_codec();
+    test_audio_codec();
     return 0;
 }
