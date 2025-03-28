@@ -34,7 +34,7 @@ public:
 
     std::vector<uint8_t> createFrame();
 
-    void input(int port, int16_t input);
+    void input(int port, int16_t input) const;
 };
 
 class GenericConsoleRegistry {
@@ -45,4 +45,5 @@ public:
     static void registerConsole(GenericConsole *console);
     static void unregisterConsole(GenericConsole *console);
     static void withConsoles(const std::function<void(GenericConsole*)>& func);
+    static void withConsole(const jUUID* uuid, const std::function<void(GenericConsole*)>& func);
 };

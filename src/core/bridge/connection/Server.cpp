@@ -202,8 +202,17 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_CONTROLS: {
-            std::cerr << "[RetroServer] Received update controls packet" << std::endl;
-            // TODO: Update Controls
+            const auto parsed = Int8ArrayPacket::unpack(packet);
+            GenericConsoleRegistry::withConsole(parsed->ref, [parsed](const GenericConsole* entry) {
+                const int port = parsed->data[0];
+                union {
+                    uint8_t bytes[2];
+                    int16_t value = 0;
+                } converter;
+                converter.bytes[0] = parsed->data[1];
+                converter.bytes[1] = parsed->data[2];
+                entry->input(port, converter.value);
+            });
             break;
         }
         case PACKET_AUTH_ACK:

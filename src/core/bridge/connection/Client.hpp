@@ -24,6 +24,7 @@ public:
 
     void registerDisplay(const jUUID* uuid, NativeDisplay* display);
     void unregisterDisplay(const jUUID* uuid);
+    void sendControlsUpdate(const jUUID* link, int port, int16_t controls) const;
 
     void mainLoop();
     void onConnect() const;

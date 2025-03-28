@@ -13,7 +13,6 @@ public class NetworkId {
     public static final Identifier UPDATE_AUDIO_DATA = Identifier.of("emumod", "audio_data");
 
     public static final Identifier CREATE_CARTRIDGE = Identifier.of("emumod", "create_cartridge");
-    public static final Identifier UPDATE_CONTROLS = Identifier.of("emumod", "update_controls");
 
     public static class ScreenType {
         public static final byte CARTRIDGE          = 0x00;

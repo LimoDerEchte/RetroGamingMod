@@ -47,6 +47,14 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_register
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen
   (JNIEnv *, jclass, jlong, jlong);
 
+/*
+ * Class:     com_limo_emumod_client_bridge_NativeClient
+ * Method:    sendControlUpdate
+ * Signature: (JJIS)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate
+  (JNIEnv *, jclass, jlong, jlong, jint, jshort);
+
 #ifdef __cplusplus
 }
 #endif

@@ -82,8 +82,8 @@ std::vector<uint8_t> GenericConsole::createFrame() {
     return videoEncoder->encodeFrame(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
 }
 
-void GenericConsole::input(const int port, const int16_t input) {
-    std::lock_guard lock(mutex);
+void GenericConsole::input(const int port, const int16_t input) const {
+    std::cout << "[RetroGamingCore] Input: " << port << " " << std::uppercase << std::hex << input << std::endl;
     if (retroCoreHandle != nullptr) {
         retroCoreHandle->controls[port] = input;
     }
@@ -99,11 +99,24 @@ void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
     consoles.erase(std::ranges::remove(consoles, console).begin(), consoles.end());
 }
 
-void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole *)>& func) {
+void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole*)>& func) {
     std::lock_guard guard(consoleMutex);
     for (const auto &console : consoles) {
         console->mutex.lock();
         func(console);
+        console->mutex.unlock();
+    }
+}
+
+void GenericConsoleRegistry::withConsole(const jUUID *uuid, const std::function<void(GenericConsole*)> &func) {
+    std::lock_guard guard(consoleMutex);
+    for (const auto &console : consoles) {
+        console->mutex.lock();
+        if (memcmp(uuid, console->uuid, sizeof(jUUID)) == 0) {
+            func(console);
+            console->mutex.unlock();
+            return;
+        }
         console->mutex.unlock();
     }
 }

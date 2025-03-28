@@ -105,11 +105,5 @@ public class ServerHandler {
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });
         });
-        ServerPlayNetworking.registerGlobalReceiver(C2S.UpdateGameControls.ID, (payload, ctx) -> {
-            // Gameboys
-            if(GenericHandheldItem.running.containsKey(payload.uuid())) {
-                GenericHandheldItem.running.get(payload.uuid()).updateInput(payload.port(), payload.input());
-            }
-        });
     }
 }

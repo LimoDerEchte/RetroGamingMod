@@ -41,6 +41,12 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     client->unregisterDisplay(uuid);
 }
 
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint port, const jshort controls) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    client->sendControlsUpdate(uuid, port, controls);
+}
+
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
     std::cout << "[RetroClient] Connecting to ENet server on " << ip << ":" << port << std::endl;
     if (enet_initialize() != 0) {
@@ -84,6 +90,13 @@ void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
     displays.erase(uuid->combine());
+}
+
+void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) const {
+    int8_t content[3];
+    content[0] = port;
+    memcpy(&content[1], &controls, sizeof(controls));
+    enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
 }
 
 void RetroClient::mainLoop() {

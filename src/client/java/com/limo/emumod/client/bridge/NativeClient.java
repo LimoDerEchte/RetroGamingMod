@@ -29,9 +29,14 @@ public class NativeClient {
         unregisterScreen(handle, NativeUtil.nativeUUID(uuid));
     }
 
+    public void updateControls(UUID uuid, int port, short controls) {
+        sendControlUpdate(handle, NativeUtil.nativeUUID(uuid), port, controls);
+    }
+
     private static native long connect(String ip, int port, String token);
     private static native void disconnect(long ptr);
     private static native boolean isAuthenticated(long ptr);
     private static native long registerScreen(long ptr, long uuid, int width, int height);
     private static native void unregisterScreen(long ptr, long uuid);
+    private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
 }
