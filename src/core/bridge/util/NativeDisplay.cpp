@@ -41,8 +41,8 @@ NativeDisplay::NativeDisplay(const int width, const int height) : width(width), 
 void NativeDisplay::receive(const uint8_t *data, const size_t size) {
     std::lock_guard lock(mutex);
     if (decoder == nullptr) {
-        decoder = new VideoDecoderARGB(width, height);
+        decoder = new VideoDecoderInt16(width, height);
     }
-    decoder->decode(std::vector(data, data + size), buf);
+    decoder->decodeFrame(std::vector(data, data + size));
     changed = true;
 }

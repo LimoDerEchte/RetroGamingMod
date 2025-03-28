@@ -75,11 +75,11 @@ void GenericConsole::dispose() {
     bip::shared_memory_object::remove(id);
 }
 
-std::vector<uint8_t>* GenericConsole::createFrame() {
+std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
-        videoEncoder = new VideoEncoderRGB565(width, height);
+        videoEncoder = new VideoEncoderInt16(width, height);
     }
-    return videoEncoder->encode(retroCoreHandle->display);
+    return videoEncoder->encodeFrame(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
 }
 
 void GenericConsole::input(const int port, const int16_t input) {

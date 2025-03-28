@@ -5,7 +5,7 @@
 #include "codec/VideoDecoder.hpp"
 
 class NativeDisplay {
-    VideoDecoderARGB* decoder= nullptr;
+    VideoDecoderInt16* decoder = nullptr;
 
 public:
     mutable bool changed = false;

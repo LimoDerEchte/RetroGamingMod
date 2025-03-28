@@ -9,14 +9,13 @@
 #include "codec/VideoEncoder.hpp"
 #include "util/NativeDisplay.hpp"
 
-#include "util/NativeAudio.hpp"
 #include "util/NativeUtil.hpp"
 
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    VideoEncoderRGB565* videoEncoder = nullptr;
+    VideoEncoderInt16* videoEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
@@ -32,7 +31,8 @@ public:
 
     void load(const char *retroCore, const char *core, const char *rom);
     void dispose();
-    std::vector<uint8_t>* createFrame();
+
+    std::vector<uint8_t> createFrame();
 
     void input(int port, int16_t input);
 };

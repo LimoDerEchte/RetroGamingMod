@@ -127,13 +127,12 @@ void RetroServer::mainVideoSenderLoop(const int fps) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
             const auto frame = console->createFrame();
-            if (frame->empty())
+            if (frame.empty())
                 return;
             const auto packet = Int8ArrayPacket(
                 PACKET_UPDATE_DISPLAY, console->uuid,
-                frame->data(), frame->size()
+                frame.data(), frame.size()
             ).pack();
-            delete[] frame;
             mutex.lock();
             for (const RetroServerClient* client : *clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)

@@ -4,13 +4,10 @@
 
 #include <iostream>
 #include <ostream>
-#include <thread>
 #include <codec/VideoDecoder.hpp>
 #include <codec/VideoEncoder.hpp>
 
 #include "connection/NetworkDefinitions.hpp"
-#include "new_codec/VideoDecoder.hpp"
-#include "new_codec/VideoEncoder.hpp"
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
@@ -109,8 +106,8 @@ void test_new_codec() {
         constexpr int width = 240;
         constexpr int height = 160;
         constexpr int count = 1000;
-        VideoEncoder encoder(width, height);
-        VideoDecoder decoder(width, height);
+        VideoEncoderInt16 encoder(width, height);
+        VideoDecoderInt16 decoder(width, height);
 
         std::vector<std::vector<int16_t>> original_frames;
         std::vector<std::vector<uint8_t>> encoded_frames;
