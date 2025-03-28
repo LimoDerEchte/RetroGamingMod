@@ -8,6 +8,7 @@
 #include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
 #include <jni.h>
 
+#include "codec/AudioEncoder.hpp"
 #include "util/NativeUtil.hpp"
 
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
@@ -80,6 +81,13 @@ std::vector<uint8_t> GenericConsole::createFrame() {
         videoEncoder = new VideoEncoderInt16(width, height);
     }
     return videoEncoder->encodeFrame(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
+}
+
+std::vector<uint8_t> GenericConsole::createClip() {
+    if (audioEncoder == nullptr) {
+        audioEncoder = new AudioEncoderOpus(48000, 2, AudioEncoderOpus::Complexity::Balanced);
+    }
+    return audioEncoder->encodeFrame(std::vector(retroCoreHandle->audio, retroCoreHandle->audio + retroCoreHandle->audioSize));
 }
 
 void GenericConsole::input(const int port, const int16_t input) const {

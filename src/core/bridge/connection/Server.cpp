@@ -46,7 +46,7 @@ RetroServer::RetroServer(const int port) {
     running = true;
     std::thread([&] { mainReceiverLoop(); }).detach();
     std::thread([&] { mainKeepAliveLoop(); }).detach();
-    std::thread([&] { mainVideoSenderLoop(30); }).detach();
+    std::thread([&] { mainSenderLoop(30); }).detach();
     std::cout << "[RetroServer] Started ENet server on port " << port << std::endl;
 }
 
@@ -119,10 +119,11 @@ void RetroServer::mainKeepAliveLoop() {
     }
 }
 
-void RetroServer::mainVideoSenderLoop(const int fps) {
+void RetroServer::mainSenderLoop(const int fps) {
     const auto delay = std::chrono::nanoseconds(1000000000 / fps);
     auto next = std::chrono::high_resolution_clock::now();
     while (running) {
+        // Pack and send Video Data
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
@@ -131,6 +132,26 @@ void RetroServer::mainVideoSenderLoop(const int fps) {
                 return;
             const auto packet = Int8ArrayPacket(
                 PACKET_UPDATE_DISPLAY, console->uuid,
+                frame.data(), frame.size()
+            ).pack();
+            mutex.lock();
+            for (const RetroServerClient* client : *clients) {
+                if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
+                    continue;
+                enet_peer_send(client->peer, 0, packet);
+            }
+            mutex.unlock();
+            delete[] packet;
+        });
+        // Pack and send Audio Data
+        GenericConsoleRegistry::withConsoles([this](const auto console) {
+            if (!console->retroCoreHandle->audioChanged)
+                return;
+            const auto frame = console->createClip();
+            if (frame.empty())
+                return;
+            const auto packet = Int8ArrayPacket(
+                PACKET_UPDATE_AUDIO, console->uuid,
                 frame.data(), frame.size()
             ).pack();
             mutex.lock();

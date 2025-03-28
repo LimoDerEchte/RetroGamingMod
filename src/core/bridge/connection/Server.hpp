@@ -31,7 +31,7 @@ public:
 
     void mainReceiverLoop();
     void mainKeepAliveLoop();
-    void mainVideoSenderLoop(int fps);
+    void mainSenderLoop(int fps);
     void onConnect(ENetPeer* peer) const;
     void onDisconnect(ENetPeer* peer) const;
     void onMessage(ENetPeer* peer, const ENetPacket* packet);

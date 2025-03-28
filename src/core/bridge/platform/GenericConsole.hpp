@@ -7,15 +7,16 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
 #include "codec/VideoEncoder.hpp"
-#include "util/NativeDisplay.hpp"
 
 #include "util/NativeUtil.hpp"
 
+class AudioEncoderOpus;
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
     VideoEncoderInt16* videoEncoder = nullptr;
+    AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
@@ -33,6 +34,7 @@ public:
     void dispose();
 
     std::vector<uint8_t> createFrame();
+    std::vector<uint8_t> createClip();
 
     void input(int port, int16_t input) const;
 };
