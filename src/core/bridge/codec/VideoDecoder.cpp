@@ -56,6 +56,17 @@ std::vector<int16_t> VideoDecoderInt16::decodeFrame(const std::vector<uint8_t> &
     return performInverseDeltaEncoding(decompressed_frame);
 }
 
+void VideoDecoderInt16::decodeFrameRGB565(const std::vector<uint8_t> &encoded_data, uint32_t* buf) {
+    const std::vector<int16_t> decompressed_565 = decodeFrame(encoded_data);
+    for (size_t i = 0; i < width * height; ++i) {
+        const uint16_t p = decompressed_565[i];
+        buf[i] = 0xFF000000 |
+                 (((p >> 11) & 0x1F) << 19) |
+                 (((p >> 5) & 0x3F) << 10) |
+                 ((p & 0x1F) << 3);
+    }
+}
+
 void VideoDecoderInt16::reset() {
     previous_frame.clear();
 }

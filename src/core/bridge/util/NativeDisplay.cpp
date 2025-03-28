@@ -43,6 +43,6 @@ void NativeDisplay::receive(const uint8_t *data, const size_t size) {
     if (decoder == nullptr) {
         decoder = new VideoDecoderInt16(width, height);
     }
-    decoder->decodeFrame(std::vector(data, data + size));
+    decoder->decodeFrameRGB565(std::vector(data, data + size), buf);
     changed = true;
 }

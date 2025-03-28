@@ -23,6 +23,8 @@ public:
     VideoDecoderInt16(int width, int height);
 
     std::vector<int16_t> decodeFrame(const std::vector<uint8_t>& encoded_data);
+    void decodeFrameRGB565(const std::vector<uint8_t> &encoded_data, uint32_t* buf);
+
     void reset();
 
     [[nodiscard]] int getWidth() const;
