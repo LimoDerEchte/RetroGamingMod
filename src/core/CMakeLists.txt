@@ -20,6 +20,7 @@ find_package(boost_interprocess CONFIG REQUIRED)
 find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
+find_package(OpenAL REQUIRED openal)
 
 # Actual Projects
 add_subdirectory(bridge)

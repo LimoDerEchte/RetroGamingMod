@@ -5,6 +5,7 @@
     "boost-interprocess",
     "boost-process",
     "enet",
-    "opus"
+    "opus",
+    "openal-soft"
   ]
 }
