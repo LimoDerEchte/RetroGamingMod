@@ -19,7 +19,7 @@ find_package(JNI REQUIRED)
 find_package(boost_interprocess CONFIG REQUIRED)
 find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
-find_package(FFMPEG REQUIRED)
+find_package(Opus CONFIG REQUIRED)
 
 # Actual Projects
 add_subdirectory(bridge)

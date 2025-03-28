@@ -19,6 +19,10 @@ add_library(bridge SHARED
         codec/VideoEncoder.hpp
         codec/VideoDecoder.cpp
         codec/VideoDecoder.hpp
+        codec/AudioEncoder.cpp
+        codec/AudioEncoder.hpp
+        codec/AudioDecoder.cpp
+        codec/AudioDecoder.hpp
 )
 
 target_include_directories(bridge PRIVATE
@@ -27,7 +31,7 @@ target_include_directories(bridge PRIVATE
         ${JNI_INCLUDE_DIRS}
 )
 
-target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet z)
+target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet Opus::opus z)
 
 # FFmpeg
 #target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
