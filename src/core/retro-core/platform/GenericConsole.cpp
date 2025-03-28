@@ -38,10 +38,13 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
         }
     });
     g_instance->setAudioCallback([gb](const int16_t* data, size_t pitch) {
+        std::cout << "[RetroGamingCore] Audio Callback " << pitch << std::endl;
         if (pitch > 4096) {
             pitch = 4096;
         }
-        if (2 * pitch + gb->audioSize > 4096) {
+        if (gb->audioChanged)
+            return;
+        if (2 * pitch + gb->audioSize > 8192) {
             memcpy(gb->audio, data, 4 * pitch);
             gb->audioSize = 2 * pitch;
         } else {

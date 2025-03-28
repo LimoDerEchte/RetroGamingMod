@@ -148,6 +148,7 @@ void RetroServer::mainSenderLoop(const int fps) {
             if (!console->retroCoreHandle->audioChanged)
                 return;
             const auto frame = console->createClip();
+            console->retroCoreHandle->audioChanged = false;
             if (frame.empty())
                 return;
             const auto packet = Int8ArrayPacket(
