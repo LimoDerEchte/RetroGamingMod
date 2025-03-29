@@ -53,6 +53,9 @@ public class EmuItems {
     public static final Item GAME_GEAR = register(new GenericHandheldItem(ItemId.Registry.GAME_GEAR,
             NetworkId.ScreenType.GAME_GEAR, GAME_GEAR_CARTRIDGE), ItemId.Registry.GAME_GEAR);
 
+    public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Settings().maxCount(8)
+            .registryKey(ItemId.Registry.NES)), ItemId.Registry.NES);
+
     public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8)
             .registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
     public static final Item LARGE_TV = register(new BlockItem(EmuBlocks.LARGE_TV, new Item.Settings().maxCount(8)
@@ -86,6 +89,8 @@ public class EmuItems {
             group.add(GAMEBOY_COLOR);
             group.add(GAMEBOY_ADVANCE);
             group.add(GAME_GEAR);
+
+            group.add(NES);
 
             group.add(MONITOR);
             group.add(LARGE_TV);

@@ -39,6 +39,8 @@ public class ItemId {
         public static final RegistryKey<Item> GAMEBOY_ADVANCE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE);
         public static final RegistryKey<Item> GAME_GEAR = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR);
 
+        public static final RegistryKey<Item> NES = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.NES);
+
         public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
         public static final RegistryKey<Item> LARGE_TV = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.LARGE_TV);
 
