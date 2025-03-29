@@ -5,6 +5,7 @@ import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.console.GenericHandheldItem;
+import com.limo.emumod.monitor.CableItem;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.util.FileUtil;
@@ -62,6 +63,7 @@ public class EmuItems {
             .registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
     public static final Item LARGE_TV = register(new BlockItem(EmuBlocks.LARGE_TV, new Item.Settings().maxCount(8)
             .registryKey(ItemId.Registry.LARGE_TV)), ItemId.Registry.LARGE_TV);
+    public static final Item CABLE = register(new CableItem(), ItemId.Registry.CABLE);
 
     public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.emumod.main"))
@@ -96,6 +98,7 @@ public class EmuItems {
 
             group.add(MONITOR);
             group.add(LARGE_TV);
+            group.add(CABLE);
         });
     }
 

@@ -48,10 +48,8 @@ public class MonitorBlock extends BlockWithEntity {
                     mon.fileId = stack.get(FILE_ID);
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
-                    EmuMod.LOGGER.info("Linked Monitor at X:{}, Y:{}, Z:{}", pos.getX(), pos.getY(), pos.getZ());
-                    player.sendMessage(Text.literal("Monitor linked to game"), true);
-                } else
-                    player.sendMessage(Text.literal("Internal Error"), true);
+                    player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
+                }
             }
         }
         return ActionResult.SUCCESS;

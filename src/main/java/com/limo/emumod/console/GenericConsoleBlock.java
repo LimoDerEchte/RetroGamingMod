@@ -1,9 +1,13 @@
 package com.limo.emumod.console;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import com.mojang.serialization.MapCodec;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
@@ -30,6 +34,7 @@ import java.io.File;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
+import static com.limo.emumod.network.ServerHandler.mcs;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 
 public class GenericConsoleBlock extends BlockWithEntity {
@@ -53,10 +58,16 @@ public class GenericConsoleBlock extends BlockWithEntity {
         if(world.isClient || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
         if(con.fileId != null && player.isSneaking()) {
+            if(EmuMod.running.containsKey(con.fileId))
+                EmuMod.running.get(con.fileId).stop();
+            EmuMod.running.remove(con.fileId);
             player.getInventory().insertStack(con.cartridge);
+            PlayerLookup.all(mcs).forEach(sp ->
+                    ServerPlayNetworking.send(sp, new S2C.UpdateDisplayPayload(con.fileId, 0, 0)));
             con.cartridge = null;
             con.fileId = null;
             con.markDirty();
+            player.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
         }
         if(stack.getItem() != cartridgeItem || !LinkedCartridgeItem.hasGame(stack))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;

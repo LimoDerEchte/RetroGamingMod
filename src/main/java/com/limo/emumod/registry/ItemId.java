@@ -24,6 +24,8 @@ public class ItemId {
         public static final Identifier GAMEBOY_ADVANCE = Identifier.of("emumod", "gameboy_advance");
         public static final Identifier GAME_GEAR = Identifier.of("emumod", "game_gear");
 
+        public static final Identifier CABLE = Identifier.of("emumod", "cable");
+
         public static final Identifier MAIN_GROUP = Identifier.of("emumod", "main_group");
     }
 
@@ -47,6 +49,7 @@ public class ItemId {
 
         public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
         public static final RegistryKey<Item> LARGE_TV = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.LARGE_TV);
+        public static final RegistryKey<Item> CABLE = RegistryKey.of(RegistryKeys.ITEM, Id.CABLE);
 
         public static final RegistryKey<ItemGroup> MAIN_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP, Id.MAIN_GROUP);
     }

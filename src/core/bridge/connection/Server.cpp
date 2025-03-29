@@ -230,7 +230,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
             break;
         }
         case PACKET_KEEP_ALIVE: {
-            std::cout << "[RetroServer] Received Keep Alive from " << client->peer->incomingPeerID << std::endl;
+            //std::cout << "[RetroServer] Received Keep Alive from " << client->peer->incomingPeerID << std::endl;
             break;
         }
         case PACKET_UPDATE_CONTROLS: {
