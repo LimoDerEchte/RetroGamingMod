@@ -11,7 +11,7 @@
 
 class LibRetroCore {
 public:
-    explicit LibRetroCore(std::string corePath);
+    explicit LibRetroCore(std::string corePath, std::string systemPath);
     ~LibRetroCore();
     bool loadCore();
     [[nodiscard]] bool loadROM(const std::string &romPath) const;
@@ -28,6 +28,7 @@ public:
     LibRetroCore& operator=(const LibRetroCore&) = delete;
 
 private:
+    std::string systemPath;
     std::string corePath;
     void* coreHandle;
     std::mutex saveMutex;

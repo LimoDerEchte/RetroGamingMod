@@ -18,13 +18,25 @@ static std::deque<int16_t> g_audioBuffer;
 static constexpr size_t FRAME_SIZE = 1920; // Fixed frame size (40ms at 48kHz)
 static constexpr int SAVE_DELAY_SECONDS = 30;
 
+char* getDirectory(const char* path) {
+    char* dirPath = strdup(path);
+    if (!dirPath) return nullptr;
+    if (char* lastSlash = strrchr(dirPath, '/')) {
+        *lastSlash = '\0';
+    } else {
+        dirPath[0] = '.';
+        dirPath[1] = '\0';
+    }
+    return dirPath;
+}
+
 int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, const char *rom, const char *save) {
     auto [gb, len] = mem->find<GenericShared>("SharedData");
     if (gb == nullptr || len == 0) {
         std::cerr << "[RetroGamingCore] The shared memory content couldn't be located" << std::endl;
         return EXIT_FAILURE;
     }
-    g_instance = new LibRetroCore(core);
+    g_instance = new LibRetroCore(core, getDirectory(core));
     if (!g_instance->loadCore()) {
         std::cerr << "[RetroGamingCore] Failed to load core" << std::endl;
         return EXIT_FAILURE;

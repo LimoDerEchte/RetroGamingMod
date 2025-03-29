@@ -26,6 +26,7 @@
   "item.emumod.handheld.eject": "Cartridge was ejected",
   "item.emumod.handheld.insert": "Cartridge was inserted successfully",
   "item.emumod.handheld.file_deleted": "The file linked with the cartridge was deleted!",
+  "item.emumod.handheld.bios": "The bios for this console is missing: %s",
 
   "gui.emumod.cartridge.title": "Cartridge Creation",
   "gui.emumod.cartridge.create": "Create Cartridge",

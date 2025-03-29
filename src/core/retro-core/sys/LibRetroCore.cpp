@@ -3,6 +3,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <cstring>
 #include <fstream>
 #include <utility>
 #include <filesystem>
@@ -20,8 +21,8 @@ static void log_printf(retro_log_level level, const char *fmt, ...) {
     va_end(args);*/
 }
 
-LibRetroCore::LibRetroCore(std::string corePath)
-    : corePath(std::move(corePath)), coreHandle(nullptr), retro_init(nullptr), retro_deinit(nullptr),
+LibRetroCore::LibRetroCore(std::string corePath, std::string systemPath)
+    : systemPath(std::move(systemPath)), corePath(std::move(corePath)), coreHandle(nullptr), retro_init(nullptr), retro_deinit(nullptr),
       retro_run(nullptr), retro_load_game(nullptr), retro_unload_game(nullptr), retro_set_video_refresh(nullptr),
       retro_set_environment(nullptr), retro_set_input_poll(nullptr), retro_set_input_state(nullptr),
       retro_set_audio_sample(nullptr), retro_set_audio_sample_batch(nullptr), retro_get_system_info(nullptr),
@@ -223,7 +224,7 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
         case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY: {
-            *static_cast<const char **>(data) = ".";
+            memcpy(data, g_instance->systemPath.c_str(), g_instance->systemPath.size());
             return true;
         }
         case RETRO_ENVIRONMENT_SET_VARIABLES:
