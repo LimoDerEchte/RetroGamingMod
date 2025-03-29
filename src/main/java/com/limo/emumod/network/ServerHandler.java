@@ -1,9 +1,9 @@
 package com.limo.emumod.network;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.bridge.NativeServer;
 import com.limo.emumod.cartridge.CartridgeItem;
-import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -40,8 +40,8 @@ public class ServerHandler {
             SERVER = new NativeServer(serverPort);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            GenericHandheldItem.running.values().forEach(NativeGenericConsole::stop);
-            GenericHandheldItem.running.clear();
+            EmuMod.running.values().forEach(NativeGenericConsole::stop);
+            EmuMod.running.clear();
             if(SERVER != null) {
                 SERVER.stop();
                 SERVER = null;
@@ -49,7 +49,7 @@ public class ServerHandler {
         });
         ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
             sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
-            for(Map.Entry<UUID, NativeGenericConsole> console : GenericHandheldItem.running.entrySet()) {
+            for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
                 sender.sendPacket(new S2C.UpdateDisplayPayload(console.getKey(),
                         console.getValue().getWidth(), console.getValue().getHeight()));
             }

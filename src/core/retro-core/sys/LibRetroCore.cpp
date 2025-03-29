@@ -224,7 +224,8 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
         case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY: {
-            memcpy(data, g_instance->systemPath.c_str(), g_instance->systemPath.size());
+            //memcpy(data, g_instance->systemPath.c_str(), g_instance->systemPath.size());
+            *static_cast<const char **>(data) = ".";
             return true;
         }
         case RETRO_ENVIRONMENT_SET_VARIABLES:

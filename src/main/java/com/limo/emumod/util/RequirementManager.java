@@ -21,6 +21,7 @@ public class RequirementManager {
 
     public static File mGBA;
     public static File gearSystem;
+    public static File FCEUmm;
 
     public static void init() {
         detectPlatform();
@@ -30,6 +31,7 @@ public class RequirementManager {
         // LibRetro Cores
         checkFile(mGBA);
         checkFile(gearSystem);
+        checkFile(FCEUmm);
         // Load Bridge Lib
         System.load(bridge.getAbsolutePath());
     }
@@ -41,6 +43,7 @@ public class RequirementManager {
         // LibRetro Cores
         mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
         gearSystem = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearsystem_libretro"));
+        FCEUmm = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "fceumm_libretro"));
         // Update platform download base url
         String arch = PlatformDetector.is64Bit() ? "x86_64" : "x86";
         String platform = PlatformDetector.isWindows() ? "windows" : "linux";

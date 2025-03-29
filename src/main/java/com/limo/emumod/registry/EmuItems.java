@@ -1,5 +1,6 @@
 package com.limo.emumod.registry;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
@@ -19,7 +20,6 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 
 import java.io.File;
@@ -102,7 +102,7 @@ public class EmuItems {
     private static boolean runGenericHandheld(File core, UUID file, String fileType, int width, int height) {
         NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
         con.load(core);
-        GenericHandheldItem.running.put(file, con);
+        EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
                 ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
         return true;
@@ -115,7 +115,7 @@ public class EmuItems {
         }
         NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
         con.load(core);
-        GenericHandheldItem.running.put(file, con);
+        EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
                 ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
         return true;
