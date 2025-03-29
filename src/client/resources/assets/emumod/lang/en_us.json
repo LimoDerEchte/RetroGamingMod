@@ -9,10 +9,14 @@
   "item.emumod.gameboy_advance_cartridge": "Gameboy Advance Cartridge",
   "item.emumod.game_gear_cartridge": "Game Gear Cartridge",
 
+  "item.emumod.nes_cartridge": "NES Cartridge",
+
   "item.emumod.gameboy": "Gameboy",
   "item.emumod.gameboy_color": "Gameboy Color",
   "item.emumod.gameboy_advance": "Gameboy Advance",
   "item.emumod.game_gear": "Game Gear",
+
+  "item.emumod.nes": "Nintendo Entertainment System",
 
   "item.emumod.monitor": "Monitor",
   "item.emumod.large_tv": "Large TV",

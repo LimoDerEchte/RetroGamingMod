@@ -23,15 +23,22 @@ import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
     public Item linkItem;
-    private final String fileType;
-    private final Runnable clearLinkItem;
-    private final BiFunction<PlayerEntity, UUID, Boolean> start;
+    private final boolean isHandheld;
+    private String fileType;
+    private Runnable clearLinkItem;
+    private BiFunction<PlayerEntity, UUID, Boolean> start;
 
     public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, BiFunction<PlayerEntity, UUID, Boolean> start) {
         super(new Settings().maxCount(1).registryKey(key));
+        this.isHandheld = true;
         this.fileType = fileType;
         this.clearLinkItem = clearLinkItem;
         this.start = start;
+    }
+
+    public LinkedCartridgeItem(RegistryKey<Item> key) {
+        super(new Settings().maxCount(1).registryKey(key));
+        isHandheld = false;
     }
 
     @Override
@@ -44,6 +51,9 @@ public class LinkedCartridgeItem extends Item {
         if(world.isClient())
             return super.use(world, user, hand);
         ItemStack stack = user.getStackInHand(hand);
+        if(!isHandheld) {
+            return ActionResult.PASS;
+        }
         ItemStack link = GenericHandheldItem.link != null && GenericHandheldItem.link.getItem() == linkItem ?
                 GenericHandheldItem.link : ItemStack.EMPTY;
         if(link.getCount() > 0 && hasGame(stack)) {

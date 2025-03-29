@@ -61,20 +61,37 @@ public class ServerHandler {
             String fileExtension;
             switch (payload.type()) {
                 case 0 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
+                    if(payload.data().length >= 0x142)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     boolean isGBC = payload.data()[0x143] != 0;
                     item = isGBC ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE;
                     fileExtension = isGBC? "gbc" : "gb";
                 }
                 case 1 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
+                    if(payload.data().length >= 0xAC)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     item = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE;
                     fileExtension = "gba";
                 }
                 case 2 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
+                    if(payload.data().length >= 0x7ffE)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     item = EmuItems.GAME_GEAR_CARTRIDGE;
                     fileExtension = "gg";
+                }
+                case 3 -> {
+                    if(payload.data().length >= 0xFFEF)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0xFFE0, 0xFFEF);
+                    else
+                        nameBytes = "Invalid".getBytes();
+                    item = EmuItems.NES_CARTRIDGE;
+                    fileExtension = "nes";
                 }
                 default -> {
                     ctx.player().sendMessage(Text.literal("Invalid request"), true);

@@ -10,6 +10,7 @@ import net.minecraft.registry.RegistryKey;
 public class EmuBlocks {
     public static final Block MONITOR = register(new MonitorBlock(), BlockId.Registry.MONITOR);
     public static final Block LARGE_TV = register(new MonitorBlock(), BlockId.Registry.LARGE_TV);
+
     public static final Block NES = register(new GenericConsoleBlock(BlockId.Registry.NES), BlockId.Registry.NES);
 
     public static Block register(Block block, RegistryKey<Block> blockKey) {

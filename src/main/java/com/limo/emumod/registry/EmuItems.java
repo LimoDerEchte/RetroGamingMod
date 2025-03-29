@@ -44,6 +44,8 @@ public class EmuItems {
             "gg", () -> GenericHandheldItem.link = null, (user, file) ->
             runGenericHandheldWithBios(user, RequirementManager.gearSystem, "bios.gg", file, "gg", 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
+    public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
+
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
     public static final Item GAMEBOY_COLOR = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY_COLOR,
