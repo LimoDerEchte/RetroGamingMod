@@ -46,7 +46,8 @@ RetroServer::RetroServer(const int port) {
     running = true;
     std::thread([&] { mainReceiverLoop(); }).detach();
     std::thread([&] { mainKeepAliveLoop(); }).detach();
-    std::thread([&] { mainSenderLoop(30); }).detach();
+    std::thread([&] { videoSenderLoop(30); }).detach();
+    std::thread([&] { audioSenderLoop(300); }).detach();
     std::cout << "[RetroServer] Started ENet server on port " << port << std::endl;
 }
 
@@ -119,11 +120,10 @@ void RetroServer::mainKeepAliveLoop() {
     }
 }
 
-void RetroServer::mainSenderLoop(const int fps) {
+void RetroServer::videoSenderLoop(const int fps) {
     const auto delay = std::chrono::nanoseconds(1000000000 / fps);
     auto next = std::chrono::high_resolution_clock::now();
     while (running) {
-        // Pack and send Video Data
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
@@ -143,7 +143,15 @@ void RetroServer::mainSenderLoop(const int fps) {
             mutex.unlock();
             delete[] packet;
         });
-        // Pack and send Audio Data
+        next += delay;
+        std::this_thread::sleep_until(next);
+    }
+}
+
+void RetroServer::audioSenderLoop(const int cps) {
+    const auto delay = std::chrono::nanoseconds(1000000000 / cps);
+    auto next = std::chrono::high_resolution_clock::now();
+    while (running) {
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->audioChanged)
                 return;
@@ -169,12 +177,14 @@ void RetroServer::mainSenderLoop(const int fps) {
     }
 }
 
-void RetroServer::onConnect(ENetPeer *peer) const {
+void RetroServer::onConnect(ENetPeer *peer) {
+    std::lock_guard lock(mutex);
     const auto client = new RetroServerClient(peer);
     clients->push_back(client);
 }
 
-void RetroServer::onDisconnect(ENetPeer *peer) const {
+void RetroServer::onDisconnect(ENetPeer *peer) {
+    std::lock_guard lock(mutex);
     std::erase_if(*clients, [peer](const RetroServerClient* client) {
         return client != nullptr && client->peer == peer;
     });

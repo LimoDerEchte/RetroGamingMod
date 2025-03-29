@@ -48,6 +48,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendContr
 }
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
+    std::lock_guard lock(mutex);
     std::cout << "[RetroClient] Connecting to ENet server on " << ip << ":" << port << std::endl;
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
@@ -75,6 +76,7 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token): tok
 }
 
 void RetroClient::dispose() {
+    std::lock_guard lock(mutex);
     running = false;
     if (client != nullptr) {
         enet_host_destroy(client);
@@ -85,6 +87,7 @@ void RetroClient::dispose() {
 }
 
 void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
+    std::lock_guard lock(mutex);
     const auto playback = new AudioStreamPlayer();
     playback->start();
     displays.insert_or_assign(uuid->combine(), display);
@@ -92,11 +95,13 @@ void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
+    std::lock_guard lock(mutex);
     displays.erase(uuid->combine());
     playbacks.erase(uuid->combine());
 }
 
-void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) const {
+void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) {
+    std::lock_guard lock(mutex);
     int8_t content[3];
     content[0] = static_cast<int8_t>(port);
     memcpy(&content[1], &controls, sizeof(controls));
@@ -183,12 +188,14 @@ void RetroClient::onMessage(const ENetPacket *packet) {
                 std::cerr << "[RetroClient] Received invalid display packet" << std::endl;
                 return;
             }
+            mutex.lock();
             const auto it = displays.find(parsed->ref->combine());
             if (it == displays.end()) {
                 std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
+            mutex.unlock();
             delete[] parsed;
             break;
         }
@@ -198,12 +205,14 @@ void RetroClient::onMessage(const ENetPacket *packet) {
                 std::cerr << "[RetroClient] Received invalid audio packet" << std::endl;
                 return;
             }
+            mutex.lock();
             const auto it = playbacks.find(parsed->ref->combine());
             if (it == playbacks.end()) {
                 std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
+            mutex.unlock();
             delete[] parsed;
             break;
         }

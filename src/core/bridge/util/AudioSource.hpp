@@ -20,7 +20,8 @@ class AudioStreamPlayer {
     ALCcontext* context;
     ALuint source;
     std::vector<ALuint> buffers;
-    static constexpr int NUM_BUFFERS = 4;
+    static constexpr int NUM_BUFFERS = 16;
+    static constexpr int MIN_BUFFERS_TO_START = 3;
 
     std::thread playbackThread;
     std::atomic<bool> running;

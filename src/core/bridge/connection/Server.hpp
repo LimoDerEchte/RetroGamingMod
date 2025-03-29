@@ -31,9 +31,10 @@ public:
 
     void mainReceiverLoop();
     void mainKeepAliveLoop();
-    void mainSenderLoop(int fps);
-    void onConnect(ENetPeer* peer) const;
-    void onDisconnect(ENetPeer* peer) const;
+    void videoSenderLoop(int fps);
+    void audioSenderLoop(int cps);
+    void onConnect(ENetPeer* peer);
+    void onDisconnect(ENetPeer* peer);
     void onMessage(ENetPeer* peer, const ENetPacket* packet);
 
     static void kick(ENetPeer *peer, const char *message);

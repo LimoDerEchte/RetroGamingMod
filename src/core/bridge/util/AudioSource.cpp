@@ -73,19 +73,16 @@ void AudioStreamPlayer::initOpenAL() {
     if (!device) {
         throw std::runtime_error("Failed to open OpenAL device");
     }
-
     context = alcCreateContext(device, nullptr);
     if (!context) {
         alcCloseDevice(device);
         throw std::runtime_error("Failed to create OpenAL context");
     }
-
     if (!alcMakeContextCurrent(context)) {
         alcDestroyContext(context);
         alcCloseDevice(device);
         throw std::runtime_error("Failed to make OpenAL context current");
     }
-
     alGenSources(1, &source);
     if (alGetError() != AL_NO_ERROR) {
         alcMakeContextCurrent(nullptr);
@@ -93,7 +90,6 @@ void AudioStreamPlayer::initOpenAL() {
         alcCloseDevice(device);
         throw std::runtime_error("Failed to generate OpenAL source");
     }
-
     alGenBuffers(NUM_BUFFERS, buffers.data());
     if (alGetError() != AL_NO_ERROR) {
         alDeleteSources(1, &source);
@@ -108,17 +104,14 @@ void AudioStreamPlayer::cleanupOpenAL() {
     if (source) {
         alDeleteSources(1, &source);
     }
-
     if (!buffers.empty()) {
         alDeleteBuffers(static_cast<ALsizei>(buffers.size()), buffers.data());
         buffers.clear();
     }
-
     if (context) {
         alcMakeContextCurrent(nullptr);
         alcDestroyContext(context);
     }
-
     if (device) {
         alcCloseDevice(device);
     }
@@ -132,7 +125,6 @@ void AudioStreamPlayer::receive(const uint8_t* data, const size_t size) {
         std::lock_guard lock(queueMutex);
         packetQueue.push(std::move(packet));
     }
-
     queueCondition.notify_one();
 }
 
@@ -140,7 +132,6 @@ void AudioStreamPlayer::start() {
     if (running) {
         return;
     }
-
     running = true;
     playbackThread = std::thread(&AudioStreamPlayer::playbackLoop, this);
 }
@@ -183,19 +174,16 @@ void AudioStreamPlayer::playbackLoop() {
             alSourcePlay(source);
             initialBuffered = true;
         }
-
         ALint state;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         if (state != AL_PLAYING && initialBuffered) {
             alSourcePlay(source);
         }
-
         ALint proc;
         alGetSourcei(source, AL_BUFFERS_PROCESSED, &proc);
         while (proc--) {
             ALuint buffer;
             alSourceUnqueueBuffers(source, 1, &buffer);
-
             std::vector<uint8_t> packet;
             {
                 std::lock_guard lock(queueMutex);
@@ -223,7 +211,6 @@ void AudioStreamPlayer::playbackLoop() {
                 }
             }
         }
-
         if (!proc) {
             std::unique_lock lock(queueMutex);
             if (packetQueue.empty() && running) {
@@ -252,14 +239,12 @@ bool AudioStreamPlayer::processNextPacket() {
     } catch (const std::exception& e) {
         std::cerr << "Error decoding audio packet: " << e.what() << std::endl;
     }
-
     return false;
 }
 
 void AudioStreamPlayer::queueBuffer(const std::vector<int16_t>& pcmData) const {
     ALint processed;
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
-
     ALuint buffer;
     if (processed > 0) {
         alSourceUnqueueBuffers(source, 1, &buffer);
@@ -276,7 +261,6 @@ void AudioStreamPlayer::queueBuffer(const std::vector<int16_t>& pcmData) const {
             return;
         }
     }
-
     const ALenum format = decoder.getChannels() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
     alBufferData(
         buffer,
@@ -285,6 +269,5 @@ void AudioStreamPlayer::queueBuffer(const std::vector<int16_t>& pcmData) const {
         static_cast<ALsizei>(pcmData.size() * sizeof(int16_t)),
         decoder.getSampleRate()
     );
-
     alSourceQueueBuffers(source, 1, &buffer);
 }

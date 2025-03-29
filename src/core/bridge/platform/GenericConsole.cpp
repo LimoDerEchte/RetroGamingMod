@@ -61,17 +61,18 @@ void GenericConsole::load(const char *retroCore, const char *core, const char *r
 }
 
 void GenericConsole::dispose() {
-    std::cout << "[RetroGamingCore] Disposing bridge instance " << std::endl;
+    std::cout << "[RetroGamingCore] Disposing bridge instance" << std::endl;
     GenericConsoleRegistry::unregisterConsole(this);
     std::lock_guard lock(mutex);
     retroCoreHandle = nullptr;
     if (retroCoreProcess != nullptr) {
         retroCoreProcess->terminate();
-        std::cout << "[RetroGamingCore] Terminating emulator " << std::endl;
+        std::cout << "[RetroGamingCore] Terminating emulator" << std::endl;
         retroCoreProcess->wait();
     }
     if (sharedMemoryHandle != nullptr) {
         sharedMemoryHandle->destroy<GenericShared>("SharedData");
+        std::cout << "[RetroGamingCore] Destroyed shared memory" << std::endl;
     }
     bip::shared_memory_object::remove(id);
 }
@@ -85,7 +86,7 @@ std::vector<uint8_t> GenericConsole::createFrame() {
 
 std::vector<uint8_t> GenericConsole::createClip() {
     if (audioEncoder == nullptr) {
-        audioEncoder = new AudioEncoderOpus(48000, 2, AudioEncoderOpus::Complexity::Balanced);
+        audioEncoder = new AudioEncoderOpus(48000, 2, AudioEncoderOpus::Complexity::Quality);
     }
     return audioEncoder->encodeFrame(std::vector(retroCoreHandle->audio, retroCoreHandle->audio + retroCoreHandle->audioSize));
 }

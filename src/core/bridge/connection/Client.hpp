@@ -14,6 +14,7 @@ class RetroClient {
     ENetHost* client;
     ENetPeer* peer;
 
+    std::mutex mutex;
     std::unordered_map<long, NativeDisplay*> displays;
     std::unordered_map<long, AudioStreamPlayer*> playbacks;
 
@@ -28,7 +29,7 @@ public:
 
     void registerDisplay(const jUUID* uuid, NativeDisplay* display);
     void unregisterDisplay(const jUUID* uuid);
-    void sendControlsUpdate(const jUUID* link, int port, int16_t controls) const;
+    void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
 
     void mainLoop();
     void onConnect() const;

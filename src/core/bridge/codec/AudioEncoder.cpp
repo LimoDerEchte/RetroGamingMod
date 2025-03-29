@@ -59,6 +59,11 @@ void AudioEncoderOpus::initializeEncoder() {
         OPUS_APPLICATION_AUDIO,
         &opus_error
     );
+    opus_encoder_ctl(encoder, OPUS_SET_BITRATE(128000));
+    opus_encoder_ctl(encoder, OPUS_SET_COMPLEXITY(static_cast<int>(complexity)));
+    opus_encoder_ctl(encoder, OPUS_SET_VBR(0));
+    opus_encoder_ctl(encoder, OPUS_SET_INBAND_FEC(1));
+    opus_encoder_ctl(encoder, OPUS_SET_PACKET_LOSS_PERC(5));
     if (opus_error != OPUS_OK) {
         std::stringstream error_msg;
         error_msg << "Failed to create Opus encoder: "

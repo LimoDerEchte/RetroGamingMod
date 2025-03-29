@@ -12,7 +12,7 @@
 
 static LibRetroCore* g_instance = nullptr;
 static std::deque<int16_t> g_audioBuffer;
-static const size_t FRAME_SIZE = 1920; // Fixed frame size (40ms at 48kHz)
+static constexpr size_t FRAME_SIZE = 1920; // Fixed frame size (40ms at 48kHz)
 
 int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, const char *rom) {
     auto [gb, len] = mem->find<GenericShared>("SharedData");
@@ -45,7 +45,6 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
         for (size_t i = 0; i < samples; ++i) {
             g_audioBuffer.push_back(data[i]);
         }
-
         if (gb->audioChanged) {
             return;
         }
@@ -56,14 +55,7 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
             }
             gb->audioSize = FRAME_SIZE;
             gb->audioChanged = true;
-            /*std::cout << "[RetroGamingCore] Audio buffer processed " << FRAME_SIZE
-                      << " samples, " << g_audioBuffer.size() << " samples remaining in buffer" << std::endl;*/
         }
-
-        /*if (!g_audioBuffer.empty()) {
-            std::cout << "[RetroGamingCore] Audio buffer has " << g_audioBuffer.size()
-                      << " samples waiting for next frame" << std::endl;
-        }*/
     });
     g_instance->setInputCallback([gb](const unsigned port, const unsigned id) {
         return gb->controls[port] & 1 << id ? 0x7FFF : 0;
