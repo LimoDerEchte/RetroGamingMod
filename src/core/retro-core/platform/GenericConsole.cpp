@@ -51,10 +51,10 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
             for (unsigned x = 0; x < width; ++x) {
                 const uint8_t* pixel = pixelData + y * pitch + x * 2;
                 const uint16_t rgb565 = pixel[0] | pixel[1] << 8;
-                gb->displayChanged = gb->displayChanged || gb->display[y * width + x] != rgb565;
                 gb->display[y * width + x] = rgb565;
             }
         }
+        gb->displayChanged = true;
     });
     g_instance->setAudioCallback([gb](const int16_t* data, const size_t pitch) {
         const size_t samples = pitch * 2;
