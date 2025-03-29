@@ -161,7 +161,7 @@ bool LibRetroCore::loadSaveFile(const char *save) {
     }
 
     file.read(static_cast<char*>(saveData), saveSize);
-    const bool success = !file.fail() && file.gcount() == static_cast<std::streamsize>(saveSize);
+    const bool success = !file.fail();
     if (success) {
         std::cout << "Successfully loaded save file: " << save << " (" << saveSize << " bytes)" << std::endl;
     } else {

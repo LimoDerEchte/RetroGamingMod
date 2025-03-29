@@ -30,7 +30,7 @@ public:
 
     explicit GenericConsole(int width, int height, const jUUID* uuid);
 
-    void load(const char *retroCore, const char *core, const char *rom);
+    void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();
 
     std::vector<uint8_t> createFrame();
