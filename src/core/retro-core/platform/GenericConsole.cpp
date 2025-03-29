@@ -6,15 +6,19 @@
 
 #include <deque>
 #include <iostream>
+#include <thread>
+#include <bits/std_thread.h>
 
 #include "SharedStructs.hpp"
 #include "sys/LibRetroCore.hpp"
 
 static LibRetroCore* g_instance = nullptr;
 static std::deque<int16_t> g_audioBuffer;
-static constexpr size_t FRAME_SIZE = 1920; // Fixed frame size (40ms at 48kHz)
 
-int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, const char *rom) {
+static constexpr size_t FRAME_SIZE = 1920; // Fixed frame size (40ms at 48kHz)
+static constexpr int SAVE_DELAY_SECONDS = 30;
+
+int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, const char *rom, const char *save) {
     auto [gb, len] = mem->find<GenericShared>("SharedData");
     if (gb == nullptr || len == 0) {
         std::cerr << "[RetroGamingCore] The shared memory content couldn't be located" << std::endl;
@@ -35,8 +39,8 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
             for (unsigned x = 0; x < width; ++x) {
                 const uint8_t* pixel = pixelData + y * pitch + x * 2;
                 const uint16_t rgb565 = pixel[0] | pixel[1] << 8;
+                gb->displayChanged = gb->displayChanged || gb->display[y * width + x] != rgb565;
                 gb->display[y * width + x] = rgb565;
-                gb->displayChanged = true;
             }
         }
     });
@@ -60,7 +64,40 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
     g_instance->setInputCallback([gb](const unsigned port, const unsigned id) {
         return gb->controls[port] & 1 << id ? 0x7FFF : 0;
     });
+    g_instance->loadSaveFile(save);
     std::cout << "[RetroGamingCore] Starting generic core" << std::endl;
+    runLoops(gb, save);
     g_instance->runCore();
     return EXIT_SUCCESS;
+}
+
+// ReSharper disable CppDFANullDereference
+void GenericConsole::runLoops(GenericShared* shared, const char *save) {
+    std::thread([save, shared] {
+        const auto delay = std::chrono::seconds(SAVE_DELAY_SECONDS);
+        auto nextAutoSave = std::chrono::high_resolution_clock::now() + delay;
+        const auto checkDelay = std::chrono::milliseconds(10);
+        auto nextCheck = std::chrono::high_resolution_clock::now() + checkDelay;
+        while (true) {
+            auto now = std::chrono::high_resolution_clock::now();
+            bool saved = false;
+            if (nextAutoSave < now) {
+                g_instance->saveSaveFile(save);
+                saved = true;
+                nextAutoSave += delay;
+            }
+            if (nextCheck < now) {
+                if (shared->shutdownRequested) {
+                    if (!saved) {
+                        g_instance->saveSaveFile(save);
+                    }
+                    break;
+                }
+                nextCheck += checkDelay;
+            }
+            std::this_thread::sleep_until(nextCheck);
+        }
+        g_instance->dispose();
+        shared->shutdownCompleted = true;
+    }).detach();
 }

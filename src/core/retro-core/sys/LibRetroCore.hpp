@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <mutex>
 
 #include "../lib/libretro-common/include/libretro.h"
 
@@ -20,12 +21,16 @@ public:
     void setInputCallback(std::function<int16_t(unsigned port, unsigned id)> const &callback);
     void dispose() const;
 
+    bool loadSaveFile(const char* save);
+    bool saveSaveFile(const char* save);
+
     LibRetroCore(const LibRetroCore&) = delete;
     LibRetroCore& operator=(const LibRetroCore&) = delete;
 
 private:
     std::string corePath;
     void* coreHandle;
+    std::mutex saveMutex;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
     std::function<void(const int16_t*, size_t)> audioCallback;
     std::function<int16_t(unsigned port, unsigned id)> inputCallback;

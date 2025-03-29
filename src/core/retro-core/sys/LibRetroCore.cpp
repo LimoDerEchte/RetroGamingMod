@@ -3,8 +3,9 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include <cstdarg>
+#include <fstream>
 #include <utility>
+#include <filesystem>
 
 static LibRetroCore* g_instance = nullptr;
 static retro_system_info g_system_info = {nullptr};
@@ -142,6 +143,59 @@ void LibRetroCore::dispose() const {
     retro_deinit();
     if (coreHandle)
         dlclose(coreHandle);
+}
+
+bool LibRetroCore::loadSaveFile(const char *save) {
+    std::lock_guard lock(saveMutex);
+    std::ifstream file(save, std::ios::binary);
+    if (!file) {
+        std::cout << "No save file found at " << save << std::endl;
+        return false;
+    }
+
+    void* saveData = retro_get_memory_data(RETRO_MEMORY_SAVE_RAM);
+    const size_t saveSize = retro_get_memory_size(RETRO_MEMORY_SAVE_RAM);
+    if (!saveData || saveSize == 0) {
+        std::cerr << "Core does not support save RAM" << std::endl;
+        return false;
+    }
+
+    file.read(static_cast<char*>(saveData), saveSize);
+    const bool success = !file.fail() && file.gcount() == static_cast<std::streamsize>(saveSize);
+    if (success) {
+        std::cout << "Successfully loaded save file: " << save << " (" << saveSize << " bytes)" << std::endl;
+    } else {
+        std::cerr << "Failed to load save file or size mismatch" << std::endl;
+    }
+    return success;
+}
+
+bool LibRetroCore::saveSaveFile(const char *save) {
+    std::lock_guard lock(saveMutex);
+    void* saveData = retro_get_memory_data(RETRO_MEMORY_SAVE_RAM);
+    size_t saveSize = retro_get_memory_size(RETRO_MEMORY_SAVE_RAM);
+
+    if (!saveData || saveSize == 0) {
+        std::cerr << "Core does not support save RAM" << std::endl;
+        return false;
+    }
+    std::filesystem::path path(save);
+    create_directories(path.parent_path());
+
+    std::ofstream file(save, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open save file for writing: " << save << std::endl;
+        return false;
+    }
+
+    file.write(static_cast<const char*>(saveData), saveSize);
+    bool success = !file.fail();
+    if (success) {
+        std::cout << "Successfully saved game to: " << save << " (" << saveSize << " bytes)" << std::endl;
+    } else {
+        std::cerr << "Failed to write save file" << std::endl;
+    }
+    return success;
 }
 
 void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, const unsigned height, const size_t pitch) {
