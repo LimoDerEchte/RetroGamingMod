@@ -4,6 +4,7 @@
 
 #include "AudioEncoder.hpp"
 
+#include <sstream>
 #include <stdexcept>
 
 AudioEncoderOpus::AudioEncoderOpus(
@@ -59,7 +60,13 @@ void AudioEncoderOpus::initializeEncoder() {
         &opus_error
     );
     if (opus_error != OPUS_OK) {
-        throw std::runtime_error("Failed to create Opus encoder");
+        std::stringstream error_msg;
+        error_msg << "Failed to create Opus encoder: "
+                  << "Error code " << opus_error << " ("
+                  << getOpusErrorString(opus_error) << ")"
+                  << ", Sample rate: " << sample_rate
+                  << ", Channels: " << channels;
+        throw std::runtime_error(error_msg.str());
     }
     opus_encoder_ctl(encoder, OPUS_SET_COMPLEXITY(static_cast<int>(complexity)));
 }
@@ -77,7 +84,14 @@ std::vector<uint8_t> AudioEncoderOpus::encodeFrame(const std::vector<int16_t>& p
         static_cast<int>(output_buffer.size())
     );
     if (encoded_bytes < 0) {
-        throw std::runtime_error("Opus encoding failed");
+        std::stringstream error_msg;
+        error_msg << "Opus encoding failed: "
+                  << "Error code " << encoded_bytes << " ("
+                  << getOpusErrorString(encoded_bytes) << ")"
+                  << ", Input size: " << pcm_data.size()
+                  << " samples, Buffer size: " << output_buffer.size()
+                  << " bytes";
+        throw std::runtime_error(error_msg.str());
     }
     output_buffer.resize(encoded_bytes);
     return output_buffer;
@@ -88,4 +102,27 @@ void AudioEncoderOpus::reset() {
         opus_encoder_destroy(encoder);
     }
     initializeEncoder();
+}
+
+std::string AudioEncoderOpus::getOpusErrorString(const int error_code) {
+    switch(error_code) {
+        case OPUS_OK:
+            return "No error";
+        case OPUS_BAD_ARG:
+            return "One or more invalid/out of range arguments";
+        case OPUS_BUFFER_TOO_SMALL:
+            return "The buffer is too small";
+        case OPUS_INTERNAL_ERROR:
+            return "An internal error was detected";
+        case OPUS_INVALID_PACKET:
+            return "The compressed data passed is corrupted";
+        case OPUS_UNIMPLEMENTED:
+            return "The requested feature is not implemented";
+        case OPUS_INVALID_STATE:
+            return "The encoder or decoder is in an invalid state";
+        case OPUS_ALLOC_FAIL:
+            return "Memory allocation failed";
+        default:
+            return "Unknown error";
+    }
 }

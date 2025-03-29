@@ -4,7 +4,10 @@
 
 #include "AudioDecoder.hpp"
 
+#include <sstream>
 #include <stdexcept>
+
+#include "AudioEncoder.hpp"
 
 AudioDecoderOpus::AudioDecoderOpus(
     const int sample_rate,
@@ -54,7 +57,13 @@ void AudioDecoderOpus::initializeDecoder() {
         &opus_error
     );
     if (opus_error != OPUS_OK) {
-        throw std::runtime_error("Failed to create Opus decoder");
+        std::stringstream error_msg;
+        error_msg << "Failed to create Opus decoder: "
+                  << "Error code " << opus_error << " ("
+                  << AudioEncoderOpus::getOpusErrorString(opus_error) << ")"
+                  << ", Sample rate: " << sample_rate
+                  << ", Channels: " << channels;
+        throw std::runtime_error(error_msg.str());
     }
 }
 
@@ -72,7 +81,14 @@ std::vector<int16_t> AudioDecoderOpus::decodeFrame(const std::vector<uint8_t>& e
         0
     );
     if (decoded_samples < 0) {
-        throw std::runtime_error("Opus decoding failed");
+        std::stringstream error_msg;
+        error_msg << "Opus decoding failed: "
+                  << "Error code " << decoded_samples << " ("
+                  << AudioEncoderOpus::getOpusErrorString(decoded_samples) << ")"
+                  << ", Input size: " << encoded_data.size()
+                  << " bytes, Buffer size: " << output_buffer.size()
+                  << " samples";
+        throw std::runtime_error(error_msg.str());
     }
     output_buffer.resize(decoded_samples * channels);
     return output_buffer;

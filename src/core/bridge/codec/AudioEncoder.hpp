@@ -51,6 +51,8 @@ public:
     std::vector<uint8_t> encodeFrame(const std::vector<int16_t>& pcm_data);
     void reset();
 
+    static std::string getOpusErrorString(int error_code);
+
     [[nodiscard]] int getSampleRate() const {
         return sample_rate;
     }
