@@ -39,8 +39,8 @@ public class ScreenManager {
         });
     }
 
-    public static void registerDisplay(UUID id, int width, int height) {
-        displays.put(id, CLIENT.registerScreen(id, width, height));
+    public static void registerDisplay(UUID id, int width, int height, int sampleRate) {
+        displays.put(id, CLIENT.registerScreen(id, width, height, sampleRate));
         displayBuffer.put(id, new NativeImage(width, height, false));
     }
 

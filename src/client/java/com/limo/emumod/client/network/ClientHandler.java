@@ -58,12 +58,11 @@ public class ClientHandler {
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateEmulatorPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             int width = payload.width();
             int height = payload.height();
-            if(width == 0 || height == 0) {
+            int sampleRate = payload.sampleRate();
+            if(width == 0 || height == 0 || sampleRate == 0) {
                 ScreenManager.unregisterDisplay(payload.uuid());
-                CLIENT.unregisterAudio(payload.uuid());
             } else {
-                ScreenManager.registerDisplay(payload.uuid(), width, height);
-                CLIENT.registerAudio(payload.uuid(), payload.sampleRate());
+                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate);
             }
         }));
     }

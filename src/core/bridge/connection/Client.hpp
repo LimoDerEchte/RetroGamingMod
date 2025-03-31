@@ -27,10 +27,8 @@ public:
 
     void dispose();
 
-    void registerDisplay(const jUUID* uuid, NativeDisplay* display);
+    void registerDisplay(const jUUID* uuid, NativeDisplay* display, int sampleRate);
     void unregisterDisplay(const jUUID* uuid);
-    void registerAudio(const jUUID* uuid, AudioStreamPlayer* audio);
-    void unregisterAudio(const jUUID* uuid);
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
 
     void mainLoop();

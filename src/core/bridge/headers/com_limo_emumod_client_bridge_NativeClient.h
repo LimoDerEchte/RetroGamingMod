@@ -34,10 +34,10 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    registerScreen
- * Signature: (JJII)J
+ * Signature: (JJIII)J
  */
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen
-  (JNIEnv *, jclass, jlong, jlong, jint, jint);
+  (JNIEnv *, jclass, jlong, jlong, jint, jint, jint);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
@@ -45,22 +45,6 @@ JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_register
  * Signature: (JJ)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen
-  (JNIEnv *, jclass, jlong, jlong);
-
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    registerAudio
- * Signature: (JJI)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerAudio
-  (JNIEnv *, jclass, jlong, jlong, jint);
-
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    unregisterAudio
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterAudio
   (JNIEnv *, jclass, jlong, jlong);
 
 /*

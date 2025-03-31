@@ -27,11 +27,11 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
     return client->isAuthenticated();
 }
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
     const auto display = new NativeDisplay(width, height);
-    client->registerDisplay(uuid, display);
+    client->registerDisplay(uuid, display, sampleRate);
     return reinterpret_cast<jlong>(display);
 }
 
@@ -39,20 +39,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
     client->unregisterDisplay(uuid);
-}
-
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerAudio(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint sampleRate) {
-    const auto client = reinterpret_cast<RetroClient*>(ptr);
-    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    const auto audio = new AudioStreamPlayer(sampleRate, 2);
-    audio->start();
-    client->registerAudio(uuid, audio);
-}
-
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterAudio(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
-    const auto client = reinterpret_cast<RetroClient*>(ptr);
-    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    client->unregisterAudio(uuid);
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint port, const jshort controls) {
@@ -100,24 +86,20 @@ void RetroClient::dispose() {
     std::cout << "[RetroClient] Disconnected from ENet server" << std::endl;
 }
 
-void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
+void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display, const int sampleRate) {
     std::lock_guard lock(mutex);
-    displays.insert_or_assign(uuid->combine(), display);
+    const auto audio = new AudioStreamPlayer(sampleRate, 2);
+    audio->start();
+    const long uuidCombine = uuid->combine();
+    displays.insert_or_assign(uuidCombine, display);
+    playbacks.insert_or_assign(uuidCombine, audio);
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
     std::lock_guard lock(mutex);
-    displays.erase(uuid->combine());
-}
-
-void RetroClient::registerAudio(const jUUID *uuid, AudioStreamPlayer *audio) {
-    std::lock_guard lock(mutex);
-    playbacks.insert_or_assign(uuid->combine(), audio);
-}
-
-void RetroClient::unregisterAudio(const jUUID *uuid) {
-    std::lock_guard lock(mutex);
-    playbacks.erase(uuid->combine());
+    const long uuidCombine = uuid->combine();
+    displays.erase(uuidCombine);
+    playbacks.erase(uuidCombine);
 }
 
 void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) {

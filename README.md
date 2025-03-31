@@ -13,10 +13,10 @@ My previous attempt at this used coffee gb, a java gameboy emulator, which was k
 ### Handheld
 | Console         | Core                                                         | Features     |
 |-----------------|--------------------------------------------------------------|--------------|
-| Gameboy         | [mGBA](https://mgba.io/)                                     | Video        |
-| Gameboy Color   | [mGBA](https://mgba.io/)                                     | Video        |
+| Gameboy         |                                                              | Broken       |
+| Gameboy Color   |                                                              | Broken       |
 | Gameboy Advance | [mGBA](https://mgba.io/)                                     | Video, Audio |
-| SEGA Game Gear  | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX) | Video        |
+| SEGA Game Gear  | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX) | Video, Audio |
 
 ### Stationary
 None as of now
