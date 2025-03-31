@@ -20,7 +20,7 @@ public class RequirementManager {
     public static File core;
 
     public static File gearBoy;
-    public static File mGBA;
+    public static File beetleGBA;
     public static File genesisPlusGX;
     public static File FCEUmm;
     public static File bsnes;
@@ -32,7 +32,7 @@ public class RequirementManager {
         checkFileLocal(core, true);
         // LibRetro Cores
         checkCore(gearBoy);
-        checkCore(mGBA);
+        checkCore(beetleGBA);
         checkCore(genesisPlusGX);
         checkCore(FCEUmm);
         checkCore(bsnes);
@@ -46,7 +46,7 @@ public class RequirementManager {
         core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
         // LibRetro Cores
         gearBoy = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearboy_libretro"));
-        mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
+        beetleGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mednafen_gba_libretro"));
         genesisPlusGX = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "genesis_plus_gx_libretro"));
         FCEUmm = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "fceumm_libretro"));
         bsnes = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "bsnes_libretro"));

@@ -77,6 +77,7 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
 #endif
     if (!g_instance->loadCore()) {
         std::cerr << "[RetroGamingCore] Failed to load core" << std::endl;
+        gb->shutdownCompleted = true;
         return EXIT_FAILURE;
     }
 #ifdef DEBUG
@@ -84,6 +85,7 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
 #endif
     if (!g_instance->loadROM(rom)) {
         std::cerr << "[RetroGamingCore] Failed to load ROM" << std::endl;
+        gb->shutdownCompleted = true;
         return EXIT_FAILURE;
     }
 #ifdef DEBUG
@@ -96,6 +98,7 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
     std::cout << "[RetroGamingCore] Running core" << std::endl;
 #endif
     g_instance->runCore();
+    gb->shutdownCompleted = true;
     return EXIT_SUCCESS;
 }
 
@@ -106,7 +109,7 @@ void GenericConsole::runLoops(GenericShared* shared, const char *save) {
         auto nextAutoSave = std::chrono::high_resolution_clock::now() + delay;
         const auto checkDelay = std::chrono::milliseconds(10);
         auto nextCheck = std::chrono::high_resolution_clock::now() + checkDelay;
-        while (true) {
+        while (!shared->shutdownCompleted) {
             auto now = std::chrono::high_resolution_clock::now();
             bool saved = false;
             if (nextAutoSave < now) {

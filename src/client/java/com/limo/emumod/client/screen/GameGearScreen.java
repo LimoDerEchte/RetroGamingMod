@@ -49,9 +49,9 @@ public class GameGearScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // License
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_1",
-                "GPL-3.0"), 10, height - 25, Color.WHITE.getRGB(), true);
+                "Non-commercial"), 10, height - 25, Color.WHITE.getRGB(), true);
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_2",
-                "https://github.com/drhelius/Gearsystem/blob/master/LICENSE"), 10, height - 15, Color.WHITE.getRGB(), true);
+                "https://github.com/libretro/Genesis-Plus-GX/blob/master/LICENSE.txt"), 10, height - 15, Color.WHITE.getRGB(), true);
         // Update Texture
         Objects.requireNonNull(frameTexture.getImage()).copyFrom(ScreenManager.getDisplay(fileId));
         frameTexture.upload();

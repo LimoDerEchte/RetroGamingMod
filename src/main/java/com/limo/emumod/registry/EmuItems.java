@@ -40,7 +40,7 @@ public class EmuItems {
             runGenericHandheld(RequirementManager.gearBoy, file, "gbc", 160, 144, 44100)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
             "gba", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160, 48000)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+            runGenericHandheld(RequirementManager.beetleGBA, file, "gba", 240, 160, 44100)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file) ->
             runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);

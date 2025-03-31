@@ -40,6 +40,7 @@ private:
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
     std::function<void(const int16_t*, size_t)> audioCallback;
     std::function<int16_t(unsigned port, unsigned id)> inputCallback;
+    retro_pixel_format pixelFormat;
 
     typedef void (*retro_init_t)();
     typedef void (*retro_deinit_t)();
