@@ -19,7 +19,7 @@ public class RequirementManager {
     public static File bridge;
     public static File core;
 
-    public static File gambatte;
+    public static File gearBoy;
     public static File mGBA;
     public static File genesisPlusGX;
     public static File FCEUmm;
@@ -31,7 +31,7 @@ public class RequirementManager {
         checkFileLocal(bridge, false);
         checkFileLocal(core, true);
         // LibRetro Cores
-        checkCore(gambatte);
+        checkCore(gearBoy);
         checkCore(mGBA);
         checkCore(genesisPlusGX);
         checkCore(FCEUmm);
@@ -45,7 +45,7 @@ public class RequirementManager {
         bridge = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(true, "bridge"));
         core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
         // LibRetro Cores
-        gambatte = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gambatte_libretro"));
+        gearBoy = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearboy_libretro"));
         mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
         genesisPlusGX = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "genesis_plus_gx_libretro"));
         FCEUmm = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "fceumm_libretro"));
