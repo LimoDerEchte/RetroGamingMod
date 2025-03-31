@@ -63,7 +63,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
             EmuMod.running.remove(con.fileId);
             player.getInventory().insertStack(con.cartridge);
             PlayerLookup.all(mcs).forEach(sp ->
-                    ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload(con.fileId, 0, 0, 0)));
+                ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload(con.fileId, 0, 0, 0)));
             con.cartridge = null;
             con.fileId = null;
             con.markDirty();

@@ -30,7 +30,7 @@ public class EmuBlocks {
     }
 
     private static boolean runGenericConsole(File core, UUID file, String fileType, int width, int height, int sampleRate) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
+        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, file, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->

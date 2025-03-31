@@ -24,11 +24,11 @@ class GenericConsole {
 public:
     std::mutex mutex{};
     char id[32] = {};
-    const int width, height;
+    const int width, height, sampleRate;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;
 
-    explicit GenericConsole(int width, int height, const jUUID* uuid);
+    explicit GenericConsole(int width, int height, int sampleRate, const jUUID* uuid);
 
     void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();

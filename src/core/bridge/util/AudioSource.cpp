@@ -8,10 +8,11 @@
 #include <iostream>
 
 AudioStreamPlayer::AudioStreamPlayer(const int sampleRate, const int channels) :
-    decoder(sampleRate, channels),
+    decoder(48000, channels),
     device(nullptr),
     context(nullptr),
     source(0),
+    sampleRate(sampleRate),
     running(false)
 {
     buffers.resize(NUM_BUFFERS);
@@ -29,6 +30,7 @@ AudioStreamPlayer::AudioStreamPlayer(AudioStreamPlayer&& other) noexcept :
     context(other.context),
     source(other.source),
     buffers(std::move(other.buffers)),
+    sampleRate(other.sampleRate),
     running(other.running.load()),
     packetQueue(std::move(other.packetQueue))
 {
@@ -202,7 +204,7 @@ void AudioStreamPlayer::playbackLoop() {
                             format,
                             pcmData.data(),
                             static_cast<ALsizei>(pcmData.size() * sizeof(int16_t)),
-                            decoder.getSampleRate()
+                            sampleRate
                         );
                         alSourceQueueBuffers(source, 1, &buffer);
                     }
@@ -267,7 +269,7 @@ void AudioStreamPlayer::queueBuffer(const std::vector<int16_t>& pcmData) const {
         format,
         pcmData.data(),
         static_cast<ALsizei>(pcmData.size() * sizeof(int16_t)),
-        decoder.getSampleRate()
+        sampleRate
     );
     alSourceQueueBuffers(source, 1, &buffer);
 }

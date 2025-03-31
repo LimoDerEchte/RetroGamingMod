@@ -41,6 +41,20 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     client->unregisterDisplay(uuid);
 }
 
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerAudio(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint sampleRate) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    const auto audio = new AudioStreamPlayer(sampleRate, 2);
+    audio->start();
+    client->registerAudio(uuid, audio);
+}
+
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterAudio(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    client->unregisterAudio(uuid);
+}
+
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint port, const jshort controls) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
@@ -88,15 +102,21 @@ void RetroClient::dispose() {
 
 void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display) {
     std::lock_guard lock(mutex);
-    const auto playback = new AudioStreamPlayer();
-    playback->start();
     displays.insert_or_assign(uuid->combine(), display);
-    playbacks.insert_or_assign(uuid->combine(), playback);
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
     std::lock_guard lock(mutex);
     displays.erase(uuid->combine());
+}
+
+void RetroClient::registerAudio(const jUUID *uuid, AudioStreamPlayer *audio) {
+    std::lock_guard lock(mutex);
+    playbacks.insert_or_assign(uuid->combine(), audio);
+}
+
+void RetroClient::unregisterAudio(const jUUID *uuid) {
+    std::lock_guard lock(mutex);
     playbacks.erase(uuid->combine());
 }
 
@@ -192,6 +212,7 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             const auto it = displays.find(parsed->ref->combine());
             if (it == displays.end()) {
                 std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
+                delete[] parsed;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
@@ -209,6 +230,7 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             const auto it = playbacks.find(parsed->ref->combine());
             if (it == playbacks.end()) {
                 std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
+                delete[] parsed;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);

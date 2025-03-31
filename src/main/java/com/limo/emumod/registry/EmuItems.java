@@ -40,7 +40,7 @@ public class EmuItems {
             runGenericHandheld(RequirementManager.gambatte, file, "gbc", 160, 144, 32768)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
             "gba", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160, 32768)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+            runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160, 48000)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file) ->
             runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
@@ -103,7 +103,7 @@ public class EmuItems {
     }
 
     private static boolean runGenericHandheld(File core, UUID file, String fileType, int width, int height, int sampleRate) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
+        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, file, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
@@ -116,7 +116,7 @@ public class EmuItems {
             user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
             return false;
         }
-        NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
+        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, file, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->

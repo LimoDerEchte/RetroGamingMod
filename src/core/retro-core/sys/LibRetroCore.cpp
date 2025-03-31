@@ -14,7 +14,7 @@
 #include <utility>
 #ifdef DEBUG
 #include <cstdarg>
-#endif DEBUG
+#endif
 #include <filesystem>
 
 static LibRetroCore* g_instance = nullptr;
@@ -28,7 +28,7 @@ static void log_printf(retro_log_level level, const char *fmt, ...) {
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
     va_end(args);
-#endif DEBUG
+#endif
 }
 
 LibRetroCore::LibRetroCore(std::string corePath, std::string systemPath)
@@ -221,8 +221,8 @@ bool LibRetroCore::saveSaveFile(const char *save) {
     return success;
 }
 
-void LibRetroCore::logEnvironmentVariables(const retro_variable* vars) {
 #ifdef DEBUG
+void LibRetroCore::logEnvironmentVariables(const retro_variable* vars) {
     std::cout << "Environment variables set by core:" << std::endl;
     std::cout << "-----------------------------" << std::endl;
 
@@ -246,8 +246,8 @@ void LibRetroCore::logEnvironmentVariables(const retro_variable* vars) {
         }
         std::cout << "-----------------------------" << std::endl;
     }
-#endif DEBUG
 }
+#endif
 
 void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, const unsigned height, const size_t pitch) {
     if (g_instance && g_instance->videoFrameCallback) {
@@ -279,8 +279,10 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
         }
         case RETRO_ENVIRONMENT_SET_VARIABLES: {
             if (data && g_instance) {
+                #ifdef DEBUG
                 const auto* vars = static_cast<const retro_variable*>(data);
                 g_instance->logEnvironmentVariables(vars);
+                #endif
                 return true;
             }
             return false;
@@ -292,15 +294,14 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
                     var->value = g_instance->env_vars.variables[key].c_str();
                     #ifdef DEBUG
                     std::cout << "Retrieving variable: " << key << " = " << var->value << std::endl;
-                    #endif DEBUG
+                    #endif
                     return true;
-                } else {
-                    #ifdef DEBUG
-                    std::cout << "Variable not found: " << key << std::endl;
-                    #endif DEBUG
-                    var->value = nullptr;
-                    return false;
                 }
+                #ifdef DEBUG
+                std::cout << "Variable not found: " << key << std::endl;
+                #endif
+                var->value = nullptr;
+                return false;
             }
             return false;
         }
@@ -310,7 +311,7 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
                 if (g_instance->env_vars.updated) {
                     #ifdef DEBUG
                     std::cout << "Variables updated flag read and reset" << std::endl;
-                    #endif DEBUG
+                    #endif
                     g_instance->env_vars.updated = false;
                 }
                 return true;

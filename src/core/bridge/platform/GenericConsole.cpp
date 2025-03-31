@@ -14,9 +14,9 @@
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
 std::mutex GenericConsoleRegistry::consoleMutex;
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    return reinterpret_cast<jlong>(new GenericConsole(width, height, uuid));
+    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, uuid));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, const jstring save) { // NOLINT(*-misplaced-const)
@@ -30,11 +30,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop(JNI
     gameboy->dispose();
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_updateInput(JNIEnv *, jclass, const jlong ptr, const jint port, const jshort input) {
-    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
-    gameboy->input(port, input);
-}
-
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
     return gameboy->width;
@@ -45,7 +40,12 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getHeigh
     return gameboy->height;
 }
 
-GenericConsole::GenericConsole(const int width, const int height, const jUUID* uuid): width(width), height(height), uuid(uuid) {
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampleRate(JNIEnv *, jclass, const jlong ptr) {
+    const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
+    return gameboy->sampleRate;
+}
+
+GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const jUUID* uuid): width(width), height(height), sampleRate(sampleRate), uuid(uuid) {
     GenerateID(id);
     GenericConsoleRegistry::registerConsole(this);
 }

@@ -118,6 +118,8 @@ void GenericConsole::runLoops(GenericShared* shared, const char *save) {
                 if (shared->shutdownRequested) {
                     if (!saved) {
                         g_instance->saveSaveFile(save);
+                        shared->shutdownCompleted = true;
+                        g_instance->dispose();
                     }
                     break;
                 }
@@ -125,7 +127,5 @@ void GenericConsole::runLoops(GenericShared* shared, const char *save) {
             }
             std::this_thread::sleep_until(nextCheck);
         }
-        g_instance->dispose();
-        shared->shutdownCompleted = true;
     }).detach();
 }

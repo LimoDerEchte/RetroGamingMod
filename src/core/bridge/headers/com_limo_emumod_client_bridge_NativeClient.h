@@ -50,9 +50,9 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    registerAudio
- * Signature: (JJI)J
+ * Signature: (JJI)V
  */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerAudio
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerAudio
   (JNIEnv *, jclass, jlong, jlong, jint);
 
 /*
