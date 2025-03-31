@@ -1,4 +1,10 @@
+
+#ifndef DEBUG
+//#define DEBUG
+#endif
+
 #include "LibRetroCore.hpp"
+
 #include <dlfcn.h>
 #include <iostream>
 #include <thread>
@@ -6,6 +12,9 @@
 #include <cstring>
 #include <fstream>
 #include <utility>
+#ifdef DEBUG
+#include <cstdarg>
+#endif DEBUG
 #include <filesystem>
 
 static LibRetroCore* g_instance = nullptr;
@@ -13,12 +22,13 @@ static retro_system_info g_system_info = {nullptr};
 static retro_system_av_info g_av_info = {};
 
 static void log_printf(retro_log_level level, const char *fmt, ...) {
-    /* Ignore logs to prevent spamming for now
+#ifdef DEBUG
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
-    va_end(args);*/
+    va_end(args);
+#endif DEBUG
 }
 
 LibRetroCore::LibRetroCore(std::string corePath, std::string systemPath)
@@ -29,6 +39,7 @@ LibRetroCore::LibRetroCore(std::string corePath, std::string systemPath)
       retro_get_system_av_info(nullptr), retro_get_memory_data(nullptr), retro_get_memory_size(nullptr)
 {
     g_instance = this;
+    env_vars.updated = false;
 }
 
 LibRetroCore::~LibRetroCore() {
@@ -90,10 +101,21 @@ bool LibRetroCore::loadCore() {
 }
 
 bool LibRetroCore::loadROM(const std::string &romPath) const {
+    std::ifstream file(romPath, std::ios::binary | std::ios::ate);
+    if (!file)
+        return false;
+
+    const size_t size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> buffer(size);
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+        return false;
+
     const retro_game_info gameInfo = {
         romPath.c_str(),
-        nullptr,
-        0,
+        buffer.data(),
+        buffer.size(),
         nullptr
     };
     if (!retro_load_game(&gameInfo)) {
@@ -199,6 +221,34 @@ bool LibRetroCore::saveSaveFile(const char *save) {
     return success;
 }
 
+void LibRetroCore::logEnvironmentVariables(const retro_variable* vars) {
+#ifdef DEBUG
+    std::cout << "Environment variables set by core:" << std::endl;
+    std::cout << "-----------------------------" << std::endl;
+
+    for (const retro_variable* var = vars; var && var->key && var->value; var++) {
+        std::string key = var->key;
+        std::string value = var->value;
+
+        std::cout << "Key: " << key << std::endl;
+        std::cout << "Options: " << value << std::endl;
+
+        if (const size_t semicolon = value.find(';'); semicolon != std::string::npos) {
+            if (const size_t start = value.find_first_not_of(" \t", semicolon + 1); start != std::string::npos) {
+                size_t end = value.find('|', start);
+                if (end == std::string::npos) {
+                    end = value.length();
+                }
+                std::string defaultValue = value.substr(start, end - start);
+                env_vars.variables[key] = defaultValue;
+                std::cout << "Default: " << defaultValue << std::endl;
+            }
+        }
+        std::cout << "-----------------------------" << std::endl;
+    }
+#endif DEBUG
+}
+
 void LibRetroCore::videoRefreshCallback(const void* data, const unsigned width, const unsigned height, const size_t pitch) {
     if (g_instance && g_instance->videoFrameCallback) {
         g_instance->videoFrameCallback(static_cast<const int*>(data), width, height, pitch);
@@ -224,14 +274,49 @@ bool LibRetroCore::environmentCallback(const unsigned cmd, void* data) {
         case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
         case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY: {
-            //memcpy(data, g_instance->systemPath.c_str(), g_instance->systemPath.size());
-            *static_cast<const char **>(data) = ".";
+            *static_cast<const char **>(data) = g_instance->systemPath.c_str();
             return true;
         }
-        case RETRO_ENVIRONMENT_SET_VARIABLES:
-        case RETRO_ENVIRONMENT_GET_VARIABLE:
-        case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
-            return true;
+        case RETRO_ENVIRONMENT_SET_VARIABLES: {
+            if (data && g_instance) {
+                const auto* vars = static_cast<const retro_variable*>(data);
+                g_instance->logEnvironmentVariables(vars);
+                return true;
+            }
+            return false;
+        }
+        case RETRO_ENVIRONMENT_GET_VARIABLE: {
+            if (data && g_instance) {
+                auto* var = static_cast<retro_variable*>(data);
+                if (const std::string key = var->key; g_instance->env_vars.variables.contains(key)) {
+                    var->value = g_instance->env_vars.variables[key].c_str();
+                    #ifdef DEBUG
+                    std::cout << "Retrieving variable: " << key << " = " << var->value << std::endl;
+                    #endif DEBUG
+                    return true;
+                } else {
+                    #ifdef DEBUG
+                    std::cout << "Variable not found: " << key << std::endl;
+                    #endif DEBUG
+                    var->value = nullptr;
+                    return false;
+                }
+            }
+            return false;
+        }
+        case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
+            if (data && g_instance) {
+                *static_cast<bool*>(data) = g_instance->env_vars.updated;
+                if (g_instance->env_vars.updated) {
+                    #ifdef DEBUG
+                    std::cout << "Variables updated flag read and reset" << std::endl;
+                    #endif DEBUG
+                    g_instance->env_vars.updated = false;
+                }
+                return true;
+            }
+            return false;
+        }
         default:
             return false;
     }

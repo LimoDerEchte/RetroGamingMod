@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <map>
 #include <mutex>
 
 #include "../lib/libretro-common/include/libretro.h"
@@ -26,8 +27,12 @@ public:
 
     LibRetroCore(const LibRetroCore&) = delete;
     LibRetroCore& operator=(const LibRetroCore&) = delete;
-
 private:
+    struct {
+        std::map<std::string, std::string> variables;
+        bool updated;
+    } env_vars;
+
     std::string systemPath;
     std::string corePath;
     void* coreHandle;
@@ -68,6 +73,7 @@ private:
     retro_get_memory_data_t retro_get_memory_data;
     retro_get_memory_size_t retro_get_memory_size;
 
+    void logEnvironmentVariables(const retro_variable* vars);
     static void videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch);
     static bool environmentCallback(unsigned cmd, void* data);
     static void inputPollCallback();

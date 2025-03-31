@@ -12,6 +12,10 @@
 #include "SharedStructs.hpp"
 #include "sys/LibRetroCore.hpp"
 
+#ifndef DEBUG
+//#define DEBUG
+#endif
+
 static LibRetroCore* g_instance = nullptr;
 static std::deque<int16_t> g_audioBuffer;
 
@@ -37,14 +41,6 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
         return EXIT_FAILURE;
     }
     g_instance = new LibRetroCore(core, getDirectory(core));
-    if (!g_instance->loadCore()) {
-        std::cerr << "[RetroGamingCore] Failed to load core" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!g_instance->loadROM(rom)) {
-        std::cerr << "[RetroGamingCore] Failed to load ROM" << std::endl;
-        return EXIT_FAILURE;
-    }
     g_instance->setVideoFrameCallback([gb](const int* data, const unsigned width, const unsigned height, const size_t pitch) {
         const auto pixelData = reinterpret_cast<const uint8_t*>(data);
         for (unsigned y = 0; y < height; ++y) {
@@ -76,9 +72,29 @@ int GenericConsole::load(bip::managed_shared_memory* mem, const char *core, cons
     g_instance->setInputCallback([gb](const unsigned port, const unsigned id) {
         return gb->controls[port] & 1 << id ? 0x7FFF : 0;
     });
+#ifdef DEBUG
+    std::cout << "[RetroGamingCore] Loading core" << std::endl;
+#endif
+    if (!g_instance->loadCore()) {
+        std::cerr << "[RetroGamingCore] Failed to load core" << std::endl;
+        return EXIT_FAILURE;
+    }
+#ifdef DEBUG
+    std::cout << "[RetroGamingCore] Loading rom" << std::endl;
+#endif
+    if (!g_instance->loadROM(rom)) {
+        std::cerr << "[RetroGamingCore] Failed to load ROM" << std::endl;
+        return EXIT_FAILURE;
+    }
+#ifdef DEBUG
+    std::cout << "[RetroGamingCore] Loading save" << std::endl;
+#endif
     g_instance->loadSaveFile(save);
     std::cout << "[RetroGamingCore] Starting generic core" << std::endl;
     runLoops(gb, save);
+#ifdef DEBUG
+    std::cout << "[RetroGamingCore] Running core" << std::endl;
+#endif
     g_instance->runCore();
     return EXIT_SUCCESS;
 }
