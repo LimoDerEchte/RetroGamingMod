@@ -11,15 +11,17 @@ My previous attempt at this used coffee gb, a Java Game Boy emulator, which was 
 
 ## Emulators
 ### Handheld
-| Console         | Core                                                                      | Features     |
-|-----------------|---------------------------------------------------------------------------|--------------|
-| Gameboy         | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
-| Gameboy Color   | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
-| Gameboy Advance | [Beetle GBA](https://github.com/libretro/beetle-gba-libretro/tree/master) | Video, Audio |
-| SEGA Game Gear  | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX)              | Video, Audio |
+| Console          | Core                                                                      | Features     |
+|------------------|---------------------------------------------------------------------------|--------------|
+| Game Boy         | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
+| Game Boy Color   | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
+| Game Boy Advance | [Beetle GBA](https://github.com/libretro/beetle-gba-libretro/tree/master) | Video, Audio |
+| SEGA Game Gear   | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX)              | Video, Audio |
 
 ### Stationary
-None as of now
+| Console | Core                                                  | Ports (Players) | Features     |
+|---------|-------------------------------------------------------|-----------------|--------------|
+| NES     | [FCEUmm](https://github.com/libretro/libretro-fceumm) | 2               | Video, Audio |
 
 ## Building / Contributing
 ### First of all
