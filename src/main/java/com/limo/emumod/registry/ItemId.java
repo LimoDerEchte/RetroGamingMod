@@ -19,6 +19,8 @@ public class ItemId {
 
         public static final Identifier NES_CARTRIDGE = Identifier.of("emumod", "nes_cartridge");
 
+        public static final Identifier NES_CONTROLLER = Identifier.of("emumod", "nes_controller");
+
         public static final Identifier GAMEBOY = Identifier.of("emumod", "gameboy");
         public static final Identifier GAMEBOY_COLOR = Identifier.of("emumod", "gameboy_color");
         public static final Identifier GAMEBOY_ADVANCE = Identifier.of("emumod", "gameboy_advance");
@@ -39,6 +41,8 @@ public class ItemId {
         public static final RegistryKey<Item> GAME_GEAR_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR_CARTRIDGE);
 
         public static final RegistryKey<Item> NES_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.NES_CARTRIDGE);
+
+        public static final RegistryKey<Item> NES_CONTROLLER = RegistryKey.of(RegistryKeys.ITEM, Id.NES_CONTROLLER);
 
         public static final RegistryKey<Item> GAMEBOY = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY);
         public static final RegistryKey<Item> GAMEBOY_COLOR = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_COLOR);

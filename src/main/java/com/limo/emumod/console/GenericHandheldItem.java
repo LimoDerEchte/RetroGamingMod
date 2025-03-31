@@ -18,6 +18,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 import static com.limo.emumod.network.ServerHandler.mcs;
@@ -82,7 +83,7 @@ public class GenericHandheldItem extends Item {
                 user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
                 return ActionResult.PASS;
             }
-            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID)));
+            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID), OptionalInt.empty()));
         }
         return ActionResult.PASS;
     }

@@ -7,6 +7,7 @@ import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Uuids;
 
+import java.util.OptionalInt;
 import java.util.UUID;
 
 public class S2C {
@@ -24,11 +25,12 @@ public class S2C {
         }
     }
 
-    public record OpenGameScreenPayload(byte type, UUID fileId) implements CustomPayload {
+    public record OpenGameScreenPayload(byte type, UUID fileId, OptionalInt port) implements CustomPayload {
         public static final Id<OpenGameScreenPayload> ID = new Id<>(NetworkId.OPEN_GAME_SCREEN);
         public static final PacketCodec<RegistryByteBuf, OpenGameScreenPayload> CODEC = PacketCodec.tuple(
                 PacketCodecs.BYTE, OpenGameScreenPayload::type,
                 Uuids.PACKET_CODEC, OpenGameScreenPayload::fileId,
+                PacketCodecs.OPTIONAL_INT, OpenGameScreenPayload::port,
                 OpenGameScreenPayload::new
         );
 

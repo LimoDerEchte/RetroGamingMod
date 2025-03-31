@@ -1,6 +1,7 @@
 package com.limo.emumod.client.screen;
 
 import com.limo.emumod.client.util.ControlHandler;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
@@ -46,5 +47,10 @@ public class RawControllerScreen extends Screen {
         if(controlHandler.up(keyCode))
             return true;
         return super.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Nope
     }
 }

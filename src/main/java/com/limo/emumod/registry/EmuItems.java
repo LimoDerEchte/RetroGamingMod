@@ -4,6 +4,7 @@ import com.limo.emumod.EmuMod;
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.cartridge.CartridgeItem;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.console.ControllerItem;
 import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.monitor.CableItem;
 import com.limo.emumod.network.NetworkId;
@@ -46,6 +47,8 @@ public class EmuItems {
             runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
+
+    public static final Item NES_CONTROLLER = register(new ControllerItem(ItemId.Registry.NES_CONTROLLER, 2), ItemId.Registry.NES_CONTROLLER);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -95,6 +98,7 @@ public class EmuItems {
             group.add(GAME_GEAR);
 
             group.add(NES);
+            group.add(NES_CONTROLLER);
 
             group.add(MONITOR);
             group.add(LARGE_TV);
