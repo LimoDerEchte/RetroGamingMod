@@ -10,7 +10,6 @@ public class NetworkId {
     public static final Identifier CLOSE_SCREEN = Identifier.of("emumod", "close_screen");
 
     public static final Identifier UPDATE_EMULATOR = Identifier.of("emumod", "update_emu");
-    public static final Identifier UPDATE_AUDIO_DATA = Identifier.of("emumod", "audio_data");
 
     public static final Identifier CREATE_CARTRIDGE = Identifier.of("emumod", "create_cartridge");
 
@@ -21,5 +20,7 @@ public class NetworkId {
         public static final byte GAMEBOY_COLOR      = 0x01;
         public static final byte GAMEBOY_ADVANCE    = 0x02;
         public static final byte GAME_GEAR          = 0x03;
+
+        public static final byte CONTROLLER         = 0x40;
     }
 }

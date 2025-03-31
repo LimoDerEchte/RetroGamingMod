@@ -1,10 +1,7 @@
 package com.limo.emumod.client.network;
 
 import com.limo.emumod.client.bridge.NativeClient;
-import com.limo.emumod.client.screen.CartridgeScreen;
-import com.limo.emumod.client.screen.GameGearScreen;
-import com.limo.emumod.client.screen.GameboyAdvanceScreen;
-import com.limo.emumod.client.screen.GameboyScreen;
+import com.limo.emumod.client.screen.*;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -48,6 +45,7 @@ public class ClientHandler {
                     case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.fileId());
                     case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.fileId());
                     case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.fileId());
+                    case NetworkId.ScreenType.CONTROLLER -> new RawControllerScreen(payload.fileId(), 0);
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
