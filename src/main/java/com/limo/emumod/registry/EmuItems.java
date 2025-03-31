@@ -43,7 +43,7 @@ public class EmuItems {
             runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheldWithBios(user, RequirementManager.gearSystem, "bios.gg", file, "gg", 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
+            runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
 

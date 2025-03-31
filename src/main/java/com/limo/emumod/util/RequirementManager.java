@@ -20,7 +20,7 @@ public class RequirementManager {
     public static File core;
 
     public static File mGBA;
-    public static File gearSystem;
+    public static File genesisPlusGX;
     public static File FCEUmm;
     public static File bsnes;
 
@@ -31,7 +31,7 @@ public class RequirementManager {
         checkFileLocal(core, true);
         // LibRetro Cores
         checkCore(mGBA);
-        checkCore(gearSystem);
+        checkCore(genesisPlusGX);
         checkCore(FCEUmm);
         checkCore(bsnes);
         // Load Bridge Lib
@@ -44,7 +44,7 @@ public class RequirementManager {
         core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
         // LibRetro Cores
         mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
-        gearSystem = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearsystem_libretro"));
+        genesisPlusGX = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "genesis_plus_gx_libretro"));
         FCEUmm = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "fceumm_libretro"));
         bsnes = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "bsnes_libretro"));
         // Update platform download base url

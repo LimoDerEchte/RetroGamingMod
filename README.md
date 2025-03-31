@@ -11,11 +11,13 @@ My previous attempt at this used coffee gb, a java gameboy emulator, which was k
 
 ## Emulators
 ### Handheld
-Console | Core | Features
---- | --- | ---
-Gameboy | [mGBA](https://mgba.io/) | Video, Audio
-Gameboy Color | [mGBA](https://mgba.io/) | Video, Audio
-Gameboy Advance | [mGBA](https://mgba.io/) | Video, Audio
+| Console         | Core                                                         | Features     |
+|-----------------|--------------------------------------------------------------|--------------|
+| Gameboy         | [mGBA](https://mgba.io/)                                     | Video        |
+| Gameboy Color   | [mGBA](https://mgba.io/)                                     | Video        |
+| Gameboy Advance | [mGBA](https://mgba.io/)                                     | Video, Audio |
+| SEGA Game Gear  | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX) | Video        |
+
 ### Stationary
 None as of now
 
