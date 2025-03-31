@@ -18,6 +18,8 @@
 
   "item.emumod.nes": "Nintendo Entertainment System",
 
+  "item.emumod.nes_controller": "NES Controller",
+
   "item.emumod.monitor": "Monitor",
   "item.emumod.large_tv": "Large TV",
   "item.emumod.cable": "Video Cable",
