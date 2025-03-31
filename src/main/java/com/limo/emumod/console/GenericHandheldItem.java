@@ -67,7 +67,7 @@ public class GenericHandheldItem extends Item {
                 stack.remove(FILE_ID);
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
                 PlayerLookup.all(mcs).forEach(player ->
-                        ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, 0, 0)));
+                        ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, 0, 0, 0)));
             } else {
                 if(link != null) {
                     link = null;

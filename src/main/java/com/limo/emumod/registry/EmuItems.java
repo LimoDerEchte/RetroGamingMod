@@ -34,16 +34,16 @@ public class EmuItems {
 
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE,
             "gb", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.mGBA, file, "gb", 160, 144)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+            runGenericHandheld(RequirementManager.gambatte, file, "gb", 160, 144, 32768)), ItemId.Registry.GAMEBOY_CARTRIDGE);
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE,
             "gbc", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.mGBA, file, "gbc", 160, 144)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+            runGenericHandheld(RequirementManager.gambatte, file, "gbc", 160, 144, 32768)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
             "gba", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+            runGenericHandheld(RequirementManager.mGBA, file, "gba", 240, 160, 32768)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
+            runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
 
@@ -102,16 +102,16 @@ public class EmuItems {
         });
     }
 
-    private static boolean runGenericHandheld(File core, UUID file, String fileType, int width, int height) {
+    private static boolean runGenericHandheld(File core, UUID file, String fileType, int width, int height, int sampleRate) {
         NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
+                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, width, height, sampleRate)));
         return true;
     }
 
-    private static boolean runGenericHandheldWithBios(PlayerEntity user, File core, String bios, UUID file, String fileType, int width, int height) {
+    private static boolean runGenericHandheldWithBios(PlayerEntity user, File core, String bios, UUID file, String fileType, int width, int height, int sampleRate) {
         if(!FileUtil.getRequiredFile(bios).exists()) {
             user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
             return false;
@@ -120,7 +120,7 @@ public class EmuItems {
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
+                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, width, height, sampleRate)));
         return true;
     }
 }

@@ -5,24 +5,18 @@ import com.limo.emumod.client.screen.CartridgeScreen;
 import com.limo.emumod.client.screen.GameGearScreen;
 import com.limo.emumod.client.screen.GameboyAdvanceScreen;
 import com.limo.emumod.client.screen.GameboyScreen;
-import com.limo.emumod.client.util.BufferedAudioOutput;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.TrackedPosition;
-import net.minecraft.util.math.Vec3d;
 
-import java.util.HashMap;
 import java.util.Objects;
-import java.util.UUID;
 
 import static com.limo.emumod.client.EmuModClient.CLIENT;
 import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
-    public static HashMap<UUID, BufferedAudioOutput> audioBuffer = new HashMap<>();
 
     private static String ip() {
         String address = Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).getConnection().getAddressAsString(true);
@@ -61,26 +55,16 @@ public class ClientHandler {
                 screen.close();
         }));
         // Other Stuff
-        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateDisplayPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateEmulatorPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             int width = payload.width();
             int height = payload.height();
             if(width == 0 || height == 0) {
                 ScreenManager.unregisterDisplay(payload.uuid());
+                CLIENT.unregisterAudio(payload.uuid());
             } else {
                 ScreenManager.registerDisplay(payload.uuid(), width, height);
+                CLIENT.registerAudio(payload.uuid(), payload.sampleRate());
             }
-        }));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateAudioDataPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            if(!audioBuffer.containsKey(payload.uuid())) {
-                TrackedPosition tp = new TrackedPosition();
-                tp.setPos(new Vec3d(0, 0, 0));
-                audioBuffer.put(payload.uuid(), new BufferedAudioOutput(48000, tp));
-            }
-            /*try {
-                audioBuffer.get(payload.uuid()).playAudio(AudioCompression.decompressAudio(payload.data()));
-            } catch (IOException e) {
-                EmuMod.LOGGER.error("Failed to decompress audio buffer", e);
-            }*/
         }));
     }
 }

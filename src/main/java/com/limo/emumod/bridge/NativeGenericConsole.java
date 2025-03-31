@@ -58,6 +58,10 @@ public class NativeGenericConsole {
         return getHeight(pointer);
     }
 
+    public int getSampleRate() {
+        return getSampleRate(pointer);
+    }
+
     private native static long init(long uuid, int width, int height);
     private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
@@ -68,4 +72,5 @@ public class NativeGenericConsole {
 
     private native static int getWidth(long pointer);
     private native static int getHeight(long pointer);
+    private native static int getSampleRate(long pointer);
 }

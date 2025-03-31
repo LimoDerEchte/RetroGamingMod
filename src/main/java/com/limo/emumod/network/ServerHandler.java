@@ -50,8 +50,8 @@ public class ServerHandler {
         ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
             sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
             for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
-                sender.sendPacket(new S2C.UpdateDisplayPayload(console.getKey(),
-                        console.getValue().getWidth(), console.getValue().getHeight()));
+                sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
+                        console.getValue().getWidth(), console.getValue().getHeight(), console.getValue().getSampleRate()));
             }
         });
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {

@@ -55,6 +55,14 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getHeight
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     com_limo_emumod_bridge_NativeGenericConsole
+ * Method:    getSampleRate
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampleRate
+  (JNIEnv *, jclass, jlong);
+
 #ifdef __cplusplus
 }
 #endif

@@ -29,6 +29,14 @@ public class NativeClient {
         unregisterScreen(handle, NativeUtil.nativeUUID(uuid));
     }
 
+    public void registerAudio(UUID id, int sampleRate) {
+        registerAudio(handle, NativeUtil.nativeUUID(id), sampleRate);
+    }
+
+    public void unregisterAudio(UUID id) {
+        unregisterAudio(handle, NativeUtil.nativeUUID(id));
+    }
+
     public void updateControls(UUID uuid, int port, short controls) {
         sendControlUpdate(handle, NativeUtil.nativeUUID(uuid), port, controls);
     }
@@ -38,5 +46,7 @@ public class NativeClient {
     private static native boolean isAuthenticated(long ptr);
     private static native long registerScreen(long ptr, long uuid, int width, int height);
     private static native void unregisterScreen(long ptr, long uuid);
+    private static native long registerAudio(long ptr, long uuid, int sampleRate);
+    private static native void unregisterAudio(long ptr, long uuid);
     private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
 }

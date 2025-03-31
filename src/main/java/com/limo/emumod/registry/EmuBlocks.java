@@ -23,18 +23,18 @@ public class EmuBlocks {
     public static final Block LARGE_TV = register(new MonitorBlock(), BlockId.Registry.LARGE_TV);
 
     public static final Block NES = register(new GenericConsoleBlock(BlockId.Registry.NES, EmuItems.NES_CARTRIDGE, "nes",
-            (user, file) -> runGenericConsole(RequirementManager.FCEUmm, file, "nes", 256, 240)), BlockId.Registry.NES);
+            (user, file) -> runGenericConsole(RequirementManager.FCEUmm, file, "nes", 256, 240, 48000)), BlockId.Registry.NES);
 
     public static Block register(Block block, RegistryKey<Block> blockKey) {
         return Registry.register(Registries.BLOCK, blockKey, block);
     }
 
-    private static boolean runGenericConsole(File core, UUID file, String fileType, int width, int height) {
+    private static boolean runGenericConsole(File core, UUID file, String fileType, int width, int height, int sampleRate) {
         NativeGenericConsole con = new NativeGenericConsole(width, height, file, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, width, height)));
+                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, width, height, sampleRate)));
         return true;
     }
 }

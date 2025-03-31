@@ -65,27 +65,14 @@ public class S2C {
         }
     }
 
-    public record UpdateDisplayPayload(UUID uuid, int width, int height) implements CustomPayload {
-        public static final Id<UpdateDisplayPayload> ID = new Id<>(NetworkId.UPDATE_DISPLAY);
-        public static final PacketCodec<RegistryByteBuf, UpdateDisplayPayload> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateDisplayPayload::uuid,
-                PacketCodecs.VAR_INT, UpdateDisplayPayload::width,
-                PacketCodecs.VAR_INT, UpdateDisplayPayload::height,
-                UpdateDisplayPayload::new
-        );
-
-        @Override
-        public Id<? extends CustomPayload> getId() {
-            return ID;
-        }
-    }
-
-    public record UpdateAudioDataPayload(UUID uuid, byte[] data) implements CustomPayload {
-        public static final Id<UpdateAudioDataPayload> ID = new Id<>(NetworkId.UPDATE_AUDIO_DATA);
-        public static final PacketCodec<RegistryByteBuf, UpdateAudioDataPayload> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateAudioDataPayload::uuid,
-                PacketCodecs.BYTE_ARRAY, UpdateAudioDataPayload::data,
-                UpdateAudioDataPayload::new
+    public record UpdateEmulatorPayload(UUID uuid, int width, int height, int sampleRate) implements CustomPayload {
+        public static final Id<UpdateEmulatorPayload> ID = new Id<>(NetworkId.UPDATE_EMULATOR);
+        public static final PacketCodec<RegistryByteBuf, UpdateEmulatorPayload> CODEC = PacketCodec.tuple(
+                Uuids.PACKET_CODEC, UpdateEmulatorPayload::uuid,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::width,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::height,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
+                UpdateEmulatorPayload::new
         );
 
         @Override
@@ -99,7 +86,6 @@ public class S2C {
         PayloadTypeRegistry.playS2C().register(OpenGameScreenPayload.ID, OpenGameScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ENetTokenPayload.ID, ENetTokenPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(UpdateDisplayPayload.ID, UpdateDisplayPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(UpdateAudioDataPayload.ID, UpdateAudioDataPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(UpdateEmulatorPayload.ID, UpdateEmulatorPayload.CODEC);
     }
 }
