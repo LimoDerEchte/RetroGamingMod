@@ -32,7 +32,7 @@ public class ServerEvents {
                 serverPort = NetworkUtils.findLocalPort();
             SERVER = new NativeServer(serverPort);
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             EmuMod.running.values().forEach(NativeGenericConsole::stop);
             EmuMod.running.clear();
             if(SERVER != null) {
@@ -40,14 +40,14 @@ public class ServerEvents {
                 SERVER = null;
             }
         });
-        ServerPlayConnectionEvents.JOIN.register((a, sender, _) -> {
+        ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
             sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
             for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
                 sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
                         console.getValue().getWidth(), console.getValue().getHeight(), console.getValue().getSampleRate()));
             }
         });
-        ServerEntityEvents.EQUIPMENT_CHANGE.register((entity, _, previous, current) -> {
+        ServerEntityEvents.EQUIPMENT_CHANGE.register((entity, slot, previous, current) -> {
             if(previous.getItem() instanceof GenericHandheldItem && previous.hasChangedComponent(FILE_ID)) {
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
                         new S2C.UpdateHandheldAudio(current.getComponents().get(FILE_ID), UUID_ZERO)));
