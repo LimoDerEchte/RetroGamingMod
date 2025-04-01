@@ -49,6 +49,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendContr
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
     std::lock_guard lock(mutex);
+    std::lock_guard enet_lock(enet_mutex);
     std::cout << "[RetroClient] Connecting to ENet server on " << ip << ":" << port << std::endl;
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
@@ -77,6 +78,7 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token): tok
 
 void RetroClient::dispose() {
     std::lock_guard lock(mutex);
+    std::lock_guard enet_lock(enet_mutex);
     running = false;
     if (client != nullptr) {
         enet_host_destroy(client);
@@ -107,6 +109,7 @@ void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const in
     int8_t content[3];
     content[0] = static_cast<int8_t>(port);
     memcpy(&content[1], &controls, sizeof(controls));
+    std::lock_guard enet_lock(enet_mutex);
     enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
 }
 
@@ -115,7 +118,10 @@ void RetroClient::mainLoop() {
         return;
     while (running) {
         ENetEvent event;
-        if (const auto status = enet_host_service(client, &event, 0); status < 0) {
+        enet_mutex.lock();
+        const auto status = enet_host_service(client, &event, 0);
+        enet_mutex.unlock();
+        if (status < 0) {
             std::cerr << "[RetroClient] Failed to receive ENet event (" << status << ")" << std::endl;
         } else if (status == 0) {
             continue;
@@ -141,9 +147,10 @@ void RetroClient::mainLoop() {
     }
 }
 
-void RetroClient::onConnect() const {
+void RetroClient::onConnect() {
     std::cout << "[RetroClient] Connection established to " << peer->address.port << std::endl;
     // Auth Packet
+    std::lock_guard enet_lock(enet_mutex);
     int8_t pak[33]{};
     pak[0] = PACKET_AUTH;
     memcpy(&pak[1], token, 32);
@@ -171,8 +178,10 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_KEEP_ALIVE: {
+            enet_mutex.lock();
             constexpr int8_t id = PACKET_KEEP_ALIVE;
             enet_peer_send(peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
+            enet_mutex.unlock();
             break;
         }
         case PACKET_KICK: {
@@ -198,8 +207,8 @@ void RetroClient::onMessage(const ENetPacket *packet) {
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
-            mutex.unlock();
             delete[] parsed;
+            mutex.unlock();
             break;
         }
         case PACKET_UPDATE_AUDIO: {
@@ -216,8 +225,8 @@ void RetroClient::onMessage(const ENetPacket *packet) {
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
-            mutex.unlock();
             delete[] parsed;
+            mutex.unlock();
             break;
         }
         case PACKET_AUTH:

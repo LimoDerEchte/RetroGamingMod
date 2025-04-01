@@ -11,6 +11,7 @@
 #include "util/NativeUtil.hpp"
 
 class RetroClient {
+    std::mutex enet_mutex;
     ENetHost* client;
     ENetPeer* peer;
 
@@ -32,7 +33,7 @@ public:
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
 
     void mainLoop();
-    void onConnect() const;
+    void onConnect();
     void onDisconnect();
     void onMessage(const ENetPacket* packet);
 

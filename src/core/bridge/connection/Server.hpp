@@ -17,6 +17,7 @@ struct RetroServerClient {
 };
 
 class RetroServer {
+    std::mutex enet_mutex;
     ENetHost* server;
     bool running = false;
     std::mutex mutex;

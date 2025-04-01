@@ -30,6 +30,7 @@ JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(
 
 RetroServer::RetroServer(const int port) {
     std::lock_guard lock(mutex);
+    std::lock_guard enet_lock(enet_mutex);
     if (enet_initialize() != 0) {
         std::cerr << "[RetroServer] Failed to initialize ENet" << std::endl;
         return;
@@ -63,6 +64,7 @@ char* RetroServer::genToken() {
 
 void RetroServer::dispose() {
     std::lock_guard lock(mutex);
+    std::lock_guard enet_lock(enet_mutex);
     running = false;
     if (server != nullptr) {
         enet_host_destroy(server);
@@ -77,7 +79,10 @@ void RetroServer::mainReceiverLoop() {
         return;
     while (running) {
         ENetEvent event;
-        if (const auto status = enet_host_service(server, &event, 0); status < 0) {
+        enet_mutex.lock();
+        const auto status = enet_host_service(server, &event, 0);
+        enet_mutex.unlock();
+        if (status < 0) {
             std::cerr << "[RetroServer] Failed to receive ENet event (" << status << ")" << std::endl;
         } else if (status == 0) {
             continue;
@@ -112,7 +117,9 @@ void RetroServer::mainKeepAliveLoop() {
             if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                 continue;
             constexpr int8_t id = PACKET_KEEP_ALIVE;
+            enet_mutex.lock();
             enet_peer_send(client->peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
+            enet_mutex.unlock();
         }
         mutex.unlock();
         next += delay;
@@ -138,7 +145,9 @@ void RetroServer::videoSenderLoop(const int fps) {
             for (const RetroServerClient* client : *clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
+                enet_mutex.lock();
                 enet_peer_send(client->peer, 0, packet);
+                enet_mutex.unlock();
             }
             mutex.unlock();
             delete[] packet;
@@ -167,7 +176,9 @@ void RetroServer::audioSenderLoop(const int cps) {
             for (const RetroServerClient* client : *clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
+                enet_mutex.lock();
                 enet_peer_send(client->peer, 0, packet);
+                enet_mutex.unlock();
             }
             mutex.unlock();
             delete[] packet;
@@ -212,10 +223,12 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
                 return;
             }
             mutex.lock();
-            std::erase_if(*tokens, [packet, client, peer](const std::array<char, 32>& token) {
+            std::erase_if(*tokens, [&, packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
+                    enet_mutex.lock();
                     enet_peer_send(peer, 0, enet_packet_create(new char[]{ PACKET_AUTH_ACK }, 1, ENET_PACKET_FLAG_RELIABLE));
+                    enet_mutex.unlock();
                     return true;
                 }
                 return false;
@@ -230,7 +243,6 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
             break;
         }
         case PACKET_KEEP_ALIVE: {
-            //std::cout << "[RetroServer] Received Keep Alive from " << client->peer->incomingPeerID << std::endl;
             break;
         }
         case PACKET_UPDATE_CONTROLS: {
