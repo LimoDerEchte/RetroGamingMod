@@ -203,11 +203,9 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             const auto it = displays.find(parsed->ref->combine());
             if (it == displays.end()) {
                 std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
-                delete[] parsed;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
-            delete[] parsed;
             mutex.unlock();
             break;
         }
@@ -221,11 +219,9 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             const auto it = playbacks.find(parsed->ref->combine());
             if (it == playbacks.end()) {
                 std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
-                delete[] parsed;
                 return;
             }
             it->second->receive(parsed->data, parsed->size);
-            delete[] parsed;
             mutex.unlock();
             break;
         }

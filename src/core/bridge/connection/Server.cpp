@@ -150,7 +150,6 @@ void RetroServer::videoSenderLoop(const int fps) {
                 enet_mutex.unlock();
             }
             mutex.unlock();
-            delete[] packet;
         });
         next += delay;
         std::this_thread::sleep_until(next);
@@ -181,7 +180,6 @@ void RetroServer::audioSenderLoop(const int cps) {
                 enet_mutex.unlock();
             }
             mutex.unlock();
-            delete[] packet;
         });
         next += delay;
         std::this_thread::sleep_until(next);
