@@ -34,7 +34,7 @@ import java.io.File;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
-import static com.limo.emumod.network.ServerHandler.mcs;
+import static com.limo.emumod.network.ServerEvents.mcs;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 
 public class GenericConsoleBlock extends BlockWithEntity {

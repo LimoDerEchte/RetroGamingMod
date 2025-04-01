@@ -16,7 +16,7 @@ import net.minecraft.registry.RegistryKey;
 import java.io.File;
 import java.util.UUID;
 
-import static com.limo.emumod.network.ServerHandler.mcs;
+import static com.limo.emumod.network.ServerEvents.mcs;
 
 public class EmuBlocks {
     public static final Block MONITOR = register(new MonitorBlock(), BlockId.Registry.MONITOR);

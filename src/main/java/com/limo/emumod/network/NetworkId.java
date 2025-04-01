@@ -10,6 +10,7 @@ public class NetworkId {
     public static final Identifier CLOSE_SCREEN = Identifier.of("emumod", "close_screen");
 
     public static final Identifier UPDATE_EMULATOR = Identifier.of("emumod", "update_emu");
+    public static final Identifier UPDATE_AUDIO = Identifier.of("emumod", "update_audio");
 
     public static final Identifier CREATE_CARTRIDGE = Identifier.of("emumod", "create_cartridge");
 

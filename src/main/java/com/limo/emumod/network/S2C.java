@@ -83,11 +83,26 @@ public class S2C {
         }
     }
 
+    public record UpdateHandheldAudio(UUID uuid, UUID entity) implements CustomPayload {
+        public static final Id<UpdateHandheldAudio> ID = new Id<>(NetworkId.UPDATE_AUDIO);
+        public static final PacketCodec<RegistryByteBuf, UpdateHandheldAudio> CODEC = PacketCodec.tuple(
+                Uuids.PACKET_CODEC, UpdateHandheldAudio::uuid,
+                Uuids.PACKET_CODEC, UpdateHandheldAudio::entity,
+                UpdateHandheldAudio::new
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
     public static void init() {
         PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenGameScreenPayload.ID, OpenGameScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ENetTokenPayload.ID, ENetTokenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateEmulatorPayload.ID, UpdateEmulatorPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(UpdateHandheldAudio.ID, UpdateHandheldAudio.CODEC);
     }
 }

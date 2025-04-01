@@ -28,32 +28,8 @@ import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class ServerHandler {
-    public static MinecraftServer mcs;
 
     public static void init() {
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            mcs = server;
-            FileUtil.init();
-            int serverPort = server.getServerPort();
-            if(serverPort == -1)
-                serverPort = NetworkUtils.findLocalPort();
-            SERVER = new NativeServer(serverPort);
-        });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            EmuMod.running.values().forEach(NativeGenericConsole::stop);
-            EmuMod.running.clear();
-            if(SERVER != null) {
-                SERVER.stop();
-                SERVER = null;
-            }
-        });
-        ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
-            sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
-            for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
-                sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
-                        console.getValue().getWidth(), console.getValue().getHeight(), console.getValue().getSampleRate()));
-            }
-        });
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes;

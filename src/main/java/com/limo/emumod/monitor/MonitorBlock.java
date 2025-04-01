@@ -2,6 +2,7 @@ package com.limo.emumod.monitor;
 
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.console.ControllerItem;
 import com.limo.emumod.registry.BlockId;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
@@ -41,6 +42,8 @@ public class MonitorBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if(stack.getItem() instanceof CableItem)
+            return ActionResult.PASS;
         if(!player.isSneaking()) {
             if(LinkedCartridgeItem.hasGame(stack)) {
                 BlockEntity entity = world.getBlockEntity(pos);

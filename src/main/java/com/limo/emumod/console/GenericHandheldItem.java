@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.UUID;
 
-import static com.limo.emumod.network.ServerHandler.mcs;
+import static com.limo.emumod.network.ServerEvents.mcs;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
