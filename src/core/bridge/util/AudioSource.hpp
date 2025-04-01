@@ -10,6 +10,7 @@
 #include <thread>
 #include <atomic>
 #include <condition_variable>
+#include <jni.h>
 
 #include "codec/AudioDecoder.hpp"
 
@@ -26,6 +27,7 @@ class AudioStreamPlayer {
 
     std::thread playbackThread;
     std::atomic<bool> running;
+    std::mutex al_mutex;
     std::mutex queueMutex;
     std::condition_variable queueCondition;
     std::queue<std::vector<uint8_t>> packetQueue;
@@ -47,6 +49,7 @@ public:
     AudioStreamPlayer& operator=(AudioStreamPlayer&& other) noexcept;
 
     void receive(const uint8_t* data, size_t size);
+    void updateDistance(double distance);
     void start();
     void stop();
     [[nodiscard]] bool isPlaying() const;

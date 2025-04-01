@@ -47,6 +47,12 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendContr
     client->sendControlsUpdate(uuid, port, controls);
 }
 
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_updateAudioDistance(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jdouble dst) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    client->updateAudioDistance(uuid, dst);
+}
+
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
     std::lock_guard lock(mutex);
     std::lock_guard enet_lock(enet_mutex);
@@ -113,13 +119,24 @@ void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const in
     enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
 }
 
+void RetroClient::updateAudioDistance(const jUUID *uuid, const double distance) {
+    std::lock_guard lock(mutex);
+    const auto it = playbacks.find(uuid->combine());
+    if (it == playbacks.end()) {
+        return;
+    }
+    it->second->updateDistance(distance);
+}
+
 void RetroClient::mainLoop() {
     if (client == nullptr)
         return;
-    while (running) {
+    while (true) {
         ENetEvent event;
         enet_mutex.lock();
         const auto status = enet_host_service(client, &event, 0);
+        if (!running)
+            return;
         enet_mutex.unlock();
         if (status < 0) {
             std::cerr << "[RetroClient] Failed to receive ENet event (" << status << ")" << std::endl;

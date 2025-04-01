@@ -71,6 +71,7 @@ AudioStreamPlayer& AudioStreamPlayer::operator=(AudioStreamPlayer&& other) noexc
 }
 
 void AudioStreamPlayer::initOpenAL() {
+    std::lock_guard al_lock(al_mutex);
     device = alcOpenDevice(nullptr);
     if (!device) {
         throw std::runtime_error("Failed to open OpenAL device");
@@ -103,6 +104,7 @@ void AudioStreamPlayer::initOpenAL() {
 }
 
 void AudioStreamPlayer::cleanupOpenAL() {
+    std::lock_guard al_lock(al_mutex);
     if (source) {
         alDeleteSources(1, &source);
     }
@@ -130,6 +132,11 @@ void AudioStreamPlayer::receive(const uint8_t* data, const size_t size) {
     queueCondition.notify_one();
 }
 
+void AudioStreamPlayer::updateDistance(const double distance) {
+    std::lock_guard al_lock(al_mutex);
+    alSourcef(source, AL_GAIN, static_cast<float>(std::max(1.5, 1.5 / distance * .2)));
+}
+
 void AudioStreamPlayer::start() {
     if (running) {
         return;
@@ -139,6 +146,7 @@ void AudioStreamPlayer::start() {
 }
 
 void AudioStreamPlayer::stop() {
+    std::lock_guard al_lock(al_mutex);
     if (!running) {
         return;
     }
@@ -172,6 +180,7 @@ void AudioStreamPlayer::reset() {
 void AudioStreamPlayer::playbackLoop() {
     bool initialBuffered = false;
     while (running) {
+        al_mutex.lock();
         if (const bool processed = processNextPacket(); !initialBuffered && processed) {
             alSourcePlay(source);
             initialBuffered = true;
@@ -213,6 +222,7 @@ void AudioStreamPlayer::playbackLoop() {
                 }
             }
         }
+        al_mutex.unlock();
         if (!proc) {
             std::unique_lock lock(queueMutex);
             if (packetQueue.empty() && running) {

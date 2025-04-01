@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <jni.h>
 #include <unordered_map>
 #include <enet/enet.h>
 
@@ -31,6 +32,7 @@ public:
     void registerDisplay(const jUUID* uuid, NativeDisplay* display, int sampleRate);
     void unregisterDisplay(const jUUID* uuid);
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
+    void updateAudioDistance(const jUUID* uuid, double distance);
 
     void mainLoop();
     void onConnect();
