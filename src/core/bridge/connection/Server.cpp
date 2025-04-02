@@ -148,7 +148,7 @@ void RetroServer::bandwidthMonitorLoop() {
         mutex.lock();
         const auto incomingKbps = static_cast<double>(bytesIn - lastBytesIn) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
         const auto outgoingKbps = static_cast<double>(bytesOut - lastBytesOut) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
-        std::cout << "[RetroClient] Bandwidth: IN: " << std::fixed << std::setprecision(2) << incomingKbps
+        std::cout << "[RetroServer] Bandwidth: IN: " << std::fixed << std::setprecision(2) << incomingKbps
                   << " kbps, OUT: " << std::fixed << std::setprecision(2) << outgoingKbps << " kbps" << std::endl;
 
         lastBytesIn = bytesIn;
