@@ -46,6 +46,7 @@ RetroServer::RetroServer(const int port) {
     }
     running = true;
     std::thread([&] { mainReceiverLoop(); }).detach();
+    std::thread([&] { bandwidthMonitorLoop(); }).detach();
     std::thread([&] { mainKeepAliveLoop(); }).detach();
     std::thread([&] { videoSenderLoop(30); }).detach();
     std::thread([&] { audioSenderLoop(300); }).detach();
@@ -53,31 +54,45 @@ RetroServer::RetroServer(const int port) {
 }
 
 char* RetroServer::genToken() {
-    std::lock_guard lock(mutex);
     const auto data = new char[32];
     GenerateID(data);
     std::array<char, 32> stdArr = {};
     memcpy(stdArr.data(), data, 32);
+    std::lock_guard lock(mutex);
     tokens->push_back(stdArr);
     return data;
 }
 
 void RetroServer::dispose() {
-    std::lock_guard lock(mutex);
-    std::lock_guard enet_lock(enet_mutex);
+    mutex.lock();
     running = false;
+    mutex.unlock();
+
+    while (true) {
+        mutex.lock();
+        if (runningLoops == 0)
+            break;
+        mutex.unlock();
+        std::this_thread::yield();
+    }
+
+    std::lock_guard enet_lock(enet_mutex);
     if (server != nullptr) {
         enet_host_destroy(server);
         server = nullptr;
     }
     enet_deinitialize();
+    mutex.unlock();
     std::cout << "[RetroServer] Stopped ENet server" << std::endl;
 }
 
 void RetroServer::mainReceiverLoop() {
     if (server == nullptr)
         return;
-    while (running) {
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
         ENetEvent event;
         enet_mutex.lock();
         const auto status = enet_host_service(server, &event, 0);
@@ -101,17 +116,59 @@ void RetroServer::mainReceiverLoop() {
                 break;
             }
             case ENET_EVENT_TYPE_RECEIVE: {
+                mutex.lock();
+                bytesIn += event.packet->dataLength;
+                mutex.unlock();
                 onMessage(event.peer, event.packet);
                 break;
             }
         }
+        mutex.lock();
+        if (!running)
+            break;
+        mutex.unlock();
     }
+    runningLoops--;
+    mutex.unlock();
+}
+
+void RetroServer::bandwidthMonitorLoop() {
+    const auto interval = std::chrono::seconds(5);
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    uint64_t lastBytesIn = 0;
+    uint64_t lastBytesOut = 0;
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
+        std::this_thread::sleep_for(interval);
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
+
+        mutex.lock();
+        const auto incomingKbps = static_cast<double>(bytesIn - lastBytesIn) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
+        const auto outgoingKbps = static_cast<double>(bytesOut - lastBytesOut) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
+        std::cout << "[RetroClient] Bandwidth: IN: " << std::fixed << std::setprecision(2) << incomingKbps
+                  << " kbps, OUT: " << std::fixed << std::setprecision(2) << outgoingKbps << " kbps" << std::endl;
+
+        lastBytesIn = bytesIn;
+        lastBytesOut = bytesOut;
+        if (!running)
+            break;
+        mutex.unlock();
+        lastTime = currentTime;
+    }
+    runningLoops--;
+    mutex.unlock();
 }
 
 void RetroServer::mainKeepAliveLoop() {
     const auto delay = std::chrono::seconds(5);
     auto next = std::chrono::high_resolution_clock::now();
-    while (running) {
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
         mutex.lock();
         for (const RetroServerClient* client : *clients) {
             if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
@@ -120,17 +177,25 @@ void RetroServer::mainKeepAliveLoop() {
             enet_mutex.lock();
             enet_peer_send(client->peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
             enet_mutex.unlock();
+            bytesOut++;
         }
+        if (!running)
+            break;
         mutex.unlock();
         next += delay;
         std::this_thread::sleep_until(next);
     }
+    runningLoops--;
+    mutex.unlock();
 }
 
 void RetroServer::videoSenderLoop(const int fps) {
     const auto delay = std::chrono::nanoseconds(1000000000 / fps);
     auto next = std::chrono::high_resolution_clock::now();
-    while (running) {
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
@@ -148,18 +213,28 @@ void RetroServer::videoSenderLoop(const int fps) {
                 enet_mutex.lock();
                 enet_peer_send(client->peer, 0, packet);
                 enet_mutex.unlock();
+                bytesOut += packet->dataLength;
             }
             mutex.unlock();
         });
+        mutex.lock();
+        if (!running)
+            break;
+        mutex.unlock();
         next += delay;
         std::this_thread::sleep_until(next);
     }
+    runningLoops--;
+    mutex.unlock();
 }
 
 void RetroServer::audioSenderLoop(const int cps) {
     const auto delay = std::chrono::nanoseconds(1000000000 / cps);
     auto next = std::chrono::high_resolution_clock::now();
-    while (running) {
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
         GenericConsoleRegistry::withConsoles([this](const auto console) {
             if (!console->retroCoreHandle->audioChanged)
                 return;
@@ -178,12 +253,19 @@ void RetroServer::audioSenderLoop(const int cps) {
                 enet_mutex.lock();
                 enet_peer_send(client->peer, 0, packet);
                 enet_mutex.unlock();
+                bytesOut += packet->dataLength;
             }
             mutex.unlock();
         });
+        mutex.lock();
+        if (!running)
+            break;
+        mutex.unlock();
         next += delay;
         std::this_thread::sleep_until(next);
     }
+    runningLoops--;
+    mutex.unlock();
 }
 
 void RetroServer::onConnect(ENetPeer *peer) {
@@ -200,6 +282,10 @@ void RetroServer::onDisconnect(ENetPeer *peer) {
 }
 
 void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
+    mutex.lock();
+    if (!running)
+        return;
+    mutex.unlock();
     if (packet == nullptr) {
         std::cerr << "[RetroServer] Received packet is nullptr from " << peer->incomingPeerID << std::endl;
         return;
@@ -227,6 +313,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
                     enet_mutex.lock();
                     enet_peer_send(peer, 0, enet_packet_create(new char[]{ PACKET_AUTH_ACK }, 1, ENET_PACKET_FLAG_RELIABLE));
                     enet_mutex.unlock();
+                    bytesOut += 1;
                     return true;
                 }
                 return false;
@@ -269,4 +356,22 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
             break;
         }
     }
+}
+
+void RetroServer::kick(ENetPeer *peer, const char *message) {
+    std::lock_guard enet_lock(enet_mutex);
+    const auto packet = CharArrayPacket(PACKET_KICK, message).pack();
+    enet_peer_send(peer, 0, packet);
+    enet_peer_disconnect(peer, 0);
+    bytesOut += packet->dataLength;
+}
+
+RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
+    for (const auto element : *clients) {
+        if (element == nullptr || element->peer != peer) {
+            continue;
+        }
+        return element;
+    }
+    return nullptr;
 }

@@ -20,9 +20,13 @@ class RetroServer {
     std::mutex enet_mutex;
     ENetHost* server;
     bool running = false;
+    int runningLoops = 0;
     std::mutex mutex;
     std::vector<RetroServerClient*>* clients = new std::vector<RetroServerClient*>(SERVER_MAX_CLIENTS);
     std::vector<std::array<char, 32>>* tokens = new std::vector<std::array<char, 32>>();
+
+    uint64_t bytesIn = 0;
+    uint64_t bytesOut = 0;
 
 public:
     explicit RetroServer(int port);
@@ -31,6 +35,7 @@ public:
     void dispose();
 
     void mainReceiverLoop();
+    void bandwidthMonitorLoop();
     void mainKeepAliveLoop();
     void videoSenderLoop(int fps);
     void audioSenderLoop(int cps);
@@ -38,22 +43,6 @@ public:
     void onDisconnect(ENetPeer* peer);
     void onMessage(ENetPeer* peer, const ENetPacket* packet);
 
-    static void kick(ENetPeer *peer, const char *message);
+    void kick(ENetPeer *peer, const char *message);
     RetroServerClient* findClientByPeer(const ENetPeer* peer) const;
 };
-
-inline RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
-    for (const auto element : *clients) {
-        if (element == nullptr || element->peer != peer) {
-            continue;
-        }
-        return element;
-    }
-    return nullptr;
-}
-
-inline void RetroServer::kick(ENetPeer *peer, const char *message) {
-    enet_peer_send(peer, 0, CharArrayPacket(PACKET_KICK, message).pack());
-    enet_peer_disconnect(peer, 0);
-}
-
