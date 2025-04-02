@@ -60,6 +60,7 @@ public class RequirementManager {
         if(file.exists())
             return;
         String dl = baseUrl + file.getName() + ".zip";
+        EmuMod.LOGGER.info("Downloading {} from {}", file.getName(), dl);
         try(ZipInputStream zis = new ZipInputStream(new URI(dl).toURL().openStream());
             FileOutputStream stream = new FileOutputStream(file)) {
             ZipEntry entry = zis.getNextEntry();
@@ -79,6 +80,7 @@ public class RequirementManager {
     private static void checkFileLocal(File file, boolean setExec) {
         if(file.exists())
             return;
+        EmuMod.LOGGER.info("Extracting {}", file.getName());
         URL url = RequirementManager.class.getResource("/lib/" + file.getName());
         if(url == null) {
             EmuMod.LOGGER.error("Failed to find vital library");
