@@ -87,8 +87,10 @@ public class RequirementManager {
             return;
         }
         try(InputStream is = url.openStream(); OutputStream os = new FileOutputStream(file)) {
-            while(is.available() > 0) {
-                os.write(is.read());
+            byte[] buffer = new byte[8192];
+            int len;
+            while((len = is.read(buffer)) > 0) {
+                os.write(buffer, 0, len);
             }
             os.flush();
             if(setExec) {
