@@ -21,7 +21,10 @@ public class SoundManager {
                 double distance = mc.cameraEntity == null ? 0 : mc.cameraEntity.getPos().distanceTo(entity.getPos());
                 SoundManager.updateEntityInRender(entity.getUuid(), distance);
             });
-            fileDistanceMap.forEach((uuid, val) -> CLIENT.updateAudioDistance(uuid, val));
+            fileDistanceMap.forEach((uuid, val) -> {
+                if(CLIENT != null)
+                    CLIENT.updateAudioDistance(uuid, val);
+            });
         });
     }
 

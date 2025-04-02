@@ -48,11 +48,11 @@ public class ServerEvents {
             }
         });
         ServerEntityEvents.EQUIPMENT_CHANGE.register((entity, slot, previous, current) -> {
-            if(previous.getItem() instanceof GenericHandheldItem && previous.hasChangedComponent(FILE_ID)) {
+            if(previous.getItem() instanceof GenericHandheldItem && previous.getComponents().get(FILE_ID) != null) {
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                        new S2C.UpdateHandheldAudio(current.getComponents().get(FILE_ID), UUID_ZERO)));
+                        new S2C.UpdateHandheldAudio(previous.getComponents().get(FILE_ID), UUID_ZERO)));
             }
-            if(current.getItem() instanceof GenericHandheldItem && current.hasChangedComponent(FILE_ID)) {
+            if(current.getItem() instanceof GenericHandheldItem && current.getComponents().get(FILE_ID) != null && entity.getUuid() != null) {
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
                         new S2C.UpdateHandheldAudio(current.getComponents().get(FILE_ID), entity.getUuid())));
             }
