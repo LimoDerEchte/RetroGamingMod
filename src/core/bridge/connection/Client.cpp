@@ -5,6 +5,7 @@
 #include "Client.hpp"
 
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <thread>
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
@@ -80,17 +81,31 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token): tok
     std::thread([&] {
         mainLoop();
     }).detach();
+    std::thread([&] {
+        bandwidthMonitorLoop();
+    }).detach();
 }
 
 void RetroClient::dispose() {
-    std::lock_guard lock(mutex);
-    std::lock_guard enet_lock(enet_mutex);
+    mutex.lock();
     running = false;
+    mutex.unlock();
+
+    while (true) {
+        mutex.lock();
+        if (runningLoops == 0)
+            break;
+        mutex.unlock();
+        std::this_thread::yield();
+    }
+
+    std::lock_guard enet_lock(enet_mutex);
     if (client != nullptr) {
         enet_host_destroy(client);
         client = nullptr;
     }
     enet_deinitialize();
+    mutex.unlock();
     std::cout << "[RetroClient] Disconnected from ENet server" << std::endl;
 }
 
@@ -117,6 +132,7 @@ void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const in
     memcpy(&content[1], &controls, sizeof(controls));
     std::lock_guard enet_lock(enet_mutex);
     enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
+    bytesOut += sizeof(content) + 25;
 }
 
 void RetroClient::updateAudioDistance(const jUUID *uuid, const double distance) {
@@ -131,16 +147,18 @@ void RetroClient::updateAudioDistance(const jUUID *uuid, const double distance) 
 void RetroClient::mainLoop() {
     if (client == nullptr)
         return;
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
     while (true) {
         ENetEvent event;
         enet_mutex.lock();
         const auto status = enet_host_service(client, &event, 0);
-        if (!running)
-            return;
         enet_mutex.unlock();
         if (status < 0) {
             std::cerr << "[RetroClient] Failed to receive ENet event (" << status << ")" << std::endl;
         } else if (status == 0) {
+            std::this_thread::yield();
             continue;
         }
         switch (event.type) {
@@ -157,11 +175,50 @@ void RetroClient::mainLoop() {
                 break;
             }
             case ENET_EVENT_TYPE_RECEIVE: {
+                mutex.lock();
+                bytesIn += event.packet->dataLength;
+                mutex.unlock();
                 onMessage(event.packet);
                 break;
             }
         }
+        mutex.lock();
+        if (!running)
+            break;
+        mutex.unlock();
     }
+    runningLoops--;
+    mutex.unlock();
+}
+
+void RetroClient::bandwidthMonitorLoop() {
+    const auto interval = std::chrono::seconds(5);
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    uint64_t lastBytesIn = 0;
+    uint64_t lastBytesOut = 0;
+    mutex.lock();
+    runningLoops++;
+    mutex.unlock();
+    while (true) {
+        std::this_thread::sleep_for(interval);
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
+
+        mutex.lock();
+        const auto incomingKbps = static_cast<double>(bytesIn - lastBytesIn) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
+        const auto outgoingKbps = static_cast<double>(bytesOut - lastBytesOut) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
+        std::cout << "[RetroClient] Bandwidth: IN: " << std::fixed << std::setprecision(2) << incomingKbps
+                  << " kbps, OUT: " << std::fixed << std::setprecision(2) << outgoingKbps << " kbps" << std::endl;
+
+        lastBytesIn = bytesIn;
+        lastBytesOut = bytesOut;
+        if (!running)
+            break;
+        mutex.unlock();
+        lastTime = currentTime;
+    }
+    runningLoops--;
+    mutex.unlock();
 }
 
 void RetroClient::onConnect() {
@@ -172,6 +229,9 @@ void RetroClient::onConnect() {
     pak[0] = PACKET_AUTH;
     memcpy(&pak[1], token, 32);
     enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
+    mutex.lock();
+    bytesOut += 33;
+    mutex.unlock();
     std::cout << "[RetroClient] Authorizing with token " << token << std::endl;
 }
 
@@ -180,6 +240,10 @@ void RetroClient::onDisconnect() {
 }
 
 void RetroClient::onMessage(const ENetPacket *packet) {
+    mutex.lock();
+    if (!running)
+        return;
+    mutex.unlock();
     if (packet == nullptr) {
         std::cerr << "[RetroClient] Received packet is nullptr" << std::endl;
         return;
@@ -199,6 +263,9 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             constexpr int8_t id = PACKET_KEEP_ALIVE;
             enet_peer_send(peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
             enet_mutex.unlock();
+            mutex.lock();
+            bytesOut += 1;
+            mutex.unlock();
             break;
         }
         case PACKET_KICK: {

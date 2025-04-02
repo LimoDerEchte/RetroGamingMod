@@ -21,8 +21,12 @@ class RetroClient {
     std::unordered_map<long, AudioStreamPlayer*> playbacks;
 
     bool running = false;
+    int runningLoops = 0;
     bool authenticated = false;
     const char* token;
+
+    uint64_t bytesIn = 0;
+    uint64_t bytesOut = 0;
 
 public:
     RetroClient(const char* ip, int port, const char* token);
@@ -35,6 +39,7 @@ public:
     void updateAudioDistance(const jUUID* uuid, double distance);
 
     void mainLoop();
+    void bandwidthMonitorLoop();
     void onConnect();
     void onDisconnect();
     void onMessage(const ENetPacket* packet);
