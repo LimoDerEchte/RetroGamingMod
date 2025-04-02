@@ -5,7 +5,9 @@ set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(LDFLAGS -fsanitize=address)
 
 # VCPKG Config
-set(VCPKG_TARGET_TRIPLET x64-linux-dynamic)
+set(VCPKG_TARGET_TRIPLET x64-linux)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib;.a")
+set(BUILD_SHARED_LIBS OFF)
 
 # Project Stuff
 cmake_minimum_required(VERSION 3.30)
@@ -26,3 +28,15 @@ find_package(OpenAL REQUIRED openal)
 add_subdirectory(bridge)
 add_subdirectory(retro-core)
 add_subdirectory(test)
+
+# Statically include CXX
+if(UNIX AND NOT APPLE)
+    target_link_options(bridge PRIVATE
+            "-static-libgcc"
+            "-static-libstdc++"
+    )
+    target_link_options(retro-core PRIVATE
+            "-static-libgcc"
+            "-static-libstdc++"
+    )
+endif()
