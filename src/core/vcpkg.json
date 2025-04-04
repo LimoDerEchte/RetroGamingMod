@@ -6,6 +6,7 @@
     "boost-process",
     "enet",
     "opus",
-    "openal-soft"
+    "openal-soft",
+    "zlib"
   ]
 }

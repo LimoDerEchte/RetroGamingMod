@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <cstdint>
 #include <vector>
 #include <enet/enet.h>
 

@@ -5,7 +5,11 @@ set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(LDFLAGS -fsanitize=address)
 
 # VCPKG Config
-set(VCPKG_TARGET_TRIPLET x64-linux)
+if(UNIX AND NOT APPLE)
+    set(VCPKG_TARGET_TRIPLET x64-linux)
+else()
+    set(VCPKG_TARGET_TRIPLET x64-windows)
+endif()
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib;.a")
 set(BUILD_SHARED_LIBS OFF)
 
@@ -23,6 +27,7 @@ find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
 find_package(OpenAL REQUIRED openal)
+find_package(ZLIB REQUIRED)
 
 # Actual Projects
 add_subdirectory(bridge)

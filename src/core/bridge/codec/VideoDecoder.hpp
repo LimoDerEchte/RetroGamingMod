@@ -6,12 +6,6 @@
 #include <cstdint>
 #include <vector>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-}
-
 class VideoDecoderInt16 {
     const int width, height;
     std::vector<int16_t> previous_frame;
