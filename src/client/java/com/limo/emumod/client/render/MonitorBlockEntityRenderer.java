@@ -1,6 +1,7 @@
 package com.limo.emumod.client.render;
 
 import com.limo.emumod.client.network.ScreenManager;
+import com.limo.emumod.client.network.SoundManager;
 import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
 import com.limo.emumod.registry.EmuBlocks;
@@ -41,6 +42,10 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
             mc.getTextureManager().registerTexture(idCache.get(entity.getPos()), textureCache.get(entity.getPos()));
         }
         UUID file = entity.fileId;
+        if(file == null)
+            return;
+        double distance = mc.cameraEntity == null ? 0 : mc.cameraEntity.getPos().distanceTo(entity.getPos().toCenterPos());
+        SoundManager.updateInRender(file, distance);
         Identifier id = idCache.get(entity.getPos());
         NativeImageBackedTexture tex = textureCache.get(entity.getPos());
         NativeImage newTex = ScreenManager.getDisplay(file);

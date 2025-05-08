@@ -16,22 +16,29 @@ import net.minecraft.world.World;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
 
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
     public Item linkItem;
-    private final String fileType;
-    private final Runnable clearLinkItem;
-    private final Consumer<UUID> start;
+    private final boolean isHandheld;
+    private String fileType;
+    private Runnable clearLinkItem;
+    private BiFunction<PlayerEntity, UUID, Boolean> start;
 
-    public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, Consumer<UUID> start) {
+    public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, BiFunction<PlayerEntity, UUID, Boolean> start) {
         super(new Settings().maxCount(1).registryKey(key));
+        this.isHandheld = true;
         this.fileType = fileType;
         this.clearLinkItem = clearLinkItem;
         this.start = start;
+    }
+
+    public LinkedCartridgeItem(RegistryKey<Item> key) {
+        super(new Settings().maxCount(1).registryKey(key));
+        isHandheld = false;
     }
 
     @Override
@@ -44,6 +51,9 @@ public class LinkedCartridgeItem extends Item {
         if(world.isClient())
             return super.use(world, user, hand);
         ItemStack stack = user.getStackInHand(hand);
+        if(!isHandheld) {
+            return ActionResult.PASS;
+        }
         ItemStack link = GenericHandheldItem.link != null && GenericHandheldItem.link.getItem() == linkItem ?
                 GenericHandheldItem.link : ItemStack.EMPTY;
         if(link.getCount() > 0 && hasGame(stack)) {
@@ -55,13 +65,14 @@ public class LinkedCartridgeItem extends Item {
                 user.sendMessage(Text.translatable("item.emumod.handheld.file_deleted")
                         .formatted(Formatting.RED), true);
             } else {
-                link.applyComponentsFrom(ComponentMap.builder()
-                        .add(GAME, stack.getComponents().get(GAME))
-                        .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
                 clearLinkItem.run();
-                stack.setCount(0);
-                user.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);
-                start.accept(id);
+                if(start.apply(user, id)) {
+                    link.applyComponentsFrom(ComponentMap.builder()
+                            .add(GAME, stack.getComponents().get(GAME))
+                            .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
+                    stack.setCount(0);
+                    user.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);
+                }
             }
         }
         return ActionResult.PASS;

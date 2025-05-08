@@ -19,20 +19,26 @@ add_library(bridge SHARED
         codec/VideoEncoder.hpp
         codec/VideoDecoder.cpp
         codec/VideoDecoder.hpp
+        codec/AudioEncoder.cpp
+        codec/AudioEncoder.hpp
+        codec/AudioDecoder.cpp
+        codec/AudioDecoder.hpp
+        util/AudioSource.cpp
+        util/AudioSource.hpp
 )
 
 target_include_directories(bridge PRIVATE
         .
         ../shared
         ${JNI_INCLUDE_DIRS}
+        ${OPUS_INCLUDE_DIRS}
 )
-
-target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet)
+target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet OpenAL::OpenAL ZLIB::ZLIB ${OPUS_LIBRARIES})
 
 # FFmpeg
-target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_directories(bridge PRIVATE ${FFMPEG_LIBRARY_DIRS})
-target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
+#target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
+#target_link_directories(bridge PRIVATE ${FFMPEG_LIBRARY_DIRS})
+#target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
 
 # Post Build
 add_custom_command(TARGET bridge POST_BUILD

@@ -7,4 +7,4 @@ target_include_directories(bridge_test PRIVATE
         ../shared
 )
 
-target_link_libraries(bridge_test PRIVATE bridge)
+target_link_libraries(bridge_test PRIVATE bridge opus z)

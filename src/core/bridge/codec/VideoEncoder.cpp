@@ -4,72 +4,77 @@
 
 #include "VideoEncoder.hpp"
 
-#include <iostream>
+#include <cstring>
+#include <stdexcept>
+#include <zconf.h>
+#include <zlib.h>
 
-VideoEncoderRGB565::VideoEncoderRGB565(const int width, const int height) : width(width), height(height) {
-    const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    if (!codec) {
-        std::cerr << "H.264 codec not found\n";
-        exit(1);
-    }
-    codec_ctx = avcodec_alloc_context3(codec);
-    codec_ctx->bit_rate = BITRATE;
-    codec_ctx->width = width;
-    codec_ctx->height = height;
-    codec_ctx->time_base = {1, FPS};
-    codec_ctx->framerate = {FPS, 1};
-    codec_ctx->gop_size = 30;
-    codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-    codec_ctx->max_b_frames = 0;
-
-    av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", 0);
-    av_opt_set(codec_ctx->priv_data, "tune", "zerolatency", 0);
-
-    if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
-        std::cerr << "Could not open H.264 codec\n";
-        exit(1);
-    }
-    frame = av_frame_alloc();
-    frame->format = AV_PIX_FMT_YUV420P;
-    frame->width = width;
-    frame->height = height;
-    av_frame_get_buffer(frame, 32);
-    pkt = av_packet_alloc();
-}
-
-VideoEncoderRGB565::~VideoEncoderRGB565() {
-    avcodec_free_context(&codec_ctx);
-    av_frame_free(&frame);
-    av_packet_free(&pkt);
-}
-
-std::vector<uint8_t> VideoEncoderRGB565::encode(uint16_t *data) const {
-    std::cerr << "DBG 1" << std::endl;
-    std::vector<uint8_t> encoded_data;
-    if (pkt == nullptr || frame == nullptr) {
-        std::cerr << "Called encode before initialization";
-        return encoded_data;
-    }
-    std::cerr << "DBG 2" << std::endl;
-    SwsContext* sws_ctx = nullptr;
-    sws_ctx = sws_getContext(width, height, AV_PIX_FMT_RGB565, width, height,
-        AV_PIX_FMT_YUV420P, SWS_BILINEAR, nullptr, nullptr, nullptr);
-    if (sws_ctx == nullptr) {
-        std::cerr << "Could not initialize sws context" << std::endl;
-        return encoded_data;
-    }
-    std::cerr << "DBG 3" << std::endl;
-    uint8_t* src_slices[1] = { reinterpret_cast<uint8_t*>(data) };
-    const int src_stride[1] = { 2 * width };
-    sws_scale(sws_ctx, src_slices, src_stride, 0, height, frame->data, frame->linesize);
-    std::cerr << "DBG 4" << std::endl;
-    if (avcodec_send_frame(codec_ctx, frame) == 0) {
-        while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
-            encoded_data.assign(pkt->data, pkt->data + pkt->size);
-            av_packet_unref(pkt);
+std::vector<int16_t> VideoEncoderInt16::performDeltaEncoding(const std::vector<int16_t> &current_frame) {
+    std::vector<int16_t> delta_encoded(current_frame.size());
+    if (previous_frame.empty()) {
+        delta_encoded = current_frame;
+    } else {
+        int16_t prevVal = 0;
+        for (size_t i = 0; i < current_frame.size(); ++i) {
+            const auto frame_delta = static_cast<int16_t>(current_frame[i] - previous_frame[i]);
+            const auto packet_delta = static_cast<int16_t>(prevVal - frame_delta);
+            delta_encoded[i] = packet_delta;
+            prevVal = frame_delta;
         }
     }
-    std::cerr << "DBG 5" << std::endl;
-    sws_freeContext(sws_ctx);
-    return encoded_data;
+    previous_frame = current_frame;
+    return delta_encoded;
+}
+
+std::vector<uint8_t> VideoEncoderInt16::compressWithZlib(const std::vector<int16_t> &data, bool is_raw_frame) {
+    std::vector<uint8_t> input_buffer(data.size() * sizeof(int16_t));
+    memcpy(input_buffer.data(), data.data(), input_buffer.size());
+
+    uLongf compressed_size = compressBound(input_buffer.size());
+    std::vector<uint8_t> compressed_buffer(compressed_size + 1);
+
+    const int zlib_result = compress2(
+        compressed_buffer.data() + 1,
+        &compressed_size,
+        input_buffer.data(),
+        input_buffer.size(),
+        Z_BEST_COMPRESSION
+    );
+
+    if (zlib_result != Z_OK) {
+        throw std::runtime_error("Compression failed");
+    }
+
+    compressed_buffer[0] = is_raw_frame ? 1 : 0;
+    compressed_buffer.resize(compressed_size + 1);
+    return compressed_buffer;
+}
+
+VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(width), height(height) {
+}
+
+std::vector<uint8_t> VideoEncoderInt16::encodeFrame(const std::vector<int16_t> &frame) {
+    if (frame.size() != width * height) {
+        throw std::invalid_argument("Frame size does not match encoder dimensions");
+    }
+    frame_count++;
+    if (frame_count % RAW_FRAME_INTERVAL == 0) {
+        previous_frame = frame;
+        return compressWithZlib(frame, true);
+    }
+    const std::vector<int16_t> delta_encoded = performDeltaEncoding(frame);
+    return compressWithZlib(delta_encoded, false);
+}
+
+void VideoEncoderInt16::reset() {
+    previous_frame.clear();
+    frame_count = 0;
+}
+
+int VideoEncoderInt16::getWidth() const {
+    return width;
+}
+
+int VideoEncoderInt16::getHeight() const {
+    return height;
 }

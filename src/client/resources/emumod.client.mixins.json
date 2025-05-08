@@ -4,7 +4,6 @@
   "package": "com.limo.emumod.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "SoundSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

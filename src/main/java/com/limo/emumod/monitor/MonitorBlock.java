@@ -2,6 +2,7 @@ package com.limo.emumod.monitor;
 
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
+import com.limo.emumod.console.ControllerItem;
 import com.limo.emumod.registry.BlockId;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
@@ -20,7 +21,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 
@@ -42,6 +42,8 @@ public class MonitorBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if(stack.getItem() instanceof CableItem)
+            return ActionResult.PASS;
         if(!player.isSneaking()) {
             if(LinkedCartridgeItem.hasGame(stack)) {
                 BlockEntity entity = world.getBlockEntity(pos);
@@ -49,10 +51,8 @@ public class MonitorBlock extends BlockWithEntity {
                     mon.fileId = stack.get(FILE_ID);
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
-                    EmuMod.LOGGER.info("Linked Monitor at X:{}, Y:{}, Z:{}", pos.getX(), pos.getY(), pos.getZ());
-                    player.sendMessage(Text.literal("Monitor linked to game"), true);
-                } else
-                    player.sendMessage(Text.literal("Internal Error"), true);
+                    player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
+                }
             }
         }
         return ActionResult.SUCCESS;
@@ -69,7 +69,7 @@ public class MonitorBlock extends BlockWithEntity {
     }
 
     @Override
-    public @Nullable BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
         return new MonitorBlockEntity(pos, state);
     }
 }

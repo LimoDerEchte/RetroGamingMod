@@ -12,4 +12,6 @@ struct GenericShared {
     size_t audioSize = 0;
     // Host to Client
     int16_t controls[4]{};
+    bool shutdownRequested = false;
+    bool shutdownCompleted = false;
 };

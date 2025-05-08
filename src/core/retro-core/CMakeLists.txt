@@ -13,7 +13,7 @@ target_include_directories(retro-core PRIVATE
         ../shared
 )
 
-target_link_libraries(retro-core PRIVATE Boost::interprocess)
+target_link_libraries(retro-core PRIVATE Boost::interprocess bridge)
 
 # Post Build
 add_custom_command(TARGET retro-core POST_BUILD

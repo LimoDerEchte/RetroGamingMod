@@ -1,6 +1,6 @@
 package com.limo.emumod.console;
 
-import com.limo.emumod.bridge.NativeGenericConsole;
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -17,18 +17,16 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 
-import static com.limo.emumod.network.ServerHandler.mcs;
+import static com.limo.emumod.network.ServerEvents.mcs;
 import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GenericHandheldItem extends Item {
     public static long lastInteractionTime;
-    public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
     public static ItemStack link;
     private final byte screenType;
     private final Item cartridgeType;
@@ -63,14 +61,14 @@ public class GenericHandheldItem extends Item {
                         .add(FILE_ID, stack.getComponents().get(FILE_ID)).build());
                 user.getInventory().insertStack(cart);
                 UUID file = stack.getComponents().get(FILE_ID);
-                if(running.containsKey(file))
-                    running.get(file).stop();
-                running.remove(stack.getComponents().get(FILE_ID));
+                if(EmuMod.running.containsKey(file))
+                    EmuMod.running.get(file).stop();
+                EmuMod.running.remove(stack.getComponents().get(FILE_ID));
                 stack.remove(GAME);
                 stack.remove(FILE_ID);
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
                 PlayerLookup.all(mcs).forEach(player ->
-                        ServerPlayNetworking.send(player, new S2C.UpdateDisplayPayload(file, 0, 0)));
+                        ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, 0, 0, 0)));
             } else {
                 if(link != null) {
                     link = null;
@@ -85,7 +83,7 @@ public class GenericHandheldItem extends Item {
                 user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
                 return ActionResult.PASS;
             }
-            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID)));
+            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType, stack.getComponents().get(FILE_ID), OptionalInt.empty()));
         }
         return ActionResult.PASS;
     }

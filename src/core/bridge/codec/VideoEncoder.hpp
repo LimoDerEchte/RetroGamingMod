@@ -4,28 +4,24 @@
 
 #pragma once
 #include <cstdint>
-#include <mutex>
 #include <vector>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-#include <libavutil/opt.h>
-}
+class VideoEncoderInt16 {
+    static constexpr int RAW_FRAME_INTERVAL = 30;
 
-#define FPS 30
-#define BITRATE 250000
-
-class VideoEncoderRGB565 {
-    AVCodecContext* codec_ctx = nullptr;
-    AVFrame* frame = nullptr;
-    AVPacket* pkt = nullptr;
     const int width, height;
+    int frame_count = 0;
+    std::vector<int16_t> previous_frame;
+
+    std::vector<int16_t> performDeltaEncoding(const std::vector<int16_t>& current_frame);
+    static std::vector<uint8_t> compressWithZlib(const std::vector<int16_t>& data, bool is_raw_frame);
 
 public:
-    VideoEncoderRGB565(int width, int height);
-    ~VideoEncoderRGB565();
+    VideoEncoderInt16(int width, int height);
 
-    std::vector<uint8_t> encode(uint16_t* data) const;
+    std::vector<uint8_t> encodeFrame(const std::vector<int16_t>& frame);
+    void reset();
+
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
 };

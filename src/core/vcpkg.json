@@ -5,16 +5,8 @@
     "boost-interprocess",
     "boost-process",
     "enet",
-    {
-      "name": "ffmpeg",
-      "features": [
-        "avcodec",
-        "avformat",
-        "avfilter",
-        "swscale",
-        "swresample",
-        "x264"
-      ]
-    }
+    "opus",
+    "openal-soft",
+    "zlib"
   ]
 }

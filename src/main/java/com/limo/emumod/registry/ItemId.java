@@ -17,10 +17,16 @@ public class ItemId {
         public static final Identifier GAMEBOY_ADVANCE_CARTRIDGE = Identifier.of("emumod", "gameboy_advance_cartridge");
         public static final Identifier GAME_GEAR_CARTRIDGE = Identifier.of("emumod", "game_gear_cartridge");
 
+        public static final Identifier NES_CARTRIDGE = Identifier.of("emumod", "nes_cartridge");
+
+        public static final Identifier NES_CONTROLLER = Identifier.of("emumod", "nes_controller");
+
         public static final Identifier GAMEBOY = Identifier.of("emumod", "gameboy");
         public static final Identifier GAMEBOY_COLOR = Identifier.of("emumod", "gameboy_color");
         public static final Identifier GAMEBOY_ADVANCE = Identifier.of("emumod", "gameboy_advance");
         public static final Identifier GAME_GEAR = Identifier.of("emumod", "game_gear");
+
+        public static final Identifier CABLE = Identifier.of("emumod", "cable");
 
         public static final Identifier MAIN_GROUP = Identifier.of("emumod", "main_group");
     }
@@ -34,13 +40,20 @@ public class ItemId {
         public static final RegistryKey<Item> GAMEBOY_ADVANCE_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE_CARTRIDGE);
         public static final RegistryKey<Item> GAME_GEAR_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR_CARTRIDGE);
 
+        public static final RegistryKey<Item> NES_CARTRIDGE = RegistryKey.of(RegistryKeys.ITEM, Id.NES_CARTRIDGE);
+
+        public static final RegistryKey<Item> NES_CONTROLLER = RegistryKey.of(RegistryKeys.ITEM, Id.NES_CONTROLLER);
+
         public static final RegistryKey<Item> GAMEBOY = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY);
         public static final RegistryKey<Item> GAMEBOY_COLOR = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_COLOR);
         public static final RegistryKey<Item> GAMEBOY_ADVANCE = RegistryKey.of(RegistryKeys.ITEM, Id.GAMEBOY_ADVANCE);
         public static final RegistryKey<Item> GAME_GEAR = RegistryKey.of(RegistryKeys.ITEM, Id.GAME_GEAR);
 
+        public static final RegistryKey<Item> NES = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.NES);
+
         public static final RegistryKey<Item> MONITOR = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.MONITOR);
         public static final RegistryKey<Item> LARGE_TV = RegistryKey.of(RegistryKeys.ITEM, BlockId.Id.LARGE_TV);
+        public static final RegistryKey<Item> CABLE = RegistryKey.of(RegistryKeys.ITEM, Id.CABLE);
 
         public static final RegistryKey<ItemGroup> MAIN_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP, Id.MAIN_GROUP);
     }

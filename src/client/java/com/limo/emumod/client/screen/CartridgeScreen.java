@@ -22,7 +22,7 @@ public class CartridgeScreen extends Screen {
     public int handle;
 
     public CartridgeScreen() {
-        super(Text.translatable("gui.cartridge.title"));
+        super(Text.translatable("gui.emumod.cartridge.title"));
         handle = EmuMod.RANDOM.nextInt();
     }
 
@@ -44,6 +44,8 @@ public class CartridgeScreen extends Screen {
                         type = 1;
                     else if(file.getName().endsWith(".gg"))
                         type = 2;
+                    else if(file.getName().endsWith(".nes"))
+                        type = 3;
                     ClientPlayNetworking.send(new C2S.CreateCartridgePayload(handle, type, Files.readAllBytes(file.toPath())));
                 } catch (IOException e) {
                     failMessage = Text.translatable("gui.emumod.cartridge.file_read_error");

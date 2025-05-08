@@ -1,9 +1,9 @@
 package com.limo.emumod.network;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.bridge.NativeGenericConsole;
 import com.limo.emumod.bridge.NativeServer;
 import com.limo.emumod.cartridge.CartridgeItem;
-import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -28,29 +28,8 @@ import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class ServerHandler {
-    public static MinecraftServer mcs;
 
     public static void init() {
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            mcs = server;
-            FileUtil.init();
-            SERVER = new NativeServer(NetworkUtils.findLocalPort());
-        });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            GenericHandheldItem.running.values().forEach(NativeGenericConsole::stop);
-            GenericHandheldItem.running.clear();
-            if(SERVER != null) {
-                SERVER.stop();
-                SERVER = null;
-            }
-        });
-        ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
-            sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
-            for(Map.Entry<UUID, NativeGenericConsole> console : GenericHandheldItem.running.entrySet()) {
-                sender.sendPacket(new S2C.UpdateDisplayPayload(console.getKey(),
-                        console.getValue().getWidth(), console.getValue().getHeight()));
-            }
-        });
         ServerPlayNetworking.registerGlobalReceiver(C2S.CreateCartridgePayload.ID, (payload, ctx) -> {
             ServerPlayNetworking.send(ctx.player(), new S2C.CloseScreenPayload(payload.handle()));
             byte[] nameBytes;
@@ -58,20 +37,37 @@ public class ServerHandler {
             String fileExtension;
             switch (payload.type()) {
                 case 0 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
+                    if(payload.data().length >= 0x142)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     boolean isGBC = payload.data()[0x143] != 0;
                     item = isGBC ? EmuItems.GAMEBOY_COLOR_CARTRIDGE : EmuItems.GAMEBOY_CARTRIDGE;
                     fileExtension = isGBC? "gbc" : "gb";
                 }
                 case 1 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
+                    if(payload.data().length >= 0xAC)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0xA0, 0xAC);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     item = EmuItems.GAMEBOY_ADVANCE_CARTRIDGE;
                     fileExtension = "gba";
                 }
                 case 2 -> {
-                    nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
+                    if(payload.data().length >= 0x7ffE)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0x7ffC, 0x7ffE);
+                    else
+                        nameBytes = "Invalid".getBytes();
                     item = EmuItems.GAME_GEAR_CARTRIDGE;
                     fileExtension = "gg";
+                }
+                case 3 -> {
+                    if(payload.data().length >= 0xFFEF)
+                        nameBytes = Arrays.copyOfRange(payload.data(), 0xFFE0, 0xFFEF);
+                    else
+                        nameBytes = "Invalid".getBytes();
+                    item = EmuItems.NES_CARTRIDGE;
+                    fileExtension = "nes";
                 }
                 default -> {
                     ctx.player().sendMessage(Text.literal("Invalid request"), true);
@@ -101,12 +97,6 @@ public class ServerHandler {
                 ctx.player().getInventory().insertStack(stack);
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(C2S.UpdateGameControls.ID, (payload, ctx) -> {
-            // Gameboys
-            if(GenericHandheldItem.running.containsKey(payload.uuid())) {
-                GenericHandheldItem.running.get(payload.uuid()).updateInput(payload.port(), payload.input());
-            }
         });
     }
 }

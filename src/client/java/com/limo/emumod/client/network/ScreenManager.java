@@ -13,6 +13,11 @@ import static com.limo.emumod.client.EmuModClient.CLIENT;
 public class ScreenManager {
     private static final Map<UUID, NativeDisplay> displays = new HashMap<>();
     private static final Map<UUID, NativeImage> displayBuffer = new HashMap<>();
+    private static final NativeImage BLACK = new NativeImage(1, 1, false);
+
+    static {
+        BLACK.setColorArgb(0, 0, 0xFF000000);
+    }
 
     public static void init() {
         WorldRenderEvents.START.register((ctx) -> {
@@ -34,8 +39,8 @@ public class ScreenManager {
         });
     }
 
-    public static void registerDisplay(UUID id, int width, int height) {
-        displays.put(id, CLIENT.registerScreen(id, width, height));
+    public static void registerDisplay(UUID id, int width, int height, int sampleRate) {
+        displays.put(id, CLIENT.registerScreen(id, width, height, sampleRate));
         displayBuffer.put(id, new NativeImage(width, height, false));
     }
 
@@ -49,6 +54,6 @@ public class ScreenManager {
     }
 
     public static NativeImage getDisplay(UUID id) {
-        return displayBuffer.getOrDefault(id, new NativeImage(1, 1, false));
+        return displayBuffer.getOrDefault(id, BLACK);
     }
 }

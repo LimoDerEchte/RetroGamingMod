@@ -1,10 +1,9 @@
 package com.limo.emumod.client.util;
 
-import com.limo.emumod.network.C2S;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-
 import java.util.Map;
 import java.util.UUID;
+
+import static com.limo.emumod.client.EmuModClient.CLIENT;
 
 public class ControlHandler {
     private final Map<Integer, Short> keyMap;
@@ -22,7 +21,7 @@ public class ControlHandler {
         if(!keyMap.containsKey(key))
             return false;
         input |= keyMap.get(key);
-        ClientPlayNetworking.send(new C2S.UpdateGameControls(link, port, input));
+        CLIENT.updateControls(link, port, input);
         return true;
     }
 
@@ -30,7 +29,7 @@ public class ControlHandler {
         if(!keyMap.containsKey(key))
             return false;
         input &= (short) ~keyMap.get(key);
-        ClientPlayNetworking.send(new C2S.UpdateGameControls(link, port, input));
+        CLIENT.updateControls(link, port, input);
         return true;
     }
 }

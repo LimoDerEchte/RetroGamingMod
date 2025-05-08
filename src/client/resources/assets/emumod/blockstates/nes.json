@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "facing=north": { "model": "emumod:block/nes" },
+    "facing=east":  { "model": "emumod:block/nes", "y":  90 },
+    "facing=south": { "model": "emumod:block/nes", "y": 180 },
+    "facing=west":  { "model": "emumod:block/nes", "y": 270 }
+  }
+}
+

@@ -7,16 +7,16 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
 #include "codec/VideoEncoder.hpp"
-#include "util/NativeDisplay.hpp"
 
-#include "util/NativeAudio.hpp"
 #include "util/NativeUtil.hpp"
 
+class AudioEncoderOpus;
 namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    VideoEncoderRGB565* videoEncoder = nullptr;
+    VideoEncoderInt16* videoEncoder = nullptr;
+    AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
     bp::child* retroCoreProcess = nullptr;
@@ -24,17 +24,19 @@ class GenericConsole {
 public:
     std::mutex mutex{};
     char id[32] = {};
-    const int width, height;
+    const int width, height, sampleRate;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;
 
-    explicit GenericConsole(int width, int height, const jUUID* uuid);
+    explicit GenericConsole(int width, int height, int sampleRate, const jUUID* uuid);
 
-    void load(const char *retroCore, const char *core, const char *rom);
+    void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();
-    std::vector<uint8_t> createFrame();
 
-    void input(int port, int16_t input);
+    std::vector<uint8_t> createFrame();
+    std::vector<uint8_t> createClip();
+
+    void input(int port, int16_t input) const;
 };
 
 class GenericConsoleRegistry {
@@ -45,4 +47,5 @@ public:
     static void registerConsole(GenericConsole *console);
     static void unregisterConsole(GenericConsole *console);
     static void withConsoles(const std::function<void(GenericConsole*)>& func);
+    static void withConsole(const jUUID* uuid, const std::function<void(GenericConsole*)>& func);
 };

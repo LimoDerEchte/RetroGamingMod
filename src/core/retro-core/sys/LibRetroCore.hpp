@@ -5,12 +5,14 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <map>
+#include <mutex>
 
 #include "../lib/libretro-common/include/libretro.h"
 
 class LibRetroCore {
 public:
-    explicit LibRetroCore(std::string corePath);
+    explicit LibRetroCore(std::string corePath, std::string systemPath);
     ~LibRetroCore();
     bool loadCore();
     [[nodiscard]] bool loadROM(const std::string &romPath) const;
@@ -20,15 +22,25 @@ public:
     void setInputCallback(std::function<int16_t(unsigned port, unsigned id)> const &callback);
     void dispose() const;
 
+    bool loadSaveFile(const char* save);
+    bool saveSaveFile(const char* save);
+
     LibRetroCore(const LibRetroCore&) = delete;
     LibRetroCore& operator=(const LibRetroCore&) = delete;
-
 private:
+    struct {
+        std::map<std::string, std::string> variables;
+        bool updated;
+    } env_vars;
+
+    std::string systemPath;
     std::string corePath;
     void* coreHandle;
+    std::mutex saveMutex;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
     std::function<void(const int16_t*, size_t)> audioCallback;
     std::function<int16_t(unsigned port, unsigned id)> inputCallback;
+    retro_pixel_format pixelFormat;
 
     typedef void (*retro_init_t)();
     typedef void (*retro_deinit_t)();
@@ -62,6 +74,7 @@ private:
     retro_get_memory_data_t retro_get_memory_data;
     retro_get_memory_size_t retro_get_memory_size;
 
+    void logEnvironmentVariables(const retro_variable* vars);
     static void videoRefreshCallback(const void* data, unsigned width, unsigned height, size_t pitch);
     static bool environmentCallback(unsigned cmd, void* data);
     static void inputPollCallback();

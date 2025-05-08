@@ -4,72 +4,77 @@
 
 #include "VideoDecoder.hpp"
 
-#include <iostream>
+#include <stdexcept>
+#include <zlib.h>
 
-VideoDecoderARGB::VideoDecoderARGB(const int width, const int height) : width(width), height(height) {
-    const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-    if (!codec) {
-        std::cerr << "H.264 decoder not found\n";
-        exit(1);
-    }
-
-    codec_ctx = avcodec_alloc_context3(codec);
-    codec_ctx->width = width;
-    codec_ctx->height = height;
-    codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-
-    if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
-        std::cerr << "Could not open H.264 decoder\n";
-        exit(1);
-    }
-
-    frame = av_frame_alloc();
-    pkt = av_packet_alloc();
-}
-
-VideoDecoderARGB::~VideoDecoderARGB() {
-    avcodec_free_context(&codec_ctx);
-    av_frame_free(&frame);
-    av_packet_free(&pkt);
-}
-
-bool VideoDecoderARGB::decode(const std::vector<uint8_t>& encoded_data, uint32_t* output_buffer) const {
-    if (pkt == nullptr || frame == nullptr) {
-        std::cerr << "Called decode before initialization\n";
-        return false;
-    }
-    av_packet_unref(pkt);
-    pkt->data = const_cast<uint8_t*>(encoded_data.data());
-    pkt->size = static_cast<int>(encoded_data.size());
-
-    int ret = avcodec_send_packet(codec_ctx, pkt);
-    if (ret < 0) {
-        std::cerr << "Error sending packet for decoding\n";
-        return false;
-    }
-
-    ret = avcodec_receive_frame(codec_ctx, frame);
-    if (ret < 0) {
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-            return false;
+std::vector<int16_t> VideoDecoderInt16::performInverseDeltaEncoding(const std::vector<int16_t> &delta_frame) {
+    std::vector<int16_t> decoded_frame(delta_frame.size());
+    if (previous_frame.empty()) {
+        decoded_frame = delta_frame;
+    } else {
+        int16_t prevVal = 0;
+        for (size_t i = 0; i < delta_frame.size(); ++i) {
+            const auto packet_delta = static_cast<int16_t>(prevVal - delta_frame[i]);
+            const auto frame_delta = static_cast<int16_t>(previous_frame[i] + packet_delta);
+            decoded_frame[i] = frame_delta;
+            prevVal = packet_delta;
         }
-        std::cerr << "Error receiving frame from decoder\n";
-        return false;
     }
+    previous_frame = decoded_frame;
+    return decoded_frame;
+}
 
-    SwsContext* sws_ctx = sws_getContext(
-        width, height, AV_PIX_FMT_YUV420P,
-        width, height, AV_PIX_FMT_BGRA,
-        SWS_BILINEAR, nullptr, nullptr, nullptr
+std::vector<int16_t> VideoDecoderInt16::decompressWithZlib(const std::vector<uint8_t> &compressed_data) const {
+    uLongf decompressed_size = width * height * sizeof(int16_t);
+    std::vector<uint8_t> decompressed_buffer(decompressed_size);
+
+    const int zlib_result = uncompress(
+        decompressed_buffer.data(),
+        &decompressed_size,
+        compressed_data.data() + 1,
+        compressed_data.size() - 1
     );
-    if (!sws_ctx) {
-        std::cerr << "Could not initialize scaling context\n";
-        return false;
+
+    if (zlib_result != Z_OK) {
+        throw std::runtime_error("Decompression failed");
     }
 
-    uint8_t* dst_slices[1] = { reinterpret_cast<uint8_t*>(output_buffer) };
-    const int dst_stride[1] = { width * 4 };
-    sws_scale(sws_ctx, frame->data, frame->linesize, 0, height, dst_slices, dst_stride);
-    sws_freeContext(sws_ctx);
-    return true;
+    std::vector<int16_t> decompressed_frame(width * height);
+    memcpy(decompressed_frame.data(), decompressed_buffer.data(), decompressed_size);
+    return decompressed_frame;
+}
+
+VideoDecoderInt16::VideoDecoderInt16(const int width, const int height) : width(width), height(height) {
+}
+
+std::vector<int16_t> VideoDecoderInt16::decodeFrame(const std::vector<uint8_t> &encoded_data) {
+    std::vector<int16_t> decompressed_frame = decompressWithZlib(encoded_data);
+    if (encoded_data[0] == 1) {
+        previous_frame = decompressed_frame;
+        return decompressed_frame;
+    }
+    return performInverseDeltaEncoding(decompressed_frame);
+}
+
+void VideoDecoderInt16::decodeFrameRGB565(const std::vector<uint8_t> &encoded_data, uint32_t* buf) {
+    const std::vector<int16_t> decompressed_565 = decodeFrame(encoded_data);
+    for (size_t i = 0; i < width * height; ++i) {
+        const uint16_t p = decompressed_565[i];
+        buf[i] = 0xFF000000 |
+                 (((p >> 11) & 0x1F) << 19) |
+                 (((p >> 5) & 0x3F) << 10) |
+                 ((p & 0x1F) << 3);
+    }
+}
+
+void VideoDecoderInt16::reset() {
+    previous_frame.clear();
+}
+
+int VideoDecoderInt16::getWidth() const {
+    return width;
+}
+
+int VideoDecoderInt16::getHeight() const {
+    return height;
 }

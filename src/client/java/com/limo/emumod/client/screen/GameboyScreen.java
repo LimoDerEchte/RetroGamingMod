@@ -53,9 +53,9 @@ public class GameboyScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // License
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_1",
-                "MPL-2.0"), 10, height - 25, Color.WHITE.getRGB(), true);
+                "GPL-3.0"), 10, height - 25, Color.WHITE.getRGB(), true);
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_2",
-                "https://github.com/mgba-emu/mgba/blob/master/LICENSE"), 10, height - 15, Color.WHITE.getRGB(), true);
+                "https://github.com/drhelius/Gearboy/blob/master/LICENSE"), 10, height - 15, Color.WHITE.getRGB(), true);
         // Update Texture
         Objects.requireNonNull(frameTexture.getImage()).copyFrom(ScreenManager.getDisplay(fileId));
         frameTexture.upload();

@@ -19,8 +19,11 @@ public class RequirementManager {
     public static File bridge;
     public static File core;
 
-    public static File mGBA;
-    public static File gearSystem;
+    public static File gearBoy;
+    public static File beetleGBA;
+    public static File genesisPlusGX;
+    public static File FCEUmm;
+    public static File bsnes;
 
     public static void init() {
         detectPlatform();
@@ -28,29 +31,36 @@ public class RequirementManager {
         checkFileLocal(bridge, false);
         checkFileLocal(core, true);
         // LibRetro Cores
-        checkFile(mGBA);
-        checkFile(gearSystem);
+        checkCore(gearBoy);
+        checkCore(beetleGBA);
+        checkCore(genesisPlusGX);
+        checkCore(FCEUmm);
+        checkCore(bsnes);
         // Load Bridge Lib
         System.load(bridge.getAbsolutePath());
     }
 
-    private static void detectPlatform() {;
+    private static void detectPlatform() {
         // Required Libraries
         bridge = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(true, "bridge"));
         core = FileUtil.getRequiredFile(PlatformDetector.getExecutableName("retro-core"));
         // LibRetro Cores
-        mGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mgba_libretro"));
-        gearSystem = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearsystem_libretro"));
+        gearBoy = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "gearboy_libretro"));
+        beetleGBA = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "mednafen_gba_libretro"));
+        genesisPlusGX = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "genesis_plus_gx_libretro"));
+        FCEUmm = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "fceumm_libretro"));
+        bsnes = FileUtil.getRequiredFile(PlatformDetector.getLibraryName(false, "bsnes_libretro"));
         // Update platform download base url
         String arch = PlatformDetector.is64Bit() ? "x86_64" : "x86";
         String platform = PlatformDetector.isWindows() ? "windows" : "linux";
         baseUrl += platform + "/" + arch + "/latest/";
     }
 
-    private static void checkFile(File file) {
+    private static void checkCore(File file) {
         if(file.exists())
             return;
         String dl = baseUrl + file.getName() + ".zip";
+        EmuMod.LOGGER.info("Downloading {} from {}", file.getName(), dl);
         try(ZipInputStream zis = new ZipInputStream(new URI(dl).toURL().openStream());
             FileOutputStream stream = new FileOutputStream(file)) {
             ZipEntry entry = zis.getNextEntry();
@@ -70,14 +80,17 @@ public class RequirementManager {
     private static void checkFileLocal(File file, boolean setExec) {
         if(file.exists())
             return;
+        EmuMod.LOGGER.info("Extracting {}", file.getName());
         URL url = RequirementManager.class.getResource("/lib/" + file.getName());
         if(url == null) {
             EmuMod.LOGGER.error("Failed to find vital library");
             return;
         }
         try(InputStream is = url.openStream(); OutputStream os = new FileOutputStream(file)) {
-            while(is.available() > 0) {
-                os.write(is.read());
+            byte[] buffer = new byte[8192];
+            int len;
+            while((len = is.read(buffer)) > 0) {
+                os.write(buffer, 0, len);
             }
             os.flush();
             if(setExec) {
