@@ -4,6 +4,12 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const shared_mod = b.createModule(.{
+        .root_source_file = null,
+        .target = target,
+        .optimize = optimize,
+    });
+
     const bridge_mod = b.createModule(.{
         .root_source_file = b.path("src/bridge/root.zig"),
         .target = target,
@@ -15,6 +21,9 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
+    bridge_mod.addImport("shared-structs", shared_mod);
+    core_mod.addImport("shared-structs", shared_mod);
 
     const lib = b.addLibrary(.{
         .linkage = .static,
