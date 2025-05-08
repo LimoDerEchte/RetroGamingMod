@@ -1,0 +1,8 @@
+{
+    "configurations": [
+        {
+            "type": "zig-build-run",
+            "name": "Zig-build-run configuration"
+        }
+    ]
+}
