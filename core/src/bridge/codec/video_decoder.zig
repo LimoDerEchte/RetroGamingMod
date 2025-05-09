@@ -1,7 +1,7 @@
 
 const std = @import("std");
 
-const VideoDecoderInt16 = struct {
+pub const VideoDecoderInt16 = struct {
     width: i32,
     height: i32,
     previousFrame: std.ArrayList(i16),
