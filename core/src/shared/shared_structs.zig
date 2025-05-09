@@ -1,5 +1,5 @@
 
-const GenericShared = struct {
+pub const GenericShared = struct {
     // Client to Host
     displayChanged: bool = true,
     display: u16[512*1024] = {},

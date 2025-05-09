@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const shared_mod = b.createModule(.{
-        .root_source_file = null,
+        .root_source_file = b.path("src/shared/shared_structs.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -22,8 +22,15 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    bridge_mod.addImport("shared-structs", shared_mod);
-    core_mod.addImport("shared-structs", shared_mod);
+    bridge_mod.addImport("shared_structs", shared_mod);
+    core_mod.addImport("shared", shared_mod);
+
+    const shared = b.addLibrary(.{
+        .linkage = .static,
+        .name = "shared",
+        .root_module = shared_mod,
+    });
+    b.installArtifact(shared);
 
     const lib = b.addLibrary(.{
         .linkage = .static,

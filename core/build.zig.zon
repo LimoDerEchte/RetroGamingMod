@@ -21,6 +21,10 @@
             .url = "git+https://github.com/Peter-Barrow/shared-memory-zig.git#7dc0f7516f6d498148bf145e7649c2d9c3dddc75",
             .hash = "shared_memory-0.3.0-5YGFvOTCAABV3DPQIQqsU4xNezk6Aa6VruPEK1nINxuy",
         },
+        .jni = .{
+            .url = "https://github.com/SuperIceCN/Zig-JNI/archive/refs/tags/v0.0.9.tar.gz",
+            .hash = "JNI-0.0.1-AAAAAFfSAwA9WVi6vfiN4-LFXMa3VRyuMi2mPzJOjMcA",
+        },
     },
     .paths = .{
         "build.zig",
