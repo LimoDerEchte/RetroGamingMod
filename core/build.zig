@@ -33,7 +33,7 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(shared);
 
     const lib = b.addLibrary(.{
-        .linkage = .static,
+        .linkage = .dynamic,
         .name = "bridge",
         .root_module = bridge_mod,
     });
