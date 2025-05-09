@@ -22,7 +22,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    bridge_mod.addImport("shared_structs", shared_mod);
+    bridge_mod.addImport("shared", shared_mod);
     core_mod.addImport("shared", shared_mod);
 
     const shared = b.addLibrary(.{

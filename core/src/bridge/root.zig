@@ -4,6 +4,10 @@
 const std = @import("std");
 const testing = std.testing;
 
+const c = @cImport(
+    @cInclude("headers/com_limo_emumod_bridge_NativeUtil.h")
+);
+
 pub export fn add(a: i32, b: i32) i32 {
 
     return a + b;
