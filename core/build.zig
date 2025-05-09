@@ -37,6 +37,9 @@ pub fn build(b: *std.Build) void {
         .name = "bridge",
         .root_module = bridge_mod,
     });
+    const enet = std.Build.path(b, "lib/enet/include/");
+    lib.addIncludePath(enet);
+    lib.linkLibC();
     b.installArtifact(lib);
 
     const exe = b.addExecutable(.{
