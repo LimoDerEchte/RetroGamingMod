@@ -37,9 +37,22 @@ pub fn build(b: *std.Build) void {
         .name = "bridge",
         .root_module = bridge_mod,
     });
-    const enet = std.Build.path(b, "lib/enet/include/");
-    lib.addIncludePath(enet);
     lib.linkLibC();
+    lib.addIncludePath(std.Build.path(b, "lib/enet/include"));
+    lib.addCSourceFiles(.{
+        .root = std.Build.path(b, "lib/enet"),
+        .files = &.{
+            "callbacks.c",
+            "compress.c",
+            "host.c",
+            "list.c",
+            "packet.c",
+            "peer.c",
+            "protocol.c",
+            "unix.c",
+            "win32.c",
+        }
+    });
     b.installArtifact(lib);
 
     const exe = b.addExecutable(.{

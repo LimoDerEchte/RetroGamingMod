@@ -1,9 +1,9 @@
 
 const std = @import("std");
 const Endian = std.builtin.Endian;
-const enet = @cImport(
-    @cInclude("enet.h")
-);
+pub const enet = @cImport({
+    @cInclude("enet/enet.h");
+});
 
 const jUUID = @import("../util/native_util.zig").jUUID;
 
@@ -25,14 +25,14 @@ pub const Int8ArrayPacket = struct {
     ref: jUUID,
     data: std.ArrayList(u8),
 
-    pub fn unpack(packet: [*c]enet.struct__ENetPacket) Int8ArrayPacket {
+    pub fn unpack(packet: [*c]enet.struct__ENetPacket) !Int8ArrayPacket {
         const packetType: PacketType = @enumFromInt(packet.*.data[0]);
         if(packet.*.dataLength < 25) {
-            std.debug.print("[RetroPacket] Int16arr packet too small ({s})", .{packetType});
+            std.debug.print("[RetroPacket] Int16arr packet too small ({d})", .{@intFromEnum(packetType)});
         }
         const packetSize = std.mem.readInt(usize, packet.*.data[17..25], Endian.little);
-        var packetData: std.ArrayList(u8) = try std.ArrayList(u8).initCapacity(std.heap.page_allocator, packetSize);
-        packetData.appendUnalignedSliceAssumeCapacity(packet.*.data[25..packetSize+25]);
+        var packetData = try std.ArrayList(u8).initCapacity(std.heap.raw_c_allocator, packetSize);
+        try packetData.appendSlice(packet.*.data[25..packetSize+25]);
         return .{
             .type = packetType,
             .ref = jUUID.fromBytes(packet.*.data[1..17]),
@@ -40,15 +40,15 @@ pub const Int8ArrayPacket = struct {
         };
     }
 
-    pub fn pack(self: *Int8ArrayPacket) [*c]enet.struct__ENetPacket {
+    pub fn pack(self: *Int8ArrayPacket) ![*c]enet.struct__ENetPacket {
         const packetSize: usize = self.data.items.len + 25;
-        var packetData: std.ArrayList(u8) = try std.ArrayList(u8).initCapacity(std.heap.page_allocator, packetSize);
-        packetData.appendAssumeCapacity(@intFromEnum(self.type));
-        packetData.appendUnalignedSliceAssumeCapacity(self.ref);
+        var packetData: std.ArrayList(u8) = try std.ArrayList(u8).initCapacity(std.heap.raw_c_allocator, packetSize);
+        try packetData.append(@intFromEnum(self.type));
+        try packetData.appendSlice(&self.ref.toBytes());
         var len_bytes: [@sizeOf(usize)]u8 = undefined;
-        std.mem.writeInt(&len_bytes, self.data.items.len, Endian.little);
-        packetData.appendUnalignedSliceAssumeCapacity(&len_bytes);
-        packetData.appendUnalignedSliceAssumeCapacity(self.data.items);
-        return enet.enet_packet_create(packetData.items, packetSize, 0);
+        std.mem.writeInt(usize, &len_bytes, self.data.items.len, Endian.little);
+        try packetData.appendSlice(&len_bytes);
+        try packetData.appendSlice(self.data.items);
+        return enet.enet_packet_create(packetData.items.ptr, packetSize, 0);
     }
 };

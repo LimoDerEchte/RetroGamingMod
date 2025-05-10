@@ -13,9 +13,9 @@ pub const jUUID = struct {
     }
 
     pub fn toBytes(self: *jUUID) [16]u8 {
-        var bytes = [16]u8;
-        std.mem.writeInt(i64, &bytes[0], self.leastSignificantBits, Endian.little);
-        std.mem.writeInt(i64, &bytes[8], self.mostSignificantBits, Endian.little);
+        var bytes: [16]u8 = std.mem.zeroes([16]u8);
+        std.mem.writeInt(i64, bytes[0..8], self.leastSignificantBits, Endian.little);
+        std.mem.writeInt(i64, bytes[8..16], self.mostSignificantBits, Endian.little);
         return bytes;
     }
 

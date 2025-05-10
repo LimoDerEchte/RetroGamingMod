@@ -34,9 +34,9 @@ test "Test Packing and Unpacking" {
         },
         .data = arr
     };
-    const pack = packet.pack();
-    const unpacked = networkDef.Int8ArrayPacket.unpack(pack);
-    std.testing.expect(unpacked.type == networkDef.PacketType.PACKET_KICK);
-    std.debug.print("Decoded: {s}", .{unpacked.data.items});
-    std.testing.expectEqualStrings(data, unpacked.data.items);
+    const pack = try packet.pack();
+    const unpacked = try networkDef.Int8ArrayPacket.unpack(pack);
+    try std.testing.expect(unpacked.type == networkDef.PacketType.PACKET_KICK);
+    std.debug.print("Decoded: {s}\n", .{unpacked.data.items});
+    try std.testing.expectEqualStrings(data, unpacked.data.items);
 }
