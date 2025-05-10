@@ -10,12 +10,12 @@ pub const VideoDecoderInt16 = struct {
         return .{
             .width = width,
             .height = height,
-            .previousFrame = std.ArrayList(i16).init(std.heap.page_allocator),
+            .previousFrame = std.ArrayList(i16).init(std.heap.c_allocator),
         };
     }
 
     fn performInverseDeltaEncoding(self: *VideoDecoderInt16, deltaFrame: *std.ArrayList(i16)) std.ArrayList(i16) {
-        var decodedFrame = std.ArrayList(i16).initCapacity(std.heap.page_allocator, self.width * self.height);
+        var decodedFrame = std.ArrayList(i16).initCapacity(std.heap.c_allocator, self.width * self.height);
         if(self.previousFrame.items.len == 0) {
             decodedFrame = deltaFrame;
         } else {
@@ -33,7 +33,7 @@ pub const VideoDecoderInt16 = struct {
     }
 
     fn decompressWithZlib(self: *VideoDecoderInt16, compressedData: *std.ArrayList(u8)) std.ArrayList(i16) {
-        var decodedFrame = std.ArrayList(i16).initCapacity(std.heap.page_allocator, self.width * self.height);
+        var decodedFrame = std.ArrayList(i16).initCapacity(std.heap.c_allocator, self.width * self.height);
         try {
             std.compress.zlib.decompress(compressedData.items, decodedFrame.writer());
         } catch {
