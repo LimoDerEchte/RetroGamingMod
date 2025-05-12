@@ -4,7 +4,7 @@ const decoder = @import("../codec/video_decoder.zig");
 
 const NativeDisplay = struct {
     decoder: ?decoder.VideoDecoderInt16 = null,
-    mutex: std.Thread.Mutex = {},
+    mutex: std.Thread.Mutex = .{},
     changed: bool = false,
     buf: std.ArrayList(u32),
     width: i32,
