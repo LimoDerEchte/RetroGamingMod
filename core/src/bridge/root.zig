@@ -1,5 +1,6 @@
 // Codec
 const videoDecoder = @import("codec/video_decoder.zig");
+const videoEncoder = @import("codec/video_encoder.zig");
 // Network
 const networkDef = @import("connection/network_definitions.zig");
 // Util
