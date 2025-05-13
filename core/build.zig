@@ -4,6 +4,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // Load Dependency Modules
+    const jni = b.dependency("jni", .{}).module("JNI");
+    const shared_memory = b.dependency("shared_memory", .{}).module("shared_memory");
+
+    // Declare Modules
     const shared_mod = b.createModule(.{
         .root_source_file = b.path("src/shared/shared_structs.zig"),
         .target = target,
@@ -22,9 +27,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // Import Dependencies
+    bridge_mod.addImport("jni", jni);
+    bridge_mod.addImport("shared_memory", shared_memory);
     bridge_mod.addImport("shared", shared_mod);
     core_mod.addImport("shared", shared_mod);
 
+    // Compile Shared Code
     const shared = b.addLibrary(.{
         .linkage = .static,
         .name = "shared",
@@ -32,6 +41,7 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(shared);
 
+    // Compile Bridge
     const lib = b.addLibrary(.{
         .linkage = .dynamic,
         .name = "bridge",
@@ -55,12 +65,14 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(lib);
 
+    // Compile Core
     const exe = b.addExecutable(.{
         .name = "retrocore",
         .root_module = core_mod,
     });
     b.installArtifact(exe);
 
+    // Declare Artifacts
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
