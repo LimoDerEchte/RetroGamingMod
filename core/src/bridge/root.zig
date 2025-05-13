@@ -3,6 +3,9 @@ const videoDecoder = @import("codec/video_decoder.zig");
 const videoEncoder = @import("codec/video_encoder.zig");
 // Network
 const networkDef = @import("connection/network_definitions.zig");
+// Console
+const genericConsole = @import("platform/generic_console.zig");
+const consoleRegistry = @import("platform/generic_console_registry.zig");
 // Util
 const nativeDisplay = @import("util/native_display.zig");
 const nativeUtil = @import("util/native_util.zig");
