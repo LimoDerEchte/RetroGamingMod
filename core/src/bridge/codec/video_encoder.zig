@@ -48,4 +48,18 @@ pub const VideoEncoderInt16 = struct {
         };
         return encodedFrame;
     }
+
+    pub fn encodeFrame(self: *VideoEncoderInt16, frame: std.ArrayList(i16)) !std.ArrayList(u8) {
+        self.frameCount += 1;
+        if(self.frameCount % RawFrameInterval == 0) {
+            self.previousFrame = frame;
+            return self.compressWithZlib(frame, true);
+        }
+        return self.compressWithZlib(self.performDeltaEncoding(frame), false);
+    }
+
+    pub fn reset(self: *VideoEncoderInt16) void {
+        self.previousFrame.clearAndFree();
+        self.frameCount = 0;
+    }
 };
