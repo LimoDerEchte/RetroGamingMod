@@ -1,8 +1,28 @@
 
 const std = @import("std");
+const jni = @import("jni");
 const Endian = std.builtin.Endian;
 
 const idCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+pub fn nativeUUID(_: *jni.cEnv, _: jni.jclass, mostSig: jni.jlong, leastSig: jni.jlong) callconv(.C) jni.jlong {
+    return @intCast(@intFromPtr(&jUUID{
+        .leastSignificantBits = leastSig,
+        .mostSignificantBits = mostSig,
+    }));
+}
+
+pub fn mostSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jlong {
+    const zigPtr: usize = @intCast(ptr);
+    const uuid: *jUUID = @ptrFromInt(zigPtr);
+    return uuid.mostSignificantBits;
+}
+
+pub fn leastSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jlong {
+    const zigPtr: usize = @intCast(ptr);
+    const uuid: *jUUID = @ptrFromInt(zigPtr);
+    return uuid.leastSignificantBits;
+}
 
 pub const jUUID = struct {
     mostSignificantBits: i64,

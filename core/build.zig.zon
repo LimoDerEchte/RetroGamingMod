@@ -22,8 +22,8 @@
             .hash = "shared_memory-0.3.0-5YGFvOTCAABV3DPQIQqsU4xNezk6Aa6VruPEK1nINxuy",
         },
         .jni = .{
-            .url = "https://github.com/SuperIceCN/Zig-JNI/archive/refs/tags/v0.0.9.tar.gz",
-            .hash = "JNI-0.0.1-AAAAAFfSAwA9WVi6vfiN4-LFXMa3VRyuMi2mPzJOjMcA",
+            .url = "git+https://github.com/SuperIceCN/zig-jni.git#27570fdfb5706e7d9cb0206ddd1600e66411ad87",
+            .hash = "jni-0.0.1-qf3mHEoJBADgTJirCPl6I65kKz6-PBwsV7PgN_EX6AQy",
         },
     },
     .paths = .{

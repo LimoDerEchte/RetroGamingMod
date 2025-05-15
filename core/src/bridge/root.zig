@@ -11,6 +11,11 @@ const nativeDisplay = @import("util/native_display.zig");
 const nativeUtil = @import("util/native_util.zig");
 
 const std = @import("std");
+const jni = @import("jni");
+
+comptime {
+    jni.exportJNI("com.limo.emumod.bridge.NativeUtil", nativeUtil);
+}
 
 test "Test ID Generation" {
     var id = std.mem.zeroes([32]u8);
