@@ -1,6 +1,5 @@
 package com.limo.emumod.bridge;
 
-import com.limo.emumod.EmuMod;
 import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
 
