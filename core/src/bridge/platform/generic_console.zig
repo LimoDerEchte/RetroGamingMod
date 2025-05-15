@@ -76,9 +76,9 @@ pub const GenericConsole = struct {
         return self.videoEncoder.?.encodeFrame(curr);
     }
 
-    fn input(self: *GenericConsole, port: i32, input: i16) void {
+    fn input(self: *GenericConsole, port: i32, data: i16) void {
         if(self.sharedMemory) |handle| {
-            handle.data.controls[port] = input;
+            handle.data.controls[port] = data;
         }
     }
 };
