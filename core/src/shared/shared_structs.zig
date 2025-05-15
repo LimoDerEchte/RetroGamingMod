@@ -1,13 +1,15 @@
 
+const std = @import("std");
+
 pub const GenericShared = struct {
     // Client to Host
     displayChanged: bool = true,
-    display: u16[512*1024] = {},
+    display: [512*1024]u16 = std.mem.zeroes([512*1024]u16),
     audioChanged: bool = false,
-    audio: i16[8192] = {},
+    audio: [8192]i16 = std.mem.zeroes([8192]i16),
     audioSize: usize = 0,
     // Host to Client
-    controls: i16[4] = {},
+    controls: [4]i16 = std.mem.zeroes([4]i16),
     shutdownRequested: bool = false,
     shutdownCompleted: bool = false,
 };
