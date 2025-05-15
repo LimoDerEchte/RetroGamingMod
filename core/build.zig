@@ -8,6 +8,10 @@ pub fn build(b: *std.Build) void {
     const jni = b.dependency("jni", .{}).module("JNI");
     const shared_memory = b.dependency("shared_memory", .{}).module("shared_memory");
 
+    const options = b.addOptions();
+    options.addOption(bool, "use_shm_funcs", true);
+    shared_memory.addOptions("config", options);
+
     // Declare Modules
     const shared_mod = b.createModule(.{
         .root_source_file = b.path("src/shared/shared_structs.zig"),
