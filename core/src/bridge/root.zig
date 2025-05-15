@@ -15,6 +15,7 @@ const jni = @import("jni");
 
 comptime {
     jni.exportJNI("com.limo.emumod.bridge.NativeDisplay", nativeDisplay);
+    jni.exportJNI("com.limo.emumod.bridge.NativeGenericConsole", genericConsole);
     jni.exportJNI("com.limo.emumod.bridge.NativeUtil", nativeUtil);
 }
 

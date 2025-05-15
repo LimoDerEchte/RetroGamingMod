@@ -1,17 +1,69 @@
 
 const std = @import("std");
+const jni = @import("jni");
 const VideoEncoderInt16 = @import("../codec/video_encoder.zig").VideoEncoderInt16;
 const native = @import("../util/native_util.zig");
 const shm = @import("shared_memory");
 const GenericShared = @import("shared").GenericShared;
 
-const consoleRegistry = @import("generic_console_registry.zig").registryInstance;
+var consoleRegistry: ?@import("generic_console_registry.zig").GenericConsoleRegistry = null;
 
+// JNI
+pub fn init(_: *jni.cEnv, _: jni.jclass, jUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
+    const uuidPtr: usize = @intCast(jUuid);
+    const uuid: *native.jUUID = @ptrFromInt(uuidPtr);
+    const console = GenericConsole.init(width, height, sampleRate, uuid.*) catch |err| {
+        std.debug.panic("Failed to init console! Panicking... {any}", .{ err });
+    };
+    return @intCast(@intFromPtr(&console));
+}
+
+pub fn start(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, retroCore: jni.jstring, core: jni.jstring, rom: jni.jstring, save: jni.jstring) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const console: *GenericConsole = @ptrFromInt(zigPtr);
+
+    const retroCoreChars = env.*.*.GetStringUTFChars.?(env, retroCore, null);
+    const coreChars = env.*.*.GetStringUTFChars.?(env, core, null);
+    const romChars = env.*.*.GetStringUTFChars.?(env, rom, null);
+    const saveChars = env.*.*.GetStringUTFChars.?(env, save, null);
+
+    defer {
+        env.*.*.ReleaseStringUTFChars.?(env, retroCore, retroCoreChars);
+        env.*.*.ReleaseStringUTFChars.?(env, core, coreChars);
+        env.*.*.ReleaseStringUTFChars.?(env, rom, romChars);
+        env.*.*.ReleaseStringUTFChars.?(env, save, saveChars);
+    }
+
+    const retroCoreSlice = std.mem.span(retroCoreChars);
+    const coreSlice = std.mem.span(coreChars);
+    const romSlice = std.mem.span(romChars);
+    const saveSlice = std.mem.span(saveChars);
+
+    console.*.load(retroCoreSlice, coreSlice, romSlice, saveSlice) catch |err| {
+        std.debug.panic("Failed to start console! Panicking... {any}", .{ err });
+    };
+}
+
+pub fn stop(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const console: *GenericConsole = @ptrFromInt(zigPtr);
+    console.dispose() catch |err| {
+        std.debug.panic("Failed to stop console! Panicking... {any}", .{ err });
+    };
+}
+
+pub fn getWidth(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jint {
+    const zigPtr: usize = @intCast(ptr);
+    const console: *GenericConsole = @ptrFromInt(zigPtr);
+    return console.width;
+}
+
+// Source
 pub const GenericConsole = struct {
     mutex: std.Thread.Mutex = .{},
-    videoEncoder: ?VideoEncoderInt16 = undefined,
-    sharedMemory: ?shm.SharedMemory(GenericShared) = undefined,
-    childProcess: ?std.process.Child = undefined,
+    videoEncoder: ?VideoEncoderInt16 = null,
+    sharedMemory: ?shm.SharedMemory(GenericShared) = null,
+    childProcess: ?std.process.Child = null,
     uuid: native.jUUID,
 
     id: [32]u8,
@@ -19,28 +71,31 @@ pub const GenericConsole = struct {
     height: i32,
     sampleRate: i32,
 
-    fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) GenericConsole {
+    fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) !GenericConsole {
         var id: [32]u8 = std.mem.zeroes([32]u8);
-        native.GenerateID(&id);
-        const console: GenericConsole = .{
+        try native.GenerateID(&id);
+        var console: GenericConsole = .{
             .uuid = uuid,
             .id = id,
             .width = width,
             .height = height,
             .sampleRate = sampleRate
         };
-        consoleRegistry.register(&console);
+        if(consoleRegistry == null) {
+            consoleRegistry = @import("generic_console_registry.zig").registryInstance;
+        }
+        try consoleRegistry.?.register(&console);
         return console;
     }
 
-    fn load(self: *GenericConsole, retroCore: []u8, core: []u8, rom: []u8, save: []u8) !void {
+    fn load(self: *GenericConsole, retroCore: []const u8, core: []const u8, rom: []const u8, save: []const u8) !void {
         self.mutex.lock();
-        self.sharedMemory = try shm.SharedMemory(GenericShared).create(self.id, std.heap.c_allocator);
+        self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, std.heap.c_allocator);
         std.debug.print("[RetroGamingCore] Constructed shared memory {s}", .{self.id});
-        self.childProcess = std.process.Child.init([]const []const u8 {
+        self.childProcess = std.process.Child.init(&[_][]const u8 {
             retroCore,
             "gn",
-            self.id,
+            &self.id,
             core,
             rom,
             save
@@ -52,23 +107,23 @@ pub const GenericConsole = struct {
 
     fn dispose(self: *GenericConsole) !void {
         std.debug.print("[RetroGamingCore] Disposing bridge instance {s}", .{self.id});
-        consoleRegistry.unregister(self);
+        consoleRegistry.?.unregister(self);
         self.mutex.lock();
-        const handleBackup = self.sharedMemory;
-        self.sharedMemory = undefined;
-        if(handleBackup) |handle| {
-            handle.data.shutdownRequested = true;
-            while (!handle.data.shutdownCompleted) {
-                std.Thread.yield();
+        var handleBackup = self.sharedMemory;
+        self.sharedMemory = null;
+        if(handleBackup != null) {
+            handleBackup.?.data.shutdownRequested = true;
+            while (!handleBackup.?.data.shutdownCompleted) {
+                try std.Thread.yield();
             }
-            handle.close();
+            handleBackup.?.close();
             std.debug.print("[RetroGamingCore] Emulator shutdown completed", .{});
         }
-        try self.childProcess.?.kill();
+        _ = try self.childProcess.?.kill();
     }
 
     fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
-        if(self.videoEncoder == undefined) {
+        if(self.videoEncoder == null) {
             self.videoEncoder = VideoEncoderInt16.init(self.width, self.height);
         }
         const curr = std.ArrayList(i16).init(std.heap.c_allocator);
