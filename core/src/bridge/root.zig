@@ -14,9 +14,11 @@ const std = @import("std");
 const jni = @import("jni");
 
 comptime {
+    jni.exportJNI("com.limo.emumod.bridge.NativeDisplay", nativeDisplay);
     jni.exportJNI("com.limo.emumod.bridge.NativeUtil", nativeUtil);
 }
 
+// Tests
 test "Test ID Generation" {
     var id = std.mem.zeroes([32]u8);
     try nativeUtil.GenerateID(&id);

@@ -5,6 +5,7 @@ const Endian = std.builtin.Endian;
 
 const idCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+// JNI
 pub fn nativeUUID(_: *jni.cEnv, _: jni.jclass, mostSig: jni.jlong, leastSig: jni.jlong) callconv(.C) jni.jlong {
     return @intCast(@intFromPtr(&jUUID{
         .leastSignificantBits = leastSig,
@@ -24,6 +25,7 @@ pub fn leastSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callcon
     return uuid.leastSignificantBits;
 }
 
+// Source
 pub const jUUID = struct {
     mostSignificantBits: i64,
     leastSignificantBits: i64,

@@ -1,7 +1,40 @@
 
 const std = @import("std");
+const jni = @import("jni");
 const decoder = @import("../codec/video_decoder.zig");
 
+// JNI
+pub fn bufSize(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jint {
+    const zigPtr: usize = @intCast(ptr);
+    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    display.mutex.lock();
+    defer display.mutex.unlock();
+    return display.width * display.height;
+}
+
+pub fn hasChanged(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jboolean {
+    const zigPtr: usize = @intCast(ptr);
+    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    display.mutex.lock();
+    defer display.mutex.unlock();
+    return jni.boolToJboolean(display.changed);
+}
+
+pub fn update(env: *jni.cEnv, obj: jni.jobject, ptr: jni.jlong) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    display.mutex.lock();
+    defer display.mutex.unlock();
+    if(!display.changed)
+        return;
+    display.changed = false;
+    const class: jni.jclass = env.*.*.GetObjectClass.?(env, obj);
+    const field: jni.jfieldID = env.*.*.GetFieldID.?(env, class, "buf", "[I");
+    const data: jni.jintArray = env.*.*.GetObjectField.?(env, obj, field);
+    env.*.*.SetIntArrayRegion.?(env, data, 0, @intCast(display.buf.items.len), @ptrCast(&display.buf.items[0]));
+}
+
+// Source
 const NativeDisplay = struct {
     decoder: ?decoder.VideoDecoderInt16 = null,
     mutex: std.Thread.Mutex = .{},
