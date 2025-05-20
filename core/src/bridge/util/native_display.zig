@@ -35,7 +35,7 @@ pub fn update(env: *jni.cEnv, obj: jni.jobject, ptr: jni.jlong) callconv(.C) voi
 }
 
 // Source
-const NativeDisplay = struct {
+pub const NativeDisplay = struct {
     decoder: ?decoder.VideoDecoderInt16 = null,
     mutex: std.Thread.Mutex = .{},
     changed: bool = false,

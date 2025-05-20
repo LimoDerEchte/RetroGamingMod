@@ -27,8 +27,8 @@ pub fn leastSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callcon
 
 // Source
 pub const jUUID = struct {
-    mostSignificantBits: i64,
-    leastSignificantBits: i64,
+    mostSignificantBits: i64 = 0,
+    leastSignificantBits: i64 = 0,
 
     pub fn combine(self: *jUUID) i64 {
         return self.mostSignificantBits ^ self.leastSignificantBits << 1;

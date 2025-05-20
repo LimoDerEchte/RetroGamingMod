@@ -25,6 +25,10 @@
             .url = "git+https://github.com/SuperIceCN/zig-jni.git#27570fdfb5706e7d9cb0206ddd1600e66411ad87",
             .hash = "jni-0.0.1-qf3mHEoJBADgTJirCPl6I65kKz6-PBwsV7PgN_EX6AQy",
         },
+        .known_folders = .{
+            .url = "git+https://github.com/ziglibs/known-folders.git#aa24df42183ad415d10bc0a33e6238c437fc0f59",
+            .hash = "known_folders-0.0.0-Fy-PJtLDAADGDOwYwMkVydMSTp_aN-nfjCZw6qPQ2ECL",
+        }
     },
     .paths = .{
         "build.zig",

@@ -1,0 +1,267 @@
+
+const std = @import("std");
+const net = @import("network_definitions.zig");
+const enet = net.enet;
+
+const jUUID = @import("../util/native_util.zig").jUUID;
+const NativeDisplay = @import("../util/native_display.zig").NativeDisplay;
+const Int8ArrayPacket = net.Int8ArrayPacket;
+
+// Source
+pub const RetroClient = struct {
+    enet_mutex: std.Thread.Mutex = .{},
+    client: [*c]enet.ENetHost,
+    peer: [*c]enet.ENetPeer,
+
+    mutex: std.Thread.Mutex = .{},
+    displays: std.AutoHashMap(i64, *NativeDisplay) = std.AutoHashMap(i64, *NativeDisplay).init(std.heap.c_allocator),
+
+    running: bool = false,
+    runningLoops: i32 = 0,
+    authenticated: bool = false,
+    token: [32]u8,
+
+    bytesIn: u64 = 0,
+    bytesOut: u64 = 0,
+
+    fn init(ip: []const u8, port: i32, token: []const u8) RetroClient {
+        var client: RetroClient = .{
+            .token = token[0..32]
+        };
+        client.mutex.lock();
+        defer client.mutex.unlock();
+        client.enet_mutex.lock();
+        defer client.enet_mutex.unlock();
+
+        std.debug.print("[RetroClient] Connecting to ENet server on {%s}:{%d}", .{ip, port});
+        if(enet.enet_initialize() != 0) {
+            std.debug.print("[RetroClient] Failed to initialize ENet", .{});
+            return client;
+        }
+        var address: enet.ENetAddress = .{};
+        enet.enet_address_set_host(&address, &ip);
+        address.port = port;
+
+        client.client = enet.enet_host_create(&address, 1, 2, 0, 0);
+        if(!client.client) {
+            std.debug.print("[RetroClient] Failed to create ENet client", .{});
+            enet.enet_deinitialize();
+            return client;
+        }
+
+        client.peer = enet.enet_host_connect(client.client, &address, 2, 0);
+        if(!client.peer) {
+            std.debug.print("[RetroClient] Failed to connect ENet client", .{});
+            enet.enet_deinitialize();
+            return client;
+        }
+
+        // TODO: Start Threads
+        return client;
+    }
+
+    fn dispose(self: *RetroClient) !void {
+        self.mutex.lock();
+        self.running = false;
+        self.mutex.unlock();
+
+        while (true) {
+            self.mutex.lock();
+            if(self.runningLoops == 0)
+                break;
+            self.mutex.unlock();
+            try std.Thread.yield();
+        }
+
+        self.enet_mutex.lock();
+        defer self.enet_mutex.unlock();
+        if(self.client) {
+            enet.enet_host_destroy(self.client);
+            self.client = 0;
+        }
+        enet.enet_deinitialize();
+        self.mutex.unlock();
+    }
+
+    fn registerDisplay(self: *RetroClient, uuid: *jUUID, display: *NativeDisplay) !void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        try self.displays.put(uuid.combine(), display);
+    }
+
+    fn unregisterDisplay(self: *RetroClient, uuid: *jUUID) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        self.displays.remove(uuid.combine());
+    }
+
+    fn sendControlsUpdate(self: *RetroClient, uuid: *jUUID, port: i32, data: i16) !void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        const packet: Int8ArrayPacket = .{
+            .type = net.PacketType.PACKET_UPDATE_CONTROLS,
+            .ref = uuid,
+        };
+        packet.data.append(@intCast(port));
+        const intData: [2]u8 = std.mem.zeroes([2]u8);
+        std.mem.writeInt(i16, intData, data, std.builtin.Endian.little);
+        packet.data.appendSlice(intData);
+        self.enet_mutex.lock();
+        defer self.enet_mutex.unlock();
+        enet.enet_peer_send(self.peer, 0, try packet.pack());
+        self.bytesOut += 28;
+    }
+
+    fn mainLoop(self: *RetroClient) !void {
+        if(!self.client) {
+            return;
+        }
+        self.mutex.lock();
+        self.runningLoops += 1;
+        self.mutex.unlock();
+
+        while (true) {
+            const event: enet.ENetEvent = .{};
+            self.enet_mutex.lock();
+            const status = enet.enet_host_service(self.client, &event, 0);
+            self.enet_mutex.unlock();
+
+            if(status < 0) {
+                std.debug.print("[RetroClient] Failed to receive ENet event ({d})", .{status});
+                continue;
+            } else if (status == 0) {
+                try std.Thread.yield();
+                continue;
+            }
+
+            switch (event.type) {
+                enet.ENET_EVENT_TYPE_NONE => {
+                    std.debug.print("[RetroClient] Event received an ENET_EVENT_TYPE_NONE", .{});
+                },
+                enet.ENET_EVENT_TYPE_CONNECT => {
+                    self.onConnect();
+                },
+                enet.ENET_EVENT_TYPE_DISCONNECT => {
+                    self.onDisconnect();
+                },
+                enet.ENET_EVENT_TYPE_RECEIVE => {
+                    self.mutex.lock();
+                    self.bytesIn += event.packet.*.dataLength;
+                    self.mutex.unlock();
+                    // TODO: onMessage
+                },
+                else => {
+                    std.debug.print("[RetroClient] Event received an invalid event type", .{});
+                }
+            }
+
+            self.mutex.lock();
+            if(!self.running)
+                break;
+            self.mutex.unlock();
+        }
+        self.runningLoops -= 1;
+        self.mutex.unlock();
+    }
+
+    fn bandwidthMonitorLoop(self: *RetroClient) void {
+        const interval = 5 * std.time.ns_per_s;
+        var nextTime = std.time.nanoTimestamp();
+        var lastBytesIn: i64 = 0;
+        var lastBytesOut: i64 = 0;
+
+        self.mutex.lock();
+        self.runningLoops += 1;
+        self.mutex.unlock();
+
+        while (true) {
+            std.Thread.sleep(nextTime - std.time.nanoTimestamp());
+
+            self.mutex.lock();
+            std.debug.print("[RetroClient] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{
+                (self.bytesIn - lastBytesIn) * 8 / 1000 / 5,
+                (self.bytesOut - lastBytesOut) * 8 / 1000 / 5
+            });
+            lastBytesIn = self.bytesIn;
+            lastBytesOut = self.bytesOut;
+
+            if(!self.running)
+                break;
+            self.mutex.unlock();
+
+            nextTime += interval;
+        }
+        self.runningLoops -= 1;
+        self.mutex.unlock();
+    }
+
+    fn onConnect(self: *RetroClient) !void {
+        std.debug.print("[RetroClient] Connection established to {d}", .{self.peer.*.address.port});
+
+        self.enet_mutex.lock();
+        defer self.enet_mutex.unlock();
+
+        const packet: Int8ArrayPacket = .{
+            .type = net.PacketType.PACKET_AUTH,
+            .ref = &jUUID{}
+        };
+        try packet.data.appendSlice(self.token);
+        enet.enet_peer_send(self.peer, 0, packet.pack());
+
+        self.mutex.lock();
+        self.bytesOut += 57;
+        self.mutex.unlock();
+
+        std.debug.print("[RetroClient] Authorizing with token {s}", .{self.token});
+    }
+
+    fn onDisconnect(self: *RetroClient) void {
+        self.dispose();
+    }
+
+    fn onMessage(self: *RetroClient, packet: [*c]enet.ENetPacket) !void {
+        if(!packet) {
+            std.debug.print("[RetroClient] Received packet is nullptr", .{});
+            return;
+        }
+        if(packet.*.dataLength == 0) {
+            std.debug.print("[RetroClient] Received empty packet from server", .{});
+            return;
+        }
+        const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
+        switch (packetType) {
+            net.PacketType.PACKET_AUTH_ACK => {
+                self.mutex.lock();
+                self.authenticated = true;
+                self.mutex.unlock();
+                std.debug.print("[RetroClient] Connection token accepted by server", .{});
+            },
+            net.PacketType.PACKET_KEEP_ALIVE => {
+                self.enet_mutex.lock();
+                const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
+                enet.enet_peer_send(self.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
+                self.enet_mutex.unlock();
+                self.mutex.lock();
+                self.bytesOut += 1;
+                self.mutex.unlock();
+            },
+            net.PacketType.PACKET_KICK => {
+                const parsed = try Int8ArrayPacket.unpack(packet);
+                std.debug.print("[RetroClient] Received kick packet: {s}", .{parsed.data.items});
+            },
+            net.PacketType.PACKET_UPDATE_DISPLAY => {
+                const parsed = try Int8ArrayPacket.unpack(packet);
+                self.mutex.lock();
+                const display = self.displays.get(parsed.ref.combine());
+                display.?.receive(parsed.data);
+                self.mutex.unlock();
+            },
+            net.PacketType.PACKET_AUTH, net.PacketType.PACKET_UPDATE_CONTROLS => {
+                std.debug.print("Received C2S packet on client", .{});
+            },
+            else => {
+                std.debug.print("Unknown C2S packet type {d}", .{packet.*.data.?[0]});
+            }
+        }
+    }
+};

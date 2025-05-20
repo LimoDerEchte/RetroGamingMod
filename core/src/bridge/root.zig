@@ -3,6 +3,7 @@ const videoDecoder = @import("codec/video_decoder.zig");
 const videoEncoder = @import("codec/video_encoder.zig");
 // Network
 const networkDef = @import("connection/network_definitions.zig");
+const client = @import("connection/client.zig");
 // Console
 const genericConsole = @import("platform/generic_console.zig");
 const consoleRegistry = @import("platform/generic_console_registry.zig");
@@ -14,6 +15,7 @@ const std = @import("std");
 const jni = @import("jni");
 
 comptime {
+    jni.exportJNI("com.limo.emumod.client.bridge.NativeClient", client);
     jni.exportJNI("com.limo.emumod.bridge.NativeDisplay", nativeDisplay);
     jni.exportJNI("com.limo.emumod.bridge.NativeGenericConsole", genericConsole);
     jni.exportJNI("com.limo.emumod.bridge.NativeUtil", nativeUtil);

@@ -22,8 +22,8 @@ pub const PacketType = enum(u8) {
 
 pub const Int8ArrayPacket = struct {
     type: PacketType,
-    ref: jUUID,
-    data: std.ArrayList(u8),
+    ref: *jUUID,
+    data: std.ArrayList(u8) = std.ArrayList(u8).init(std.heap.c_allocator),
 
     pub fn unpack(packet: [*c]enet.struct__ENetPacket) !Int8ArrayPacket {
         const packetType: PacketType = @enumFromInt(packet.*.data[0]);
@@ -35,7 +35,7 @@ pub const Int8ArrayPacket = struct {
         try packetData.appendSlice(packet.*.data[25..packetSize+25]);
         return .{
             .type = packetType,
-            .ref = jUUID.fromBytes(packet.*.data[1..17]),
+            .ref = &jUUID.fromBytes(packet.*.data[1..17]),
             .data = packetData
         };
     }

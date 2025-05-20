@@ -7,10 +7,12 @@ pub fn build(b: *std.Build) void {
     // Load Dependency Modules
     const jni = b.dependency("jni", .{}).module("JNI");
     const shared_memory = b.dependency("shared_memory", .{}).module("shared_memory");
+    const known_folders = b.dependency("known_folders", .{}).module("known-folders");
 
     const options = b.addOptions();
     options.addOption(bool, "use_shm_funcs", true);
     shared_memory.addOptions("config", options);
+    shared_memory.addImport("known-folders", known_folders);
 
     // Declare Modules
     const shared_mod = b.createModule(.{
