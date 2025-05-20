@@ -49,7 +49,7 @@ pub const RetroClient = struct {
     bytesIn: u64 = 0,
     bytesOut: u64 = 0,
 
-    fn init(ip: [*c]const u8, port: u16, token: [*c]const u8) RetroClient {
+    fn init(ip: [*c]const u8, port: u16, token: [*c]const u8) !RetroClient {
         var client: RetroClient = .{
             .token = token
         };
@@ -81,7 +81,10 @@ pub const RetroClient = struct {
             return client;
         }
 
-        // TODO: Start Threads
+        const mainLoopThread = try std.Thread.spawn(.{}, mainLoop, .{&client});
+        const bandwidthThread = try std.Thread.spawn(.{}, bandwidthMonitorLoop, .{&client});
+        mainLoopThread.detach();
+        bandwidthThread.detach();
         return client;
     }
 
@@ -138,7 +141,7 @@ pub const RetroClient = struct {
     }
 
     fn mainLoop(self: *RetroClient) !void {
-        if(!self.client) {
+        if(self.client == null) {
             return;
         }
         self.mutex.lock();
@@ -146,7 +149,7 @@ pub const RetroClient = struct {
         self.mutex.unlock();
 
         while (true) {
-            const event: enet.ENetEvent = .{};
+            var event: enet.ENetEvent = .{};
             self.enet_mutex.lock();
             const status = enet.enet_host_service(self.client, &event, 0);
             self.enet_mutex.unlock();
@@ -164,16 +167,16 @@ pub const RetroClient = struct {
                     std.debug.print("[RetroClient] Event received an ENET_EVENT_TYPE_NONE", .{});
                 },
                 enet.ENET_EVENT_TYPE_CONNECT => {
-                    self.onConnect();
+                    try self.onConnect();
                 },
                 enet.ENET_EVENT_TYPE_DISCONNECT => {
-                    self.onDisconnect();
+                    try self.onDisconnect();
                 },
                 enet.ENET_EVENT_TYPE_RECEIVE => {
                     self.mutex.lock();
                     self.bytesIn += event.packet.*.dataLength;
                     self.mutex.unlock();
-                    // TODO: onMessage
+                    try self.onMessage(event.packet);
                 },
                 else => {
                     std.debug.print("[RetroClient] Event received an invalid event type", .{});
@@ -192,15 +195,15 @@ pub const RetroClient = struct {
     fn bandwidthMonitorLoop(self: *RetroClient) void {
         const interval = 5 * std.time.ns_per_s;
         var nextTime = std.time.nanoTimestamp();
-        var lastBytesIn: i64 = 0;
-        var lastBytesOut: i64 = 0;
+        var lastBytesIn: u64 = 0;
+        var lastBytesOut: u64 = 0;
 
         self.mutex.lock();
         self.runningLoops += 1;
         self.mutex.unlock();
 
         while (true) {
-            std.Thread.sleep(nextTime - std.time.nanoTimestamp());
+            std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             self.mutex.lock();
             std.debug.print("[RetroClient] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{
@@ -226,12 +229,13 @@ pub const RetroClient = struct {
         self.enet_mutex.lock();
         defer self.enet_mutex.unlock();
 
-        const packet: Int8ArrayPacket = .{
+        var nullUuid = jUUID{};
+        var packet: Int8ArrayPacket = .{
             .type = net.PacketType.PACKET_AUTH,
-            .ref = &jUUID{}
+            .ref = &nullUuid
         };
-        try packet.data.appendSlice(self.token);
-        enet.enet_peer_send(self.peer, 0, packet.pack());
+        try packet.data.appendSlice(std.mem.span(self.token));
+        _ = enet.enet_peer_send(self.peer, 0, try packet.pack());
 
         self.mutex.lock();
         self.bytesOut += 57;
@@ -240,12 +244,12 @@ pub const RetroClient = struct {
         std.debug.print("[RetroClient] Authorizing with token {s}", .{self.token});
     }
 
-    fn onDisconnect(self: *RetroClient) void {
-        self.dispose();
+    fn onDisconnect(self: *RetroClient) !void {
+        try self.dispose();
     }
 
     fn onMessage(self: *RetroClient, packet: [*c]enet.ENetPacket) !void {
-        if(!packet) {
+        if(packet == null) {
             std.debug.print("[RetroClient] Received packet is nullptr", .{});
             return;
         }
@@ -264,7 +268,7 @@ pub const RetroClient = struct {
             net.PacketType.PACKET_KEEP_ALIVE => {
                 self.enet_mutex.lock();
                 const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
-                enet.enet_peer_send(self.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
+                _ = enet.enet_peer_send(self.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
                 self.enet_mutex.unlock();
                 self.mutex.lock();
                 self.bytesOut += 1;
@@ -275,10 +279,10 @@ pub const RetroClient = struct {
                 std.debug.print("[RetroClient] Received kick packet: {s}", .{parsed.data.items});
             },
             net.PacketType.PACKET_UPDATE_DISPLAY => {
-                const parsed = try Int8ArrayPacket.unpack(packet);
+                var parsed = try Int8ArrayPacket.unpack(packet);
                 self.mutex.lock();
                 const display = self.displays.get(parsed.ref.combine());
-                display.?.receive(parsed.data);
+                try display.?.receive(&parsed.data);
                 self.mutex.unlock();
             },
             net.PacketType.PACKET_AUTH, net.PacketType.PACKET_UPDATE_CONTROLS => {

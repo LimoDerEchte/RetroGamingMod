@@ -51,12 +51,13 @@ pub const NativeDisplay = struct {
         };
     }
 
-    pub fn receive(self: *NativeDisplay, data: std.ArrayList(u8)) void {
+    pub fn receive(self: *NativeDisplay, data: *std.ArrayList(u8)) !void {
         self.mutex.lock();
         if(self.decoder == null) {
             self.decoder = decoder.VideoDecoderInt16.init(self.width, self.height);
         }
-        self.decoder.?.decodeFrameRGB565(data);
+        const frame = try self.decoder.?.decodeFrameRGB565(data);
+        try self.buf.replaceRange(0, frame.items.len, frame.items);
         self.changed = true;
     }
 };

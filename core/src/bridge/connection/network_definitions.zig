@@ -33,9 +33,10 @@ pub const Int8ArrayPacket = struct {
         const packetSize = std.mem.readInt(usize, packet.*.data[17..25], Endian.little);
         var packetData = try std.ArrayList(u8).initCapacity(std.heap.raw_c_allocator, packetSize);
         try packetData.appendSlice(packet.*.data[25..packetSize+25]);
+        var uuid = jUUID.fromBytes(packet.*.data[1..17]);
         return .{
             .type = packetType,
-            .ref = &jUUID.fromBytes(packet.*.data[1..17]),
+            .ref = &uuid,
             .data = packetData
         };
     }
