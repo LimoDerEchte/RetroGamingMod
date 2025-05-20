@@ -1,5 +1,6 @@
 
 const std = @import("std");
+const jni = @import("jni");
 const net = @import("network_definitions.zig");
 const enet = net.enet;
 
@@ -7,11 +8,35 @@ const jUUID = @import("../util/native_util.zig").jUUID;
 const NativeDisplay = @import("../util/native_display.zig").NativeDisplay;
 const Int8ArrayPacket = net.Int8ArrayPacket;
 
+// JNI
+pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, token: jni.jstring) callconv(.C) jni.jlong {
+    const client = RetroClient.init(
+        env.*.*.GetStringUTFChars.?(env, ip, null),
+        @intCast(port),
+        env.*.*.GetStringUTFChars.?(env, token, null)
+    );
+    return @intCast(@intFromPtr(&client));
+}
+
+pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) void {
+    const zigPtr: usize = @intCast(ptr);
+    const client: *RetroClient = @ptrFromInt(zigPtr);
+    client.dispose() catch {
+        std.debug.print("[RetroClient] Something went wrong while disposing client!", .{});
+    };
+}
+
+pub fn isAuthenticated(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) jni.jboolean {
+    const zigPtr: usize = @intCast(ptr);
+    const client: *RetroClient = @ptrFromInt(zigPtr);
+    return jni.boolToJboolean(client.authenticated);
+}
+
 // Source
 pub const RetroClient = struct {
     enet_mutex: std.Thread.Mutex = .{},
-    client: [*c]enet.ENetHost,
-    peer: [*c]enet.ENetPeer,
+    client: [*c]enet.ENetHost = null,
+    peer: [*c]enet.ENetPeer = null,
 
     mutex: std.Thread.Mutex = .{},
     displays: std.AutoHashMap(i64, *NativeDisplay) = std.AutoHashMap(i64, *NativeDisplay).init(std.heap.c_allocator),
@@ -19,38 +44,38 @@ pub const RetroClient = struct {
     running: bool = false,
     runningLoops: i32 = 0,
     authenticated: bool = false,
-    token: [32]u8,
+    token: [*c]const u8,
 
     bytesIn: u64 = 0,
     bytesOut: u64 = 0,
 
-    fn init(ip: []const u8, port: i32, token: []const u8) RetroClient {
+    fn init(ip: [*c]const u8, port: u16, token: [*c]const u8) RetroClient {
         var client: RetroClient = .{
-            .token = token[0..32]
+            .token = token
         };
         client.mutex.lock();
         defer client.mutex.unlock();
         client.enet_mutex.lock();
         defer client.enet_mutex.unlock();
 
-        std.debug.print("[RetroClient] Connecting to ENet server on {%s}:{%d}", .{ip, port});
+        std.debug.print("[RetroClient] Connecting to ENet server on {s}:{d}", .{ip, port});
         if(enet.enet_initialize() != 0) {
             std.debug.print("[RetroClient] Failed to initialize ENet", .{});
             return client;
         }
         var address: enet.ENetAddress = .{};
-        enet.enet_address_set_host(&address, &ip);
+        _ = enet.enet_address_set_host(&address, ip);
         address.port = port;
 
         client.client = enet.enet_host_create(&address, 1, 2, 0, 0);
-        if(!client.client) {
+        if(client.client == null) {
             std.debug.print("[RetroClient] Failed to create ENet client", .{});
             enet.enet_deinitialize();
             return client;
         }
 
         client.peer = enet.enet_host_connect(client.client, &address, 2, 0);
-        if(!client.peer) {
+        if(client.peer == null) {
             std.debug.print("[RetroClient] Failed to connect ENet client", .{});
             enet.enet_deinitialize();
             return client;
@@ -75,7 +100,7 @@ pub const RetroClient = struct {
 
         self.enet_mutex.lock();
         defer self.enet_mutex.unlock();
-        if(self.client) {
+        if(self.client != null) {
             enet.enet_host_destroy(self.client);
             self.client = 0;
         }
