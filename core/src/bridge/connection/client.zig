@@ -18,7 +18,7 @@ pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, t
     return @intCast(@intFromPtr(&client));
 }
 
-pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) void {
+pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
     const zigPtr: usize = @intCast(ptr);
     const client: *RetroClient = @ptrFromInt(zigPtr);
     client.dispose() catch {
@@ -26,10 +26,47 @@ pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) void {
     };
 }
 
-pub fn isAuthenticated(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) jni.jboolean {
+pub fn isAuthenticated(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jboolean {
     const zigPtr: usize = @intCast(ptr);
     const client: *RetroClient = @ptrFromInt(zigPtr);
     return jni.boolToJboolean(client.authenticated);
+}
+
+pub fn registerScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
+    const zigPtr: usize = @intCast(ptr);
+    const zigUuidPtr: usize = @intCast(ptrUuid);
+    const client: *RetroClient = @ptrFromInt(zigPtr);
+    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+
+    var display = NativeDisplay.init(width, height);
+    client.registerDisplay(uuid, &display, sampleRate) catch {
+        std.debug.print("[RetroClient] Something went wrong while registering display!", .{});
+    };
+    return @intCast(@intFromPtr(&display));
+}
+
+pub fn unregisterScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const zigUuidPtr: usize = @intCast(ptrUuid);
+    const client: *RetroClient = @ptrFromInt(zigPtr);
+    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+    client.unregisterDisplay(uuid);
+}
+
+pub fn sendControlUpdate(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong, port: jni.jint, data: jni.jshort) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const zigUuidPtr: usize = @intCast(ptrUuid);
+    const client: *RetroClient = @ptrFromInt(zigPtr);
+    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+    client.sendControlsUpdate(uuid, port, data) catch {
+        std.debug.print("[RetroClient] Something went wrong while sending controls update!", .{});
+    };
+}
+
+pub fn updateAudioDistance(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong, distance: jni.jdouble) callconv(.C) void {
+    _ = ptr;
+    _ = ptrUuid;
+    _ = distance;
 }
 
 // Source
@@ -111,7 +148,7 @@ pub const RetroClient = struct {
         self.mutex.unlock();
     }
 
-    fn registerDisplay(self: *RetroClient, uuid: *jUUID, display: *NativeDisplay) !void {
+    fn registerDisplay(self: *RetroClient, uuid: *jUUID, display: *NativeDisplay, _: i32) !void {
         self.mutex.lock();
         defer self.mutex.unlock();
         try self.displays.put(uuid.combine(), display);
@@ -120,23 +157,23 @@ pub const RetroClient = struct {
     fn unregisterDisplay(self: *RetroClient, uuid: *jUUID) void {
         self.mutex.lock();
         defer self.mutex.unlock();
-        self.displays.remove(uuid.combine());
+        _ = self.displays.remove(uuid.combine());
     }
 
     fn sendControlsUpdate(self: *RetroClient, uuid: *jUUID, port: i32, data: i16) !void {
         self.mutex.lock();
         defer self.mutex.unlock();
-        const packet: Int8ArrayPacket = .{
+        var packet: Int8ArrayPacket = .{
             .type = net.PacketType.PACKET_UPDATE_CONTROLS,
             .ref = uuid,
         };
-        packet.data.append(@intCast(port));
-        const intData: [2]u8 = std.mem.zeroes([2]u8);
-        std.mem.writeInt(i16, intData, data, std.builtin.Endian.little);
-        packet.data.appendSlice(intData);
+        try packet.data.append(@intCast(port));
+        var intData: [2]u8 = std.mem.zeroes([2]u8);
+        std.mem.writeInt(i16, &intData, data, std.builtin.Endian.little);
+        try packet.data.appendSlice(&intData);
         self.enet_mutex.lock();
         defer self.enet_mutex.unlock();
-        enet.enet_peer_send(self.peer, 0, try packet.pack());
+        _ = enet.enet_peer_send(self.peer, 0, try packet.pack());
         self.bytesOut += 28;
     }
 
