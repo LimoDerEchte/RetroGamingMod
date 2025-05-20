@@ -8,7 +8,41 @@ const jUUID = @import("../util/native_util.zig").jUUID;
 const NativeDisplay = @import("../util/native_display.zig").NativeDisplay;
 const Int8ArrayPacket = net.Int8ArrayPacket;
 
-// Todo: JNI
+// JNI
+pub fn startServer(_: *jni.cEnv, _: jni.jclass, port: jni.jint, maxClients: i32) callconv(.C) jni.jlong {
+    const client = RetroServer.init(@intCast(port), maxClients) catch {
+        std.debug.panic("[RetroServer] Failed to create retro server; Panic", .{});
+    };
+    return @intCast(@intFromPtr(&client));
+}
+
+pub fn stopServer(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
+    const zigPtr: usize = @intCast(ptr);
+    const server: *RetroServer = @ptrFromInt(zigPtr);
+    server.dispose() catch {
+        std.debug.print("[RetroServer] Something went wrong while disposing server!", .{});
+    };
+}
+
+pub fn requestToken(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jstring {
+    const zigPtr: usize = @intCast(ptr);
+    const server: *RetroServer = @ptrFromInt(zigPtr);
+
+    var allocator = std.heap.c_allocator;
+    const token_str = std.heap.c_allocator.alloc(u8, 33) catch {
+        std.debug.panic("[RetroServer] Failed to alloc secure token; Panic", .{});
+    };
+    std.mem.copyForwards(u8, token_str[0..32], &server.genToken());
+    token_str[32] = 0;
+
+    const result = env.*.*.NewStringUTF.?(
+        env,
+        @ptrCast(token_str)
+    );
+
+    allocator.free(token_str);
+    return result;
+}
 
 // Source
 pub const RetroServerClient = struct {
@@ -30,7 +64,7 @@ pub const RetroServer = struct {
     bytesIn: u64 = 0,
     bytesOut: u64 = 0,
 
-    fn init(port: i32, maxClients: i32) RetroServer {
+    fn init(port: u16, maxClients: i32) !RetroServer {
         var server: RetroServer = .{};
         server.mutex.lock();
         defer server.mutex.unlock();
@@ -46,16 +80,9 @@ pub const RetroServer = struct {
         address.host = enet.ENET_HOST_ANY;
         address.port = port;
 
-        server.client = enet.enet_host_create(&address, @intCast(maxClients), 2, 0, 0);
-        if(server.client == null) {
+        server.server = enet.enet_host_create(&address, @intCast(maxClients), 2, 0, 0);
+        if(server.server == null) {
             std.debug.print("[RetroServer] Failed to create ENet client", .{});
-            enet.enet_deinitialize();
-            return server;
-        }
-
-        server.peer = enet.enet_host_connect(server.client, &address, 2, 0);
-        if(server.peer == null) {
-            std.debug.print("[RetroServer] Failed to create ENet server", .{});
             enet.enet_deinitialize();
             return server;
         }

@@ -4,8 +4,8 @@ public class NativeServer {
     private final long handle;
     private final int port;
 
-    public NativeServer(int port) {
-        handle = startServer(port);
+    public NativeServer(int port, int maxUsers) {
+        handle = startServer(port, maxUsers);
         this.port = port;
     }
 
@@ -21,7 +21,7 @@ public class NativeServer {
         return requestToken(handle);
     }
 
-    private static native long startServer(int port);
+    private static native long startServer(int port, int maxUsers);
     private static native void stopServer(long ptr);
     private static native String requestToken(long ptr);
 }

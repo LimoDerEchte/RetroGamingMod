@@ -30,7 +30,7 @@ public class ServerEvents {
             int serverPort = server.getServerPort();
             if(serverPort == -1)
                 serverPort = NetworkUtils.findLocalPort();
-            SERVER = new NativeServer(serverPort);
+            SERVER = new NativeServer(serverPort, server.getMaxPlayerCount());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             EmuMod.running.values().forEach(NativeGenericConsole::stop);

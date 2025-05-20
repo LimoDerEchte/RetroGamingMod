@@ -14,7 +14,9 @@ pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, t
         env.*.*.GetStringUTFChars.?(env, ip, null),
         @intCast(port),
         env.*.*.GetStringUTFChars.?(env, token, null)
-    );
+    ) catch {
+        std.debug.panic("[RetroServer] Failed to create retro client; Panic", .{});
+    };
     return @intCast(@intFromPtr(&client));
 }
 
