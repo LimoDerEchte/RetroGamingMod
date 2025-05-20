@@ -118,6 +118,7 @@ pub const RetroClient = struct {
             return client;
         }
 
+        client.running = true;
         const mainLoopThread = try std.Thread.spawn(.{}, mainLoop, .{&client});
         const bandwidthThread = try std.Thread.spawn(.{}, bandwidthMonitorLoop, .{&client});
         mainLoopThread.detach();
@@ -142,7 +143,7 @@ pub const RetroClient = struct {
         defer self.enet_mutex.unlock();
         if(self.client != null) {
             enet.enet_host_destroy(self.client);
-            self.client = 0;
+            self.client = null;
         }
         enet.enet_deinitialize();
         self.mutex.unlock();
