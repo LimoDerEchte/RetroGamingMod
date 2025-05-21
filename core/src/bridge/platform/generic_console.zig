@@ -10,8 +10,7 @@ var consoleRegistry: ?@import("generic_console_registry.zig").GenericConsoleRegi
 
 // JNI
 pub fn init(_: *jni.cEnv, _: jni.jclass, jUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
-    const uuidPtr: usize = @intCast(jUuid);
-    const uuid: *native.jUUID = @ptrFromInt(uuidPtr);
+    const uuid: *native.jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
     const console = GenericConsole.init(width, height, sampleRate, uuid.*) catch |err| {
         std.debug.panic("Failed to init console! Panicking... {any}", .{ err });
     };
@@ -19,8 +18,7 @@ pub fn init(_: *jni.cEnv, _: jni.jclass, jUuid: jni.jlong, width: jni.jint, heig
 }
 
 pub fn start(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, retroCore: jni.jstring, core: jni.jstring, rom: jni.jstring, save: jni.jstring) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const console: *GenericConsole = @ptrFromInt(zigPtr);
+    const console: *GenericConsole = @ptrFromInt(@as(usize, @intCast(ptr)));
 
     const retroCoreChars = env.*.*.GetStringUTFChars.?(env, retroCore, null);
     const coreChars = env.*.*.GetStringUTFChars.?(env, core, null);
@@ -45,16 +43,14 @@ pub fn start(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, retroCore: jni.jstri
 }
 
 pub fn stop(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const console: *GenericConsole = @ptrFromInt(zigPtr);
+    const console: *GenericConsole = @ptrFromInt(@as(usize, @intCast(ptr)));
     console.dispose() catch |err| {
         std.debug.panic("Failed to stop console! Panicking... {any}", .{ err });
     };
 }
 
 pub fn getWidth(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jint {
-    const zigPtr: usize = @intCast(ptr);
-    const console: *GenericConsole = @ptrFromInt(zigPtr);
+    const console: *GenericConsole = @ptrFromInt(@as(usize, @intCast(ptr)));
     return console.width;
 }
 

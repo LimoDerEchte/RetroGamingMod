@@ -17,16 +17,14 @@ pub fn startServer(_: *jni.cEnv, _: jni.jclass, port: jni.jint, maxClients: i32)
 }
 
 pub fn stopServer(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const server: *RetroServer = @ptrFromInt(zigPtr);
+    const server: *RetroServer = @ptrFromInt(@as(usize, @intCast(ptr)));
     server.dispose() catch {
         std.debug.print("[RetroServer] Something went wrong while disposing server!", .{});
     };
 }
 
 pub fn requestToken(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jstring {
-    const zigPtr: usize = @intCast(ptr);
-    const server: *RetroServer = @ptrFromInt(zigPtr);
+    const server: *RetroServer = @ptrFromInt(@as(usize, @intCast(ptr)));
 
     var allocator = std.heap.c_allocator;
     const token_str = std.heap.c_allocator.alloc(u8, 33) catch {
