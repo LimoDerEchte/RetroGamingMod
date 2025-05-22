@@ -178,7 +178,7 @@ pub const RetroServer = struct {
                     self.mutex.lock();
                     self.bytesIn += event.packet.*.dataLength;
                     self.mutex.unlock();
-                    try self.onMessage(event.packet);
+                    try self.onMessage(event.peer, event.packet);
                 },
                 else => {
                     std.debug.print("[RetroServer] Event received an invalid event type", .{});
@@ -330,5 +330,49 @@ pub const RetroServer = struct {
             self.clients.swapRemove(i);
             break;
         }
+    }
+
+    fn onMessage(self: *RetroServer, peer: [*c]enet.ENetPeer, packet: [*c]enet.ENetPacket) void {
+        if(packet == null) {
+            std.debug.print("[RetroServer] Received packet is nullptr", .{});
+            return;
+        }
+        if(packet.*.dataLength == 0) {
+            std.debug.print("[RetroServer] Received empty packet from client", .{});
+            return;
+        }
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        const client = self.findClientByPeerUnsafe(peer);
+        const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
+        if(packetType != net.PacketType.PACKET_AUTH and !client.?.authenticated) {
+            std.debug.print("[RetroServer] Received non-auth packet before auth from {any}", .{peer});
+            return;
+        }
+        switch (packetType) {
+            net.PacketType.PACKET_AUTH => {
+                if(client.?.authenticated) {
+                    std.debug.print("[RetroServer] Received auth packet after auth from {any}", .{peer});
+                    return;
+                }
+            },
+            net.PacketType.PACKET_KEEP_ALIVE => {
+                // Empty block, currently no logic
+            },
+            net.PacketType.PACKET_AUTH_ACK, net.PacketType.PACKET_KICK, net.PacketType.PACKET_UPDATE_DISPLAY, net.PacketType.PACKET_UPDATE_AUDIO => {
+                std.debug.print("[RetroServer] Received S2C packet on server", .{});
+            },
+            else => {
+                std.debug.print("[RetroServer] Unknown S2C packet type {d}", .{packet.*.data.?[0]});
+            }
+        }
+    }
+
+    fn findClientByPeerUnsafe(self: *RetroServer, peer: [*c]enet.ENetPeer) ?RetroServerClient {
+        for(self.clients.items) |client| {
+            if(client.peer == peer)
+                return client;
+        }
+        return undefined;
     }
 };

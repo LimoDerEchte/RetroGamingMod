@@ -326,10 +326,10 @@ pub const RetroClient = struct {
                 self.mutex.unlock();
             },
             net.PacketType.PACKET_AUTH, net.PacketType.PACKET_UPDATE_CONTROLS => {
-                std.debug.print("Received C2S packet on client", .{});
+                std.debug.print("[RetroClient] Received C2S packet on client", .{});
             },
             else => {
-                std.debug.print("Unknown C2S packet type {d}", .{packet.*.data.?[0]});
+                std.debug.print("[RetroClient] Unknown C2S packet type {d}", .{packet.*.data.?[0]});
             }
         }
     }
