@@ -4,6 +4,7 @@
 
 #include "VideoDecoder.hpp"
 
+#include <cstring>
 #include <stdexcept>
 #include <zlib.h>
 

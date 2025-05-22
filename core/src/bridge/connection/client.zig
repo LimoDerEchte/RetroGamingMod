@@ -21,24 +21,20 @@ pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, t
 }
 
 pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const client: *RetroClient = @ptrFromInt(zigPtr);
+    const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
     client.dispose() catch {
         std.debug.print("[RetroClient] Something went wrong while disposing client!", .{});
     };
 }
 
 pub fn isAuthenticated(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jboolean {
-    const zigPtr: usize = @intCast(ptr);
-    const client: *RetroClient = @ptrFromInt(zigPtr);
+    const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
     return jni.boolToJboolean(client.authenticated);
 }
 
-pub fn registerScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
-    const zigPtr: usize = @intCast(ptr);
-    const zigUuidPtr: usize = @intCast(ptrUuid);
-    const client: *RetroClient = @ptrFromInt(zigPtr);
-    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+pub fn registerScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, jUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
+    const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
+    const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
 
     var display = NativeDisplay.init(width, height);
     client.registerDisplay(uuid, &display, sampleRate) catch {
@@ -47,19 +43,15 @@ pub fn registerScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.
     return @intCast(@intFromPtr(&display));
 }
 
-pub fn unregisterScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const zigUuidPtr: usize = @intCast(ptrUuid);
-    const client: *RetroClient = @ptrFromInt(zigPtr);
-    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+pub fn unregisterScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, jUuid: jni.jlong) callconv(.C) void {
+    const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
+    const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
     client.unregisterDisplay(uuid);
 }
 
-pub fn sendControlUpdate(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, ptrUuid: jni.jlong, port: jni.jint, data: jni.jshort) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const zigUuidPtr: usize = @intCast(ptrUuid);
-    const client: *RetroClient = @ptrFromInt(zigPtr);
-    const uuid: *jUUID = @ptrFromInt(zigUuidPtr);
+pub fn sendControlUpdate(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, jUuid: jni.jlong, port: jni.jint, data: jni.jshort) callconv(.C) void {
+    const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
+    const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
     client.sendControlsUpdate(uuid, port, data) catch {
         std.debug.print("[RetroClient] Something went wrong while sending controls update!", .{});
     };

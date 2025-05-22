@@ -11,6 +11,8 @@
 #include "codec/AudioEncoder.hpp"
 #include "connection/NetworkDefinitions.hpp"
 
+#include <cmath>
+
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
 /*std::mutex mutex = {};
@@ -60,7 +62,7 @@ void test_video() {
             log("ERROR: Decoding failed");
         } else {
             log("Data decoded successfully");
-            /*std::cout << "Sample decoded values: ";
+            std::cout << "Sample decoded values: ";
             for (int i2 = 0; i2 < pixelCount; i2++) {
                 std::cout << std::uppercase << std::hex << res[i2] << " ";
             }

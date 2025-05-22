@@ -14,14 +14,12 @@ pub fn nativeUUID(_: *jni.cEnv, _: jni.jclass, mostSig: jni.jlong, leastSig: jni
 }
 
 pub fn mostSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jlong {
-    const zigPtr: usize = @intCast(ptr);
-    const uuid: *jUUID = @ptrFromInt(zigPtr);
+    const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(ptr)));
     return uuid.mostSignificantBits;
 }
 
 pub fn leastSignificantBits(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jlong {
-    const zigPtr: usize = @intCast(ptr);
-    const uuid: *jUUID = @ptrFromInt(zigPtr);
+    const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(ptr)));
     return uuid.leastSignificantBits;
 }
 

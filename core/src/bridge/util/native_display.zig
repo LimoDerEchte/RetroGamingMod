@@ -5,24 +5,21 @@ const decoder = @import("../codec/video_decoder.zig");
 
 // JNI
 pub fn bufSize(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jint {
-    const zigPtr: usize = @intCast(ptr);
-    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    const display: *NativeDisplay = @ptrFromInt(@as(usize, @intCast(ptr)));
     display.mutex.lock();
     defer display.mutex.unlock();
     return display.width * display.height;
 }
 
 pub fn hasChanged(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jboolean {
-    const zigPtr: usize = @intCast(ptr);
-    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    const display: *NativeDisplay = @ptrFromInt(@as(usize, @intCast(ptr)));
     display.mutex.lock();
     defer display.mutex.unlock();
     return jni.boolToJboolean(display.changed);
 }
 
 pub fn update(env: *jni.cEnv, obj: jni.jobject, ptr: jni.jlong) callconv(.C) void {
-    const zigPtr: usize = @intCast(ptr);
-    const display: *NativeDisplay = @ptrFromInt(zigPtr);
+    const display: *NativeDisplay = @ptrFromInt(@as(usize, @intCast(ptr)));
     display.mutex.lock();
     defer display.mutex.unlock();
     if(!display.changed)
