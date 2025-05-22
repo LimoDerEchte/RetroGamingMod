@@ -71,7 +71,7 @@ pub const GenericConsole = struct {
     height: i32,
     sampleRate: i32,
 
-    fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) !GenericConsole {
+    pub fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) !GenericConsole {
         var id: [32]u8 = std.mem.zeroes([32]u8);
         try native.GenerateID(&id);
         var console: GenericConsole = .{
@@ -88,7 +88,7 @@ pub const GenericConsole = struct {
         return console;
     }
 
-    fn load(self: *GenericConsole, retroCore: []const u8, core: []const u8, rom: []const u8, save: []const u8) !void {
+    pub fn load(self: *GenericConsole, retroCore: []const u8, core: []const u8, rom: []const u8, save: []const u8) !void {
         self.mutex.lock();
         self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, std.heap.c_allocator);
         std.debug.print("[RetroGamingCore] Constructed shared memory {s}", .{self.id});
@@ -105,7 +105,7 @@ pub const GenericConsole = struct {
         self.mutex.unlock();
     }
 
-    fn dispose(self: *GenericConsole) !void {
+    pub fn dispose(self: *GenericConsole) !void {
         std.debug.print("[RetroGamingCore] Disposing bridge instance {s}", .{self.id});
         consoleRegistry.?.unregister(self);
         self.mutex.lock();
@@ -122,7 +122,7 @@ pub const GenericConsole = struct {
         _ = try self.childProcess.?.kill();
     }
 
-    fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
+    pub fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
         if(self.videoEncoder == null) {
             self.videoEncoder = VideoEncoderInt16.init(self.width, self.height);
         }
@@ -131,7 +131,7 @@ pub const GenericConsole = struct {
         return self.videoEncoder.?.encodeFrame(curr);
     }
 
-    fn input(self: *GenericConsole, port: i32, data: i16) void {
+    pub fn input(self: *GenericConsole, port: i32, data: i16) void {
         if(self.sharedMemory) |handle| {
             handle.data.controls[port] = data;
         }

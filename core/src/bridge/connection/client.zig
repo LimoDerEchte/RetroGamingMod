@@ -306,8 +306,8 @@ pub const RetroClient = struct {
                 std.debug.print("[RetroClient] Connection token accepted by server", .{});
             },
             net.PacketType.PACKET_KEEP_ALIVE => {
-                self.enet_mutex.lock();
                 const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
+                self.enet_mutex.lock();
                 _ = enet.enet_peer_send(self.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
                 self.enet_mutex.unlock();
                 self.mutex.lock();
