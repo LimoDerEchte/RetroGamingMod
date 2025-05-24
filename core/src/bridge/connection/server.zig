@@ -353,11 +353,48 @@ pub const RetroServer = struct {
                     std.debug.print("[RetroServer] Received auth packet after auth from {any}", .{peer});
                     return;
                 }
+                for(self.tokens.items, 0..) |token, i| {
+                    if(!std.mem.eql([32]u8, token, packet.*.data[1..33]))
+                        continue;
+                    client.?.authenticated = true;
+                    const id: u8 = @intFromEnum(net.PacketType.PACKET_AUTH_ACK);
+                    self.enet_mutex.lock();
+                    _ = enet.enet_peer_send(peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
+                    self.enet_mutex.unlock();
+                    self.bytesOut += 1;
+                    self.tokens.swapRemove(i);
+                    break;
+                }
+                if (client.?.authenticated) {
+                    std.debug.print("[RetroServer] Successfully authorized connection {%d}", .{peer.*.incomingPeerID});
+                } else {
+                    self.kick(peer, "Invalid token");
+                    std.debug.print("[RetroServer] Kicking connection with invalid token ({%d})", .{peer.*.incomingPeerID});
+                }
+            },
+            net.PacketType.PACKET_UPDATE_CONTROLS => {
+                const parsed = Int8ArrayPacket.unpack(packet) catch {
+                    std.debug.print("[RetroServer] Failed decoding control update packet!", .{});
+                    return;
+                };
+                const port: i32 = @intCast(parsed.data.items[0]);
+                const data: i16 = std.mem.readInt(i16, parsed.data.items[1..2], std.builtin.Endian.little);
+
+                consoleRegistry.?.mutex.lock();
+                defer consoleRegistry.?.mutex.unlock();
+                const console = consoleRegistry.?.findConsoleUnsafe(parsed.ref);
+                if(console == null) {
+                    std.debug.print("[RetroServer] Received control update packet for non existent console!", .{});
+                }
+                console.input(port, data);
             },
             net.PacketType.PACKET_KEEP_ALIVE => {
                 // Empty block, currently no logic
             },
-            net.PacketType.PACKET_AUTH_ACK, net.PacketType.PACKET_KICK, net.PacketType.PACKET_UPDATE_DISPLAY, net.PacketType.PACKET_UPDATE_AUDIO => {
+            net.PacketType.PACKET_AUTH_ACK,
+            net.PacketType.PACKET_KICK,
+            net.PacketType.PACKET_UPDATE_DISPLAY,
+            net.PacketType.PACKET_UPDATE_AUDIO => {
                 std.debug.print("[RetroServer] Received S2C packet on server", .{});
             },
             else => {

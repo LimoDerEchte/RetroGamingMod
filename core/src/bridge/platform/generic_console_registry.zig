@@ -39,6 +39,6 @@ pub const GenericConsoleRegistry = struct {
                 return console;
             }
         }
-        return undefined;
+        return null;
     }
 };
