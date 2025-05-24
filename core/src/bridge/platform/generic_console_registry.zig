@@ -33,9 +33,9 @@ pub const GenericConsoleRegistry = struct {
         self.mutex.unlock();
     }
 
-    pub fn findConsoleUnsafe(self: *GenericConsoleRegistry, uuid: jUUID) *GenericConsole {
+    pub fn findConsoleUnsafe(self: *GenericConsoleRegistry, uuid: *jUUID) ?*GenericConsole {
         for(self.consoles.items) |console| {
-            if(console.uuid == uuid) {
+            if(std.mem.eql(jUUID, &console.uuid, uuid)) {
                 return console;
             }
         }

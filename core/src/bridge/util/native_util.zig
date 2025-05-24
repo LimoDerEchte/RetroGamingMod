@@ -45,6 +45,13 @@ pub const jUUID = struct {
             .mostSignificantBits = std.mem.readInt(i64, bytes[8..16], Endian.little)
         };
     }
+
+    pub fn zero() jUUID {
+        return .{
+            .mostSignificantBits = 0,
+            .leastSignificantBits = 0
+        };
+    }
 };
 
 pub fn GenerateID(id: *[32]u8) !void {

@@ -170,13 +170,13 @@ pub const RetroServer = struct {
                     try self.onConnect(event.peer);
                 },
                 enet.ENET_EVENT_TYPE_DISCONNECT => {
-                    try self.onDisconnect(event.peer);
+                    self.onDisconnect(event.peer);
                 },
                 enet.ENET_EVENT_TYPE_RECEIVE => {
                     self.mutex.lock();
                     self.bytesIn += event.packet.*.dataLength;
                     self.mutex.unlock();
-                    try self.onMessage(event.peer, event.packet);
+                    self.onMessage(event.peer, event.packet);
                 },
                 else => {
                     std.debug.print("[RetroServer] Event received an invalid event type", .{});
@@ -241,7 +241,7 @@ pub const RetroServer = struct {
                     continue;
                 }
                 self.enet_mutex.lock();
-                _ = enet.enet_peer_send(self.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
+                _ = enet.enet_peer_send(client.peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
                 self.enet_mutex.unlock();
                 self.bytesOut += 1;
             }
@@ -310,13 +310,13 @@ pub const RetroServer = struct {
         self.mutex.unlock();
     }
 
-    fn onConnect(self: *RetroServer, peer: [*c]enet.ENetPeer) void {
+    fn onConnect(self: *RetroServer, peer: [*c]enet.ENetPeer) !void {
         self.mutex.lock();
         defer self.mutex.unlock();
         const client: RetroServerClient = .{
             .peer = peer
         };
-        self.clients.append(client);
+        try self.clients.append(client);
     }
 
     fn onDisconnect(self: *RetroServer, peer: [*c]enet.ENetPeer) void {
@@ -325,7 +325,7 @@ pub const RetroServer = struct {
         for(self.clients.items, 0..) |client, i| {
             if(client.peer != peer)
                 continue;
-            self.clients.swapRemove(i);
+            _ = self.clients.swapRemove(i);
             break;
         }
     }
@@ -341,7 +341,7 @@ pub const RetroServer = struct {
         }
         self.mutex.lock();
         defer self.mutex.unlock();
-        const client = self.findClientByPeerUnsafe(peer);
+        var client = self.findClientByPeerUnsafe(peer);
         const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
         if(packetType != net.PacketType.PACKET_AUTH and !client.?.authenticated) {
             std.debug.print("[RetroServer] Received non-auth packet before auth from {any}", .{peer});
@@ -354,7 +354,7 @@ pub const RetroServer = struct {
                     return;
                 }
                 for(self.tokens.items, 0..) |token, i| {
-                    if(!std.mem.eql([32]u8, token, packet.*.data[1..33]))
+                    if(!std.mem.eql(u8, token[0..32], packet.*.data[1..33]))
                         continue;
                     client.?.authenticated = true;
                     const id: u8 = @intFromEnum(net.PacketType.PACKET_AUTH_ACK);
@@ -362,14 +362,14 @@ pub const RetroServer = struct {
                     _ = enet.enet_peer_send(peer, 0, enet.enet_packet_create(&id, 1, enet.ENET_PACKET_FLAG_RELIABLE));
                     self.enet_mutex.unlock();
                     self.bytesOut += 1;
-                    self.tokens.swapRemove(i);
+                    _ = self.tokens.swapRemove(i);
                     break;
                 }
                 if (client.?.authenticated) {
-                    std.debug.print("[RetroServer] Successfully authorized connection {%d}", .{peer.*.incomingPeerID});
+                    std.debug.print("[RetroServer] Successfully authorized connection {d}", .{peer.*.incomingPeerID});
                 } else {
                     self.kick(peer, "Invalid token");
-                    std.debug.print("[RetroServer] Kicking connection with invalid token ({%d})", .{peer.*.incomingPeerID});
+                    std.debug.print("[RetroServer] Kicking connection with invalid token ({d})", .{peer.*.incomingPeerID});
                 }
             },
             net.PacketType.PACKET_UPDATE_CONTROLS => {
@@ -378,7 +378,7 @@ pub const RetroServer = struct {
                     return;
                 };
                 const port: i32 = @intCast(parsed.data.items[0]);
-                const data: i16 = std.mem.readInt(i16, parsed.data.items[1..2], std.builtin.Endian.little);
+                const data: i16 = std.mem.readInt(i16, parsed.data.items[1..3], std.builtin.Endian.little);
 
                 consoleRegistry.?.mutex.lock();
                 defer consoleRegistry.?.mutex.unlock();
@@ -386,7 +386,7 @@ pub const RetroServer = struct {
                 if(console == null) {
                     std.debug.print("[RetroServer] Received control update packet for non existent console!", .{});
                 }
-                console.input(port, data);
+                console.?.input(port, data);
             },
             net.PacketType.PACKET_KEEP_ALIVE => {
                 // Empty block, currently no logic
@@ -396,11 +396,26 @@ pub const RetroServer = struct {
             net.PacketType.PACKET_UPDATE_DISPLAY,
             net.PacketType.PACKET_UPDATE_AUDIO => {
                 std.debug.print("[RetroServer] Received S2C packet on server", .{});
-            },
-            else => {
-                std.debug.print("[RetroServer] Unknown S2C packet type {d}", .{packet.*.data.?[0]});
             }
         }
+    }
+
+    fn kick(self: *RetroServer, peer: [*c]enet.ENetPeer, message: []const u8) void {
+        var packet: Int8ArrayPacket = .{
+            .type = net.PacketType.PACKET_KICK,
+            .ref = @constCast(&jUUID.zero()),
+            .data = std.ArrayList(u8).fromOwnedSlice(std.heap.c_allocator, @constCast(message))
+        };
+        const pack = packet.pack() catch {
+            return;
+        };
+        self.enet_mutex.lock();
+        defer self.enet_mutex.unlock();
+        _ = enet.enet_peer_send(peer, 0, pack);
+        _ = enet.enet_peer_disconnect(peer, 0);
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        self.bytesOut += pack.*.dataLength;
     }
 
     fn findClientByPeerUnsafe(self: *RetroServer, peer: [*c]enet.ENetPeer) ?RetroServerClient {

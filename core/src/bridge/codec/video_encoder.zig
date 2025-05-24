@@ -13,7 +13,7 @@ pub const VideoEncoderInt16 = struct {
         return .{
             .width = width,
             .height = height,
-            .previousFrame = try std.ArrayList(i16).init(std.heap.c_allocator),
+            .previousFrame = std.ArrayList(i16).init(std.heap.c_allocator),
         };
     }
 

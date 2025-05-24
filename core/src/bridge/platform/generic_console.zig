@@ -120,10 +120,13 @@ pub const GenericConsole = struct {
 
     pub fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
         if(self.videoEncoder == null) {
-            self.videoEncoder = VideoEncoderInt16.init(self.width, self.height);
+            self.videoEncoder = VideoEncoderInt16.init(self.width, self.height) catch {
+                std.debug.print("[RetroGamingCore] Failed to initialize video encoder", .{});
+                return;
+            };
         }
-        const curr = std.ArrayList(i16).init(std.heap.c_allocator);
-        curr.appendSlice(self.sharedMemory.?.data.display[0..self.width * self.height]);
+        var curr = std.ArrayList(i16).init(std.heap.c_allocator);
+        curr.appendSlice(self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)]);
         return self.videoEncoder.?.encodeFrame(curr);
     }
 
