@@ -291,7 +291,7 @@ pub const RetroServer = struct {
                         continue;
                     }
                     self.enet_mutex.lock();
-                    _ = enet.enet_peer_send(self.peer, 0, pack);
+                    _ = enet.enet_peer_send(client.peer, 0, pack);
                     self.enet_mutex.unlock();
                     self.bytesOut += pack.*.dataLength;
                 }
@@ -377,7 +377,7 @@ pub const RetroServer = struct {
                     std.debug.print("[RetroServer] Failed decoding control update packet!", .{});
                     return;
                 };
-                const port: i32 = @intCast(parsed.data.items[0]);
+                const port: usize = @intCast(parsed.data.items[0]);
                 const data: i16 = std.mem.readInt(i16, parsed.data.items[1..3], std.builtin.Endian.little);
 
                 consoleRegistry.?.mutex.lock();

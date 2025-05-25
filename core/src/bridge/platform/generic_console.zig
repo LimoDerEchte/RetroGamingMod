@@ -126,11 +126,12 @@ pub const GenericConsole = struct {
             };
         }
         var curr = std.ArrayList(i16).init(std.heap.c_allocator);
-        curr.appendSlice(self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)]);
+        const slice = self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)];
+        try curr.appendSlice(@as([]const i16, @ptrCast(slice)));
         return self.videoEncoder.?.encodeFrame(curr);
     }
 
-    pub fn input(self: *GenericConsole, port: i32, data: i16) void {
+    pub fn input(self: *GenericConsole, port: usize, data: i16) void {
         if(self.sharedMemory) |handle| {
             handle.data.controls[port] = data;
         }

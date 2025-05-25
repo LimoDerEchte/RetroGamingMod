@@ -52,6 +52,10 @@ pub const jUUID = struct {
             .leastSignificantBits = 0
         };
     }
+
+    pub fn eq(self: *jUUID, other: *jUUID) bool {
+        return self.leastSignificantBits == other.leastSignificantBits and self.mostSignificantBits == other.mostSignificantBits;
+    }
 };
 
 pub fn GenerateID(id: *[32]u8) !void {

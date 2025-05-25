@@ -35,7 +35,7 @@ pub const GenericConsoleRegistry = struct {
 
     pub fn findConsoleUnsafe(self: *GenericConsoleRegistry, uuid: *jUUID) ?*GenericConsole {
         for(self.consoles.items) |console| {
-            if(std.mem.eql(jUUID, &console.uuid, uuid)) {
+            if(console.uuid.eq(uuid)) {
                 return console;
             }
         }
