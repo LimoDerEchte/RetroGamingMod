@@ -27,17 +27,18 @@ pub fn stopServer(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void
 pub fn requestToken(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jstring {
     const server: *RetroServer = @ptrFromInt(@as(usize, @intCast(ptr)));
 
-    var allocator = std.heap.c_allocator;
-    const token_str = std.heap.c_allocator.alloc(u8, 33) catch {
-        std.debug.panic("[RetroServer] Failed to alloc secure token; Panic", .{});
+    const token_str = server.allocator.allocator().alloc(u8, 33) catch {
+        std.debug.panic("[RetroServer] Failed to allocate secure token; Panic", .{});
     };
-    std.mem.copyForwards(u8, token_str[0..32], &server.genToken());
+    defer server.allocator.allocator().free(token_str);
+
+    var token = server.genToken() catch {
+        std.debug.panic("[RetroServer] Failed to allocate raw token; Panic", .{});
+    };
+    std.mem.copyForwards(u8, token_str[0..32], &token);
     token_str[32] = 0;
 
-    const result = env.*.*.NewStringUTF.?(env, @ptrCast(token_str));
-
-    allocator.free(token_str);
-    return result;
+    return env.*.*.NewStringUTF.?(env, @ptrCast(token_str));
 }
 
 // Source
@@ -54,8 +55,9 @@ pub const RetroServer = struct {
     running: bool = false,
     runningLoops: i32 = 0,
 
-    clients: std.ArrayList(RetroServerClient) = std.ArrayList(RetroServerClient).init(std.heap.c_allocator),
-    tokens: std.ArrayList([32]u8) = std.ArrayList([32]u8).init(std.heap.c_allocator),
+    allocator: std.heap.ArenaAllocator = std.heap.ArenaAllocator.init(std.heap.page_allocator),
+    clients: std.ArrayList(RetroServerClient) = std.ArrayList(RetroServerClient).init(std.heap.page_allocator),
+    tokens: std.ArrayList([32]u8) = std.ArrayList([32]u8).init(std.heap.page_allocator),
 
     bytesIn: u64 = 0,
     bytesOut: u64 = 0,
@@ -120,11 +122,15 @@ pub const RetroServer = struct {
             self.server = null;
         }
         enet.enet_deinitialize();
+
+        self.allocator.deinit();
+        self.clients.deinit();
+        self.tokens.deinit();
         self.mutex.unlock();
     }
 
-    fn genToken(self: *RetroServer) [32]u8 {
-        var data: [32]u8 = std.mem.zeroes([32]u8);
+    fn genToken(self: *RetroServer) ![32]u8 {
+        var data: [32]u8 = (try self.allocator.allocator().alloc([32]u8, 1))[0];
         @import("../util/native_util.zig").GenerateID(&data) catch {
             std.debug.panic("[RetroServer] Failed to generate secure token; Panic", .{});
         };
@@ -270,7 +276,11 @@ pub const RetroServer = struct {
                 if (frame.items.len == 0) {
                     continue;
                 }
-                var packet: Int8ArrayPacket = .{ .type = net.PacketType.PACKET_UPDATE_DISPLAY, .ref = &console.*.uuid, .data = frame };
+                var packet: Int8ArrayPacket = .{
+                    .type = net.PacketType.PACKET_UPDATE_DISPLAY,
+                    .ref = &console.*.uuid,
+                    .data = frame,
+                };
                 const pack = packet.pack() catch {
                     continue;
                 };
@@ -385,7 +395,11 @@ pub const RetroServer = struct {
     }
 
     fn kick(self: *RetroServer, peer: [*c]enet.ENetPeer, message: []const u8) void {
-        var packet: Int8ArrayPacket = .{ .type = net.PacketType.PACKET_KICK, .ref = @constCast(&jUUID.zero()), .data = std.ArrayList(u8).fromOwnedSlice(std.heap.c_allocator, @constCast(message)) };
+        var packet: Int8ArrayPacket = .{
+            .type = net.PacketType.PACKET_KICK,
+            .ref = @constCast(&jUUID.zero()),
+            .data = std.ArrayList(u8).fromOwnedSlice(self.allocator.allocator(), @constCast(message)),
+        };
         const pack = packet.pack() catch {
             return;
         };
@@ -393,6 +407,7 @@ pub const RetroServer = struct {
         defer self.enet_mutex.unlock();
         _ = enet.enet_peer_send(peer, 0, pack);
         _ = enet.enet_peer_disconnect(peer, 0);
+        packet.deinit();
         self.mutex.lock();
         defer self.mutex.unlock();
         self.bytesOut += pack.*.dataLength;
@@ -403,6 +418,6 @@ pub const RetroServer = struct {
             if (client.peer == peer)
                 return client;
         }
-        return undefined;
+        return null;
     }
 };

@@ -22,7 +22,7 @@ pub const PacketType = enum(u8) {
 pub const Int8ArrayPacket = struct {
     type: PacketType,
     ref: *jUUID,
-    data: std.ArrayList(u8) = std.ArrayList(u8).init(std.heap.c_allocator),
+    data: std.ArrayList(u8) = std.ArrayList(u8).init(std.heap.page_allocator),
 
     pub fn unpack(packet: [*c]enet.struct__ENetPacket) !Int8ArrayPacket {
         const packetType: PacketType = @enumFromInt(packet.*.data[0]);
@@ -46,5 +46,9 @@ pub const Int8ArrayPacket = struct {
         try packetData.appendSlice(&len_bytes);
         try packetData.appendSlice(self.data.items);
         return enet.enet_packet_create(packetData.items.ptr, packetSize, 0);
+    }
+
+    pub fn deinit(self: *Int8ArrayPacket) void {
+        self.data.deinit();
     }
 };
