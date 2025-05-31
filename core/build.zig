@@ -8,11 +8,13 @@ pub fn build(b: *std.Build) void {
     const jni = b.dependency("jni", .{}).module("JNI");
     const shared_memory = b.dependency("shared_memory", .{}).module("shared_memory");
     const known_folders = b.dependency("known_folders", .{}).module("known-folders");
+    const zigwin32 = b.dependency("zigwin32", .{}).module("win32");
 
     const options = b.addOptions();
     options.addOption(bool, "use_shm_funcs", true);
     shared_memory.addOptions("config", options);
     shared_memory.addImport("known-folders", known_folders);
+    shared_memory.addImport("zigwin32", zigwin32);
 
     // Declare Modules
     const shared_mod = b.createModule(.{

@@ -38,3 +38,7 @@ pub fn main() !void {
 
     std.debug.print("This should NEVER be called by a user (unknown platform {s})\n", .{platform});
 }
+
+test {
+    std.testing.refAllDecls(@This());
+}
