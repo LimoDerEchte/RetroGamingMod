@@ -37,6 +37,7 @@ pub fn build(b: *std.Build) void {
     bridge_mod.addImport("jni", jni);
     bridge_mod.addImport("shared_memory", shared_memory);
     bridge_mod.addImport("shared", shared_mod);
+    core_mod.addImport("shared_memory", shared_memory);
     core_mod.addImport("shared", shared_mod);
 
     // Compile Shared Code
@@ -73,6 +74,7 @@ pub fn build(b: *std.Build) void {
         .name = "retrocore",
         .root_module = core_mod,
     });
+    exe.linkLibC();
     exe.addIncludePath(std.Build.path(b, "lib/libretro-common/include"));
     b.installArtifact(exe);
 

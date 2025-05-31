@@ -1,39 +1,40 @@
-//! By convention, main.zig is where your main function lives in the case that
-//! you are building an executable. If you are making a library, the convention
-//! is to delete this file and start with root.zig instead.
+const std = @import("std");
+const shm = @import("shared_memory");
+const shared = @import("shared");
+const GenericConsole = @import("platform/generic_console.zig");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    if (args.len < 6) {
+        std.debug.print("This should NEVER be called by a user (too few arguments)\n", .{});
+        std.debug.print("Usage: retro-core <platform> <id> <core> <rom> <save>\n", .{});
+        return;
+    }
 
-    try bw.flush(); // Don't forget to flush!
-}
+    const platform = args[1];
+    const id = args[2];
+    const core = args[3];
+    const rom = args[4];
+    const save = args[5];
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // Try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
-
-test "fuzz example" {
-    const Context = struct {
-        fn testOne(context: @This(), input: []const u8) anyerror!void {
-            _ = context;
-            // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
-            try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input));
-        }
+    const sharedData = shm.SharedMemory(shared.GenericShared).open(id, allocator) catch |err| {
+        std.debug.print("[RetroGamingCore] Failed to open shared memory: {}\n", .{err});
+        return;
     };
-    try std.testing.fuzz(Context{}, Context.testOne, .{});
-}
 
-const std = @import("std");
+    if (std.mem.eql(u8, platform, "gn")) {
+        const result = GenericConsole.load(allocator, sharedData.data, core, rom, save) catch |err| {
+            std.debug.print("[RetroGamingCore] Error in GenericConsole.load: {}\n", .{err});
+            return;
+        };
+        std.process.exit(@intCast(result));
+    }
+
+    std.debug.print("This should NEVER be called by a user (unknown platform {})\n", .{platform});
+}

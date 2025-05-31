@@ -23,7 +23,7 @@ const LibRetroError = error{
 
 const PixelFormat = enum(c_uint) {
     rgb565 = c.RETRO_PIXEL_FORMAT_RGB565,
-    xrgb1555 = c.RETRO_PIXEL_FORMAT_XRGB1555,
+    xrgb1555 = c.RETRO_PIXEL_FORMAT_0RGB1555,
     xrgb8888 = c.RETRO_PIXEL_FORMAT_XRGB8888,
 };
 
@@ -213,21 +213,21 @@ pub const LibRetroCore = struct {
         self.core_handle = handle;
 
         // Load all required functions
-        self.retro_init = self.getSymbol("retro_init");
-        self.retro_deinit = self.getSymbol("retro_deinit");
-        self.retro_run = self.getSymbol("retro_run");
-        self.retro_load_game = self.getSymbol("retro_load_game");
-        self.retro_unload_game = self.getSymbol("retro_unload_game");
-        self.retro_set_video_refresh = self.getSymbol("retro_set_video_refresh");
-        self.retro_set_environment = self.getSymbol("retro_set_environment");
-        self.retro_set_input_poll = self.getSymbol("retro_set_input_poll");
-        self.retro_set_input_state = self.getSymbol("retro_set_input_state");
-        self.retro_set_audio_sample = self.getSymbol("retro_set_audio_sample");
-        self.retro_set_audio_sample_batch = self.getSymbol("retro_set_audio_sample_batch");
-        self.retro_get_system_info = self.getSymbol("retro_get_system_info");
-        self.retro_get_system_av_info = self.getSymbol("retro_get_system_av_info");
-        self.retro_get_memory_data = self.getSymbol("retro_get_memory_data");
-        self.retro_get_memory_size = self.getSymbol("retro_get_memory_size");
+        self.retro_init = self.getSymbol(*const fn () callconv(.C) void, "retro_init");
+        self.retro_deinit = self.getSymbol(*const fn () callconv(.C) void, "retro_deinit");
+        self.retro_run = self.getSymbol(*const fn () callconv(.C) void, "retro_run");
+        self.retro_load_game = self.getSymbol(*const fn (*const c.retro_game_info) callconv(.C) bool, "retro_load_game");
+        self.retro_unload_game = self.getSymbol(*const fn () callconv(.C) void, "retro_unload_game");
+        self.retro_set_video_refresh = self.getSymbol(*const fn (*const fn (?*const anyopaque, c_uint, c_uint, usize) callconv(.C) void) callconv(.C) void, "retro_set_video_refresh");
+        self.retro_set_environment = self.getSymbol(*const fn (*const fn (c_uint, ?*anyopaque) callconv(.C) bool) callconv(.C) void, "retro_set_environment");
+        self.retro_set_input_poll = self.getSymbol(*const fn (*const fn () callconv(.C) void) callconv(.C) void, "retro_set_input_poll");
+        self.retro_set_input_state = self.getSymbol(*const fn (*const fn (c_uint, c_uint, c_uint, c_uint) callconv(.C) i16) callconv(.C) void, "retro_set_input_state");
+        self.retro_set_audio_sample = self.getSymbol(*const fn (*const fn (i16, i16) callconv(.C) void) callconv(.C) void, "retro_set_audio_sample");
+        self.retro_set_audio_sample_batch = self.getSymbol(*const fn (*const fn ([*c]const i16, usize) callconv(.C) usize) callconv(.C) void, "retro_set_audio_sample_batch");
+        self.retro_get_system_info = self.getSymbol(*const fn (*c.retro_system_info) callconv(.C) void, "retro_get_system_info");
+        self.retro_get_system_av_info = self.getSymbol(*const fn (*c.retro_system_av_info) callconv(.C) void, "retro_get_system_av_info");
+        self.retro_get_memory_data = self.getSymbol(*const fn (c_uint) callconv(.C) ?*anyopaque, "retro_get_memory_data");
+        self.retro_get_memory_size = self.getSymbol(*const fn (c_uint) callconv(.C) usize, "retro_get_memory_size");
 
         // Verify required functions are loaded
         if (self.retro_init == null or self.retro_deinit == null or self.retro_run == null or
@@ -245,8 +245,7 @@ pub const LibRetroCore = struct {
         self.retro_get_system_info.?(&g_system_info);
 
         if (g_system_info.library_name) |name| {
-            const version = g_system_info.library_version orelse "unknown";
-            print("Loaded core: {s} v{s}\n", .{ name, version });
+            print("Loaded core: {s}\n", .{name});
         }
 
         self.retro_set_video_refresh.?(videoRefreshCallback);
@@ -305,7 +304,7 @@ pub const LibRetroCore = struct {
         }
 
         self.retro_get_system_av_info.?(&g_av_info);
-        print("Game loaded. Resolution: {}x{} @ {d:.1} fps\n", .{
+        print("Game loaded. Resolution: {d}x{d} @ {d:.1} fps\n", .{
             g_av_info.geometry.base_width,
             g_av_info.geometry.base_height,
             g_av_info.timing.fps,
@@ -316,7 +315,7 @@ pub const LibRetroCore = struct {
         const fps = if (g_av_info.timing.fps > 0) g_av_info.timing.fps else 60.0;
         const frame_time_ns: u64 = @intFromFloat(1_000_000_000.0 / fps);
 
-        print("Starting main loop at {d:.1} fps (frame time: {}ns)\n", .{ fps, frame_time_ns });
+        print("Starting main loop at {d:.1} fps (frame time: {d}ns)\n", .{ fps, frame_time_ns });
 
         while (true) {
             const start = std.time.nanoTimestamp();
@@ -364,7 +363,7 @@ pub const LibRetroCore = struct {
         const success = bytes_read == save_size;
 
         if (success) {
-            print("Successfully loaded save file: {s} ({} bytes)\n", .{ save_path, save_size });
+            print("Successfully loaded save file: {s} ({d} bytes)\n", .{ save_path, save_size });
         } else {
             print("Failed to load save file or size mismatch\n", .{});
         }
@@ -401,15 +400,15 @@ pub const LibRetroCore = struct {
             return false;
         };
 
-        print("Successfully saved game to: {s} ({} bytes)\n", .{ save_path, save_size });
+        print("Successfully saved game to: {s} ({d} bytes)\n", .{ save_path, save_size });
         return true;
     }
 
     fn logEnvironmentVariables(self: *LibRetroCore, vars: [*c]const c.retro_variable) void {
         if (builtin.mode != .Debug) return;
 
-        print("Environment variables set by core:\n");
-        print("-----------------------------\n");
+        print("Environment variables set by core:\n", .{});
+        print("-----------------------------\n", .{});
 
         var i: usize = 0;
         while (true) {
@@ -447,7 +446,7 @@ pub const LibRetroCore = struct {
                     print("Default: {s}\n", .{default_value});
                 }
             }
-            print("-----------------------------\n");
+            print("-----------------------------\n", .{});
             i += 1;
         }
     }
