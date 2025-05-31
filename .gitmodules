@@ -1,9 +1,9 @@
 [submodule "src/core/vcpkg"]
 	path = src/core/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
-[submodule "src/core/lib/libretro-common"]
-	path = src/core/lib/libretro-common
-	url = https://github.com/libretro/libretro-common.git
 [submodule "core/lib/enet"]
 	path = core/lib/enet
 	url = https://github.com/lsalzman/enet.git
+[submodule "core/lib/libretro-common"]
+	path = core/lib/libretro-common
+	url = https://github.com/libretro/libretro-common.git

@@ -55,20 +55,17 @@ pub fn build(b: *std.Build) void {
     });
     lib.linkLibC();
     lib.addIncludePath(std.Build.path(b, "lib/enet/include"));
-    lib.addCSourceFiles(.{
-        .root = std.Build.path(b, "lib/enet"),
-        .files = &.{
-            "callbacks.c",
-            "compress.c",
-            "host.c",
-            "list.c",
-            "packet.c",
-            "peer.c",
-            "protocol.c",
-            "unix.c",
-            "win32.c",
-        }
-    });
+    lib.addCSourceFiles(.{ .root = std.Build.path(b, "lib/enet"), .files = &.{
+        "callbacks.c",
+        "compress.c",
+        "host.c",
+        "list.c",
+        "packet.c",
+        "peer.c",
+        "protocol.c",
+        "unix.c",
+        "win32.c",
+    } });
     b.installArtifact(lib);
 
     // Compile Core
@@ -76,6 +73,7 @@ pub fn build(b: *std.Build) void {
         .name = "retrocore",
         .root_module = core_mod,
     });
+    exe.addIncludePath(std.Build.path(b, "lib/libretro-common/include"));
     b.installArtifact(exe);
 
     // Declare Artifacts
