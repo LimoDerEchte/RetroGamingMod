@@ -6,36 +6,36 @@ pub const VideoEncoderInt16 = struct {
     width: i32,
     height: i32,
     frameCount: i32 = 0,
-    previousFrame: std.ArrayList(i16),
+    previousFrame: ?std.ArrayList(i16),
 
     pub fn init(width: i32, height: i32) !VideoEncoderInt16 {
         return .{
             .width = width,
             .height = height,
-            .previousFrame = std.ArrayList(i16).init(std.heap.c_allocator),
+            .previousFrame = null,
         };
     }
 
     fn performDeltaEncoding(self: *VideoEncoderInt16, currentFrame: std.ArrayList(i16)) !std.ArrayList(i16) {
-        var deltaEncoded = try std.ArrayList(i16).initCapacity(std.heap.c_allocator, @intCast(self.width * self.height));
-        if (self.previousFrame.items.len == 0) {
+        var deltaEncoded = try std.ArrayList(i16).initCapacity(std.heap.page_allocator, @intCast(self.width * self.height));
+        if (self.previousFrame == null) {
             deltaEncoded = currentFrame;
         } else {
             var prevVal: i16 = 0;
-            for (currentFrame.items, self.previousFrame.items, 0..) |item, prev, i| {
+            for (currentFrame.items, self.previousFrame.?.items, 0..) |item, prev, i| {
                 const frameDelta = item - prev;
                 const packetDelta = prevVal - frameDelta;
                 deltaEncoded.items[i] = packetDelta;
                 prevVal = frameDelta;
             }
+            self.previousFrame.?.deinit();
         }
-        self.previousFrame.clearAndFree();
         self.previousFrame = currentFrame;
         return deltaEncoded;
     }
 
     fn compressWithZlib(self: *VideoEncoderInt16, data: std.ArrayList(i16), isRawFrame: bool) !std.ArrayList(u8) {
-        var encodedFrame = try std.ArrayList(u8).initCapacity(std.heap.c_allocator, @intCast(self.width * self.height * 2 + 1));
+        var encodedFrame = try std.ArrayList(u8).initCapacity(std.heap.page_allocator, @intCast(self.width * self.height * 2 + 1));
         var writer = encodedFrame.writer();
         try writer.writeByte(@intFromBool(isRawFrame));
         var stream = std.io.fixedBufferStream(std.mem.bytesAsSlice(u8, data.items));
@@ -46,6 +46,7 @@ pub const VideoEncoderInt16 = struct {
     }
 
     pub fn encodeFrame(self: *VideoEncoderInt16, frame: std.ArrayList(i16)) !std.ArrayList(u8) {
+        defer frame.deinit();
         self.frameCount += 1;
         if (@mod(self.frameCount, RawFrameInterval) == 0) {
             self.frameCount = 0;
@@ -56,7 +57,7 @@ pub const VideoEncoderInt16 = struct {
     }
 
     pub fn reset(self: *VideoEncoderInt16) void {
-        self.previousFrame.clearAndFree();
+        self.previousFrame.deinit();
         self.frameCount = 0;
     }
 };
