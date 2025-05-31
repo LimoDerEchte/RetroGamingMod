@@ -1,4 +1,3 @@
-
 const std = @import("std");
 const jni = @import("jni");
 const net = @import("network_definitions.zig");
@@ -35,10 +34,7 @@ pub fn requestToken(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) 
     std.mem.copyForwards(u8, token_str[0..32], &server.genToken());
     token_str[32] = 0;
 
-    const result = env.*.*.NewStringUTF.?(
-        env,
-        @ptrCast(token_str)
-    );
+    const result = env.*.*.NewStringUTF.?(env, @ptrCast(token_str));
 
     allocator.free(token_str);
     return result;
@@ -57,7 +53,7 @@ pub const RetroServer = struct {
     mutex: std.Thread.Mutex = .{},
     running: bool = false,
     runningLoops: i32 = 0,
-    
+
     clients: std.ArrayList(RetroServerClient) = std.ArrayList(RetroServerClient).init(std.heap.c_allocator),
     tokens: std.ArrayList([32]u8) = std.ArrayList([32]u8).init(std.heap.c_allocator),
 
@@ -65,7 +61,7 @@ pub const RetroServer = struct {
     bytesOut: u64 = 0,
 
     fn init(port: u16, maxClients: i32) !RetroServer {
-        if(consoleRegistry == null) {
+        if (consoleRegistry == null) {
             consoleRegistry = @import("../platform/generic_console_registry.zig").registryInstance;
         }
 
@@ -76,7 +72,7 @@ pub const RetroServer = struct {
         defer server.enet_mutex.unlock();
 
         std.debug.print("[RetroServer] Starting ENet server on port {d}", .{port});
-        if(enet.enet_initialize() != 0) {
+        if (enet.enet_initialize() != 0) {
             std.debug.print("[RetroServer] Failed to initialize ENet", .{});
             return server;
         }
@@ -85,7 +81,7 @@ pub const RetroServer = struct {
         address.port = port;
 
         server.server = enet.enet_host_create(&address, @intCast(maxClients), 2, 0, 0);
-        if(server.server == null) {
+        if (server.server == null) {
             std.debug.print("[RetroServer] Failed to create ENet client", .{});
             enet.enet_deinitialize();
             return server;
@@ -95,7 +91,7 @@ pub const RetroServer = struct {
         const mainLoopThread = try std.Thread.spawn(.{}, mainReceiverLoop, .{&server});
         const bandwidthThread = try std.Thread.spawn(.{}, bandwidthMonitorLoop, .{&server});
         const keepAliveThread = try std.Thread.spawn(.{}, mainKeepAliveLoop, .{&server});
-        const videoSenderThread = try std.Thread.spawn(.{}, videoSenderLoop, .{&server, 30});
+        const videoSenderThread = try std.Thread.spawn(.{}, videoSenderLoop, .{ &server, 30 });
         mainLoopThread.detach();
         bandwidthThread.detach();
         keepAliveThread.detach();
@@ -111,7 +107,7 @@ pub const RetroServer = struct {
 
         while (true) {
             self.mutex.lock();
-            if(self.runningLoops == 0)
+            if (self.runningLoops == 0)
                 break;
             self.mutex.unlock();
             try std.Thread.yield();
@@ -119,7 +115,7 @@ pub const RetroServer = struct {
 
         self.enet_mutex.lock();
         defer self.enet_mutex.unlock();
-        if(self.server != null) {
+        if (self.server != null) {
             enet.enet_host_destroy(self.server);
             self.server = null;
         }
@@ -141,7 +137,7 @@ pub const RetroServer = struct {
     }
 
     fn mainReceiverLoop(self: *RetroServer) !void {
-        if(self.server == null) {
+        if (self.server == null) {
             return;
         }
         self.mutex.lock();
@@ -154,7 +150,7 @@ pub const RetroServer = struct {
             const status = enet.enet_host_service(self.server, &event, 0);
             self.enet_mutex.unlock();
 
-            if(status < 0) {
+            if (status < 0) {
                 std.debug.print("[RetroServer] Failed to receive ENet event ({d})", .{status});
                 continue;
             } else if (status == 0) {
@@ -180,11 +176,11 @@ pub const RetroServer = struct {
                 },
                 else => {
                     std.debug.print("[RetroServer] Event received an invalid event type", .{});
-                }
+                },
             }
 
             self.mutex.lock();
-            if(!self.running)
+            if (!self.running)
                 break;
             self.mutex.unlock();
         }
@@ -206,14 +202,11 @@ pub const RetroServer = struct {
             std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             self.mutex.lock();
-            std.debug.print("[RetroServer] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{
-                (self.bytesIn - lastBytesIn) * 8 / 1000 / 5,
-                (self.bytesOut - lastBytesOut) * 8 / 1000 / 5
-            });
+            std.debug.print("[RetroServer] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{ (self.bytesIn - lastBytesIn) * 8 / 1000 / 5, (self.bytesOut - lastBytesOut) * 8 / 1000 / 5 });
             lastBytesIn = self.bytesIn;
             lastBytesOut = self.bytesOut;
 
-            if(!self.running)
+            if (!self.running)
                 break;
             self.mutex.unlock();
 
@@ -236,7 +229,7 @@ pub const RetroServer = struct {
             self.mutex.lock();
 
             const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
-            for(self.clients.items) |client| {
+            for (self.clients.items) |client| {
                 if (client.peer == null or client.peer.*.state != enet.ENET_PEER_STATE_CONNECTED) {
                     continue;
                 }
@@ -246,7 +239,7 @@ pub const RetroServer = struct {
                 self.bytesOut += 1;
             }
 
-            if(!self.running)
+            if (!self.running)
                 break;
             self.mutex.unlock();
 
@@ -268,30 +261,26 @@ pub const RetroServer = struct {
             std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             consoleRegistry.?.mutex.lock();
-            for(consoleRegistry.?.consoles.items) |console| {
-                if(!console.sharedMemory.?.data.displayChanged)
+            for (consoleRegistry.?.consoles.items) |console| {
+                if (!console.sharedMemory.?.data.displayChanged)
                     continue;
                 const frame = console.*.createFrame() catch {
                     continue;
                 };
-                if(frame.items.len == 0) {
+                if (frame.items.len == 0) {
                     continue;
                 }
-                var packet: Int8ArrayPacket = .{
-                    .type = net.PacketType.PACKET_UPDATE_DISPLAY,
-                    .ref = &console.*.uuid,
-                    .data = frame
-                };
+                var packet: Int8ArrayPacket = .{ .type = net.PacketType.PACKET_UPDATE_DISPLAY, .ref = &console.*.uuid, .data = frame };
                 const pack = packet.pack() catch {
                     continue;
                 };
                 self.mutex.lock();
-                for(self.clients.items) |client| {
+                for (self.clients.items) |client| {
                     if (client.peer == null or client.peer.*.state != enet.ENET_PEER_STATE_CONNECTED) {
                         continue;
                     }
                     self.enet_mutex.lock();
-                    _ = enet.enet_peer_send(self.peer, 0, pack);
+                    _ = enet.enet_peer_send(client.peer, 0, pack);
                     self.enet_mutex.unlock();
                     self.bytesOut += pack.*.dataLength;
                 }
@@ -300,7 +289,7 @@ pub const RetroServer = struct {
             consoleRegistry.?.mutex.unlock();
 
             self.mutex.lock();
-            if(!self.running)
+            if (!self.running)
                 break;
             self.mutex.unlock();
 
@@ -313,17 +302,15 @@ pub const RetroServer = struct {
     fn onConnect(self: *RetroServer, peer: [*c]enet.ENetPeer) !void {
         self.mutex.lock();
         defer self.mutex.unlock();
-        const client: RetroServerClient = .{
-            .peer = peer
-        };
+        const client: RetroServerClient = .{ .peer = peer };
         try self.clients.append(client);
     }
 
     fn onDisconnect(self: *RetroServer, peer: [*c]enet.ENetPeer) void {
         self.mutex.lock();
         defer self.mutex.unlock();
-        for(self.clients.items, 0..) |client, i| {
-            if(client.peer != peer)
+        for (self.clients.items, 0..) |client, i| {
+            if (client.peer != peer)
                 continue;
             _ = self.clients.swapRemove(i);
             break;
@@ -331,11 +318,11 @@ pub const RetroServer = struct {
     }
 
     fn onMessage(self: *RetroServer, peer: [*c]enet.ENetPeer, packet: [*c]enet.ENetPacket) void {
-        if(packet == null) {
+        if (packet == null) {
             std.debug.print("[RetroServer] Received packet is nullptr", .{});
             return;
         }
-        if(packet.*.dataLength == 0) {
+        if (packet.*.dataLength == 0) {
             std.debug.print("[RetroServer] Received empty packet from client", .{});
             return;
         }
@@ -343,18 +330,18 @@ pub const RetroServer = struct {
         defer self.mutex.unlock();
         var client = self.findClientByPeerUnsafe(peer);
         const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
-        if(packetType != net.PacketType.PACKET_AUTH and !client.?.authenticated) {
+        if (packetType != net.PacketType.PACKET_AUTH and !client.?.authenticated) {
             std.debug.print("[RetroServer] Received non-auth packet before auth from {any}", .{peer});
             return;
         }
         switch (packetType) {
             net.PacketType.PACKET_AUTH => {
-                if(client.?.authenticated) {
+                if (client.?.authenticated) {
                     std.debug.print("[RetroServer] Received auth packet after auth from {any}", .{peer});
                     return;
                 }
-                for(self.tokens.items, 0..) |token, i| {
-                    if(!std.mem.eql(u8, token[0..32], packet.*.data[1..33]))
+                for (self.tokens.items, 0..) |token, i| {
+                    if (!std.mem.eql(u8, token[0..32], packet.*.data[1..33]))
                         continue;
                     client.?.authenticated = true;
                     const id: u8 = @intFromEnum(net.PacketType.PACKET_AUTH_ACK);
@@ -377,13 +364,13 @@ pub const RetroServer = struct {
                     std.debug.print("[RetroServer] Failed decoding control update packet!", .{});
                     return;
                 };
-                const port: i32 = @intCast(parsed.data.items[0]);
+                const port: usize = @intCast(parsed.data.items[0]);
                 const data: i16 = std.mem.readInt(i16, parsed.data.items[1..3], std.builtin.Endian.little);
 
                 consoleRegistry.?.mutex.lock();
                 defer consoleRegistry.?.mutex.unlock();
                 const console = consoleRegistry.?.findConsoleUnsafe(parsed.ref);
-                if(console == null) {
+                if (console == null) {
                     std.debug.print("[RetroServer] Received control update packet for non existent console!", .{});
                 }
                 console.?.input(port, data);
@@ -391,21 +378,14 @@ pub const RetroServer = struct {
             net.PacketType.PACKET_KEEP_ALIVE => {
                 // Empty block, currently no logic
             },
-            net.PacketType.PACKET_AUTH_ACK,
-            net.PacketType.PACKET_KICK,
-            net.PacketType.PACKET_UPDATE_DISPLAY,
-            net.PacketType.PACKET_UPDATE_AUDIO => {
+            net.PacketType.PACKET_AUTH_ACK, net.PacketType.PACKET_KICK, net.PacketType.PACKET_UPDATE_DISPLAY, net.PacketType.PACKET_UPDATE_AUDIO => {
                 std.debug.print("[RetroServer] Received S2C packet on server", .{});
-            }
+            },
         }
     }
 
     fn kick(self: *RetroServer, peer: [*c]enet.ENetPeer, message: []const u8) void {
-        var packet: Int8ArrayPacket = .{
-            .type = net.PacketType.PACKET_KICK,
-            .ref = @constCast(&jUUID.zero()),
-            .data = std.ArrayList(u8).fromOwnedSlice(std.heap.c_allocator, @constCast(message))
-        };
+        var packet: Int8ArrayPacket = .{ .type = net.PacketType.PACKET_KICK, .ref = @constCast(&jUUID.zero()), .data = std.ArrayList(u8).fromOwnedSlice(std.heap.c_allocator, @constCast(message)) };
         const pack = packet.pack() catch {
             return;
         };
@@ -419,8 +399,8 @@ pub const RetroServer = struct {
     }
 
     fn findClientByPeerUnsafe(self: *RetroServer, peer: [*c]enet.ENetPeer) ?RetroServerClient {
-        for(self.clients.items) |client| {
-            if(client.peer == peer)
+        for (self.clients.items) |client| {
+            if (client.peer == peer)
                 return client;
         }
         return undefined;

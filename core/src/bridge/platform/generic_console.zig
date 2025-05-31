@@ -1,4 +1,3 @@
-
 const std = @import("std");
 const jni = @import("jni");
 const VideoEncoderInt16 = @import("../codec/video_encoder.zig").VideoEncoderInt16;
@@ -12,7 +11,7 @@ var consoleRegistry: ?@import("generic_console_registry.zig").GenericConsoleRegi
 pub fn init(_: *jni.cEnv, _: jni.jclass, jUuid: jni.jlong, width: jni.jint, height: jni.jint, sampleRate: jni.jint) callconv(.C) jni.jlong {
     const uuid: *native.jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
     const console = GenericConsole.init(width, height, sampleRate, uuid.*) catch |err| {
-        std.debug.panic("Failed to init console! Panicking... {any}", .{ err });
+        std.debug.panic("Failed to init console! Panicking... {any}", .{err});
     };
     return @intCast(@intFromPtr(&console));
 }
@@ -38,14 +37,14 @@ pub fn start(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, retroCore: jni.jstri
     const saveSlice = std.mem.span(saveChars);
 
     console.*.load(retroCoreSlice, coreSlice, romSlice, saveSlice) catch |err| {
-        std.debug.panic("Failed to start console! Panicking... {any}", .{ err });
+        std.debug.panic("Failed to start console! Panicking... {any}", .{err});
     };
 }
 
 pub fn stop(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
     const console: *GenericConsole = @ptrFromInt(@as(usize, @intCast(ptr)));
     console.dispose() catch |err| {
-        std.debug.panic("Failed to stop console! Panicking... {any}", .{ err });
+        std.debug.panic("Failed to stop console! Panicking... {any}", .{err});
     };
 }
 
@@ -70,14 +69,8 @@ pub const GenericConsole = struct {
     pub fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) !GenericConsole {
         var id: [32]u8 = std.mem.zeroes([32]u8);
         try native.GenerateID(&id);
-        var console: GenericConsole = .{
-            .uuid = uuid,
-            .id = id,
-            .width = width,
-            .height = height,
-            .sampleRate = sampleRate
-        };
-        if(consoleRegistry == null) {
+        var console: GenericConsole = .{ .uuid = uuid, .id = id, .width = width, .height = height, .sampleRate = sampleRate };
+        if (consoleRegistry == null) {
             consoleRegistry = @import("generic_console_registry.zig").registryInstance;
         }
         try consoleRegistry.?.register(&console);
@@ -88,14 +81,7 @@ pub const GenericConsole = struct {
         self.mutex.lock();
         self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, std.heap.c_allocator);
         std.debug.print("[RetroGamingCore] Constructed shared memory {s}", .{self.id});
-        self.childProcess = std.process.Child.init(&[_][]const u8 {
-            retroCore,
-            "gn",
-            &self.id,
-            core,
-            rom,
-            save
-        }, std.heap.c_allocator);
+        self.childProcess = std.process.Child.init(&[_][]const u8{ retroCore, "gn", &self.id, core, rom, save }, std.heap.c_allocator);
         try self.childProcess.?.spawn();
         std.debug.print("[RetroGamingCore] Spawned core process for {s}", .{self.id});
         self.mutex.unlock();
@@ -107,7 +93,7 @@ pub const GenericConsole = struct {
         self.mutex.lock();
         var handleBackup = self.sharedMemory;
         self.sharedMemory = null;
-        if(handleBackup != null) {
+        if (handleBackup != null) {
             handleBackup.?.data.shutdownRequested = true;
             while (!handleBackup.?.data.shutdownCompleted) {
                 try std.Thread.yield();
@@ -119,19 +105,19 @@ pub const GenericConsole = struct {
     }
 
     pub fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
-        if(self.videoEncoder == null) {
+        if (self.videoEncoder == null) {
             self.videoEncoder = VideoEncoderInt16.init(self.width, self.height) catch {
                 std.debug.print("[RetroGamingCore] Failed to initialize video encoder", .{});
                 return;
             };
         }
         var curr = std.ArrayList(i16).init(std.heap.c_allocator);
-        curr.appendSlice(self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)]);
+        try curr.appendSlice(@ptrCast(self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)]));
         return self.videoEncoder.?.encodeFrame(curr);
     }
 
-    pub fn input(self: *GenericConsole, port: i32, data: i16) void {
-        if(self.sharedMemory) |handle| {
+    pub fn input(self: *GenericConsole, port: usize, data: i16) void {
+        if (self.sharedMemory) |handle| {
             handle.data.controls[port] = data;
         }
     }

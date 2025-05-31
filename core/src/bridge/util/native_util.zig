@@ -1,4 +1,3 @@
-
 const std = @import("std");
 const jni = @import("jni");
 const Endian = std.builtin.Endian;
@@ -40,17 +39,15 @@ pub const jUUID = struct {
     }
 
     pub fn fromBytes(bytes: *[16]u8) jUUID {
-        return .{
-            .leastSignificantBits = std.mem.readInt(i64, bytes[0..8], Endian.little),
-            .mostSignificantBits = std.mem.readInt(i64, bytes[8..16], Endian.little)
-        };
+        return .{ .leastSignificantBits = std.mem.readInt(i64, bytes[0..8], Endian.little), .mostSignificantBits = std.mem.readInt(i64, bytes[8..16], Endian.little) };
+    }
+
+    pub fn eq(self: *jUUID, other: *jUUID) bool {
+        return self.leastSignificantBits == other.leastSignificantBits and self.mostSignificantBits == other.mostSignificantBits;
     }
 
     pub fn zero() jUUID {
-        return .{
-            .mostSignificantBits = 0,
-            .leastSignificantBits = 0
-        };
+        return .{ .mostSignificantBits = 0, .leastSignificantBits = 0 };
     }
 };
 
@@ -61,7 +58,7 @@ pub fn GenerateID(id: *[32]u8) !void {
         break :blk seed;
     });
     const rand = prng.random();
-    for(0..id.len) |i| {
+    for (0..id.len) |i| {
         id[i] = idCharset[rand.intRangeLessThan(u8, 0, idCharset.len)];
     }
 }
