@@ -55,6 +55,7 @@ pub fn getWidth(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.ji
 
 // Source
 pub const GenericConsole = struct {
+    allocator: std.heap.ArenaAllocator = std.heap.ArenaAllocator.init(std.heap.page_allocator),
     mutex: std.Thread.Mutex = .{},
     videoEncoder: ?VideoEncoderInt16 = null,
     sharedMemory: ?shm.SharedMemory(GenericShared) = null,
@@ -69,7 +70,13 @@ pub const GenericConsole = struct {
     pub fn init(width: i32, height: i32, sampleRate: i32, uuid: native.jUUID) !GenericConsole {
         var id: [32]u8 = std.mem.zeroes([32]u8);
         try native.GenerateID(&id);
-        var console: GenericConsole = .{ .uuid = uuid, .id = id, .width = width, .height = height, .sampleRate = sampleRate };
+        var console: GenericConsole = .{
+            .uuid = uuid,
+            .id = id,
+            .width = width,
+            .height = height,
+            .sampleRate = sampleRate,
+        };
         if (consoleRegistry == null) {
             consoleRegistry = @import("generic_console_registry.zig").registryInstance;
         }
@@ -79,9 +86,16 @@ pub const GenericConsole = struct {
 
     pub fn load(self: *GenericConsole, retroCore: []const u8, core: []const u8, rom: []const u8, save: []const u8) !void {
         self.mutex.lock();
-        self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, std.heap.c_allocator);
+        self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, self.allocator.allocator());
         std.debug.print("[RetroGamingCore] Constructed shared memory {s}", .{self.id});
-        self.childProcess = std.process.Child.init(&[_][]const u8{ retroCore, "gn", &self.id, core, rom, save }, std.heap.c_allocator);
+        self.childProcess = std.process.Child.init(&[_][]const u8{
+            retroCore,
+            "gn",
+            &self.id,
+            core,
+            rom,
+            save,
+        }, self.allocator.allocator());
         try self.childProcess.?.spawn();
         std.debug.print("[RetroGamingCore] Spawned core process for {s}", .{self.id});
         self.mutex.unlock();
@@ -102,6 +116,8 @@ pub const GenericConsole = struct {
             std.debug.print("[RetroGamingCore] Emulator shutdown completed", .{});
         }
         _ = try self.childProcess.?.kill();
+        self.mutex.unlock();
+        self.allocator.deinit();
     }
 
     pub fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
@@ -111,9 +127,11 @@ pub const GenericConsole = struct {
                 return;
             };
         }
-        var curr = std.ArrayList(i16).init(std.heap.c_allocator);
+        var curr = std.ArrayList(i16).init(std.heap.page_allocator);
         try curr.appendSlice(@ptrCast(self.sharedMemory.?.data.display[0..@intCast(self.width * self.height)]));
-        return self.videoEncoder.?.encodeFrame(curr);
+        const encoded = try self.videoEncoder.?.encodeFrame(curr);
+        curr.deinit();
+        return encoded;
     }
 
     pub fn input(self: *GenericConsole, port: usize, data: i16) void {

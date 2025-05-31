@@ -2,7 +2,10 @@ const std = @import("std");
 const GenericConsole = @import("generic_console.zig").GenericConsole;
 const jUUID = @import("../util/native_util.zig").jUUID;
 
-pub var registryInstance: GenericConsoleRegistry = .{ .mutex = .{}, .consoles = std.ArrayList(*GenericConsole).init(std.heap.c_allocator) };
+pub var registryInstance: GenericConsoleRegistry = .{
+    .mutex = .{},
+    .consoles = std.ArrayList(*GenericConsole).init(std.heap.page_allocator),
+};
 
 pub const GenericConsoleRegistry = struct {
     mutex: std.Thread.Mutex,
