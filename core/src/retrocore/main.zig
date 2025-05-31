@@ -24,17 +24,17 @@ pub fn main() !void {
     const save = args[5];
 
     const sharedData = shm.SharedMemory(shared.GenericShared).open(id, allocator) catch |err| {
-        std.debug.print("[RetroGamingCore] Failed to open shared memory: {}\n", .{err});
+        std.debug.print("[RetroGamingCore] Failed to open shared memory: {any}\n", .{err});
         return;
     };
 
     if (std.mem.eql(u8, platform, "gn")) {
         const result = GenericConsole.load(allocator, sharedData.data, core, rom, save) catch |err| {
-            std.debug.print("[RetroGamingCore] Error in GenericConsole.load: {}\n", .{err});
+            std.debug.print("[RetroGamingCore] Error in GenericConsole.load: {any}\n", .{err});
             return;
         };
         std.process.exit(@intCast(result));
     }
 
-    std.debug.print("This should NEVER be called by a user (unknown platform {})\n", .{platform});
+    std.debug.print("This should NEVER be called by a user (unknown platform {s})\n", .{platform});
 }
