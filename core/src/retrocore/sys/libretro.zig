@@ -43,7 +43,7 @@ fn logPrintf(level: c.retro_log_level, fmt: [*c]const u8, ...) callconv(.C) void
         // For now, we'll use a simplified approach
         _ = level;
         if (fmt) |f| {
-            print("LibRetro: {s}\n", .{f});
+            print("[LibRetroCore] {s}\n", .{f});
         }
     }
 }
