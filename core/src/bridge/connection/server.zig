@@ -12,7 +12,7 @@ var consoleRegistry: ?@import("../platform/generic_console_registry.zig").Generi
 // JNI
 pub fn startServer(_: *jni.cEnv, _: jni.jclass, port: jni.jint, maxClients: i32) callconv(.C) jni.jlong {
     const client = RetroServer.init(@intCast(port), maxClients) catch {
-        std.debug.panic("[RetroServer] Failed to create retro server; Panic", .{});
+        std.debug.panic("[RetroServer] Failed to create retro server; Panic\n", .{});
     };
     return @intCast(@intFromPtr(&client));
 }
@@ -20,23 +20,29 @@ pub fn startServer(_: *jni.cEnv, _: jni.jclass, port: jni.jint, maxClients: i32)
 pub fn stopServer(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
     const server: *RetroServer = @ptrFromInt(@as(usize, @intCast(ptr)));
     server.dispose() catch {
-        std.debug.print("[RetroServer] Something went wrong while disposing server!", .{});
+        std.debug.print("[RetroServer] Something went wrong while disposing server!\n", .{});
     };
 }
 
 pub fn requestToken(env: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) jni.jstring {
     const server: *RetroServer = @ptrFromInt(@as(usize, @intCast(ptr)));
+    std.debug.print("DBG 1\n", .{});
 
     const token_str = server.allocator.allocator().alloc(u8, 33) catch {
-        std.debug.panic("[RetroServer] Failed to allocate secure token; Panic", .{});
+        std.debug.panic("[RetroServer] Failed to allocate secure token; Panic\n", .{});
     };
+    std.debug.print("DBG 2\n", .{});
     defer server.allocator.allocator().free(token_str);
+    std.debug.print("DBG 3\n", .{});
 
     var token = server.genToken() catch {
-        std.debug.panic("[RetroServer] Failed to allocate raw token; Panic", .{});
+        std.debug.panic("[RetroServer] Failed to allocate raw token; Panic\n", .{});
     };
+    std.debug.print("DBG 4\n", .{});
     std.mem.copyForwards(u8, token_str[0..32], &token);
+    std.debug.print("DBG 5\n", .{});
     token_str[32] = 0;
+    std.debug.print("DBG 6\n", .{});
 
     return env.*.*.NewStringUTF.?(env, @ptrCast(token_str));
 }
@@ -73,9 +79,9 @@ pub const RetroServer = struct {
         server.enet_mutex.lock();
         defer server.enet_mutex.unlock();
 
-        std.debug.print("[RetroServer] Starting ENet server on port {d}", .{port});
+        std.debug.print("[RetroServer] Starting ENet server on port {d}\n", .{port});
         if (enet.enet_initialize() != 0) {
-            std.debug.print("[RetroServer] Failed to initialize ENet", .{});
+            std.debug.print("[RetroServer] Failed to initialize ENet\n", .{});
             return server;
         }
         var address: enet.ENetAddress = .{};
@@ -84,7 +90,7 @@ pub const RetroServer = struct {
 
         server.server = enet.enet_host_create(&address, @intCast(maxClients), 2, 0, 0);
         if (server.server == null) {
-            std.debug.print("[RetroServer] Failed to create ENet client", .{});
+            std.debug.print("[RetroServer] Failed to create ENet client\n", .{});
             enet.enet_deinitialize();
             return server;
         }
@@ -98,7 +104,7 @@ pub const RetroServer = struct {
         bandwidthThread.detach();
         keepAliveThread.detach();
         videoSenderThread.detach();
-        std.debug.print("[RetroServer] Started ENet server on port {d}", .{port});
+        std.debug.print("[RetroServer] Started ENet server on port {d}\n", .{port});
         return server;
     }
 
@@ -132,12 +138,12 @@ pub const RetroServer = struct {
     fn genToken(self: *RetroServer) ![32]u8 {
         var data: [32]u8 = (try self.allocator.allocator().alloc([32]u8, 1))[0];
         @import("../util/native_util.zig").GenerateID(&data) catch {
-            std.debug.panic("[RetroServer] Failed to generate secure token; Panic", .{});
+            std.debug.panic("[RetroServer] Failed to generate secure token; Panic\n", .{});
         };
         self.mutex.lock();
         defer self.mutex.unlock();
         self.tokens.append(data) catch {
-            std.debug.print("[RetroServer] Failed to register generated token!", .{});
+            std.debug.print("[RetroServer] Failed to register generated token!\n", .{});
         };
         return data;
     }
@@ -157,7 +163,7 @@ pub const RetroServer = struct {
             self.enet_mutex.unlock();
 
             if (status < 0) {
-                std.debug.print("[RetroServer] Failed to receive ENet event ({d})", .{status});
+                std.debug.print("[RetroServer] Failed to receive ENet event ({d})\n", .{status});
                 continue;
             } else if (status == 0) {
                 try std.Thread.yield();
@@ -166,7 +172,7 @@ pub const RetroServer = struct {
 
             switch (event.type) {
                 enet.ENET_EVENT_TYPE_NONE => {
-                    std.debug.print("[RetroServer] Event received an ENET_EVENT_TYPE_NONE", .{});
+                    std.debug.print("[RetroServer] Event received an ENET_EVENT_TYPE_NONE\n", .{});
                 },
                 enet.ENET_EVENT_TYPE_CONNECT => {
                     try self.onConnect(event.peer);
@@ -181,7 +187,7 @@ pub const RetroServer = struct {
                     self.onMessage(event.peer, event.packet);
                 },
                 else => {
-                    std.debug.print("[RetroServer] Event received an invalid event type", .{});
+                    std.debug.print("[RetroServer] Event received an invalid event type\n", .{});
                 },
             }
 
@@ -205,10 +211,11 @@ pub const RetroServer = struct {
         self.mutex.unlock();
 
         while (true) {
-            std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
+            if (nextTime - std.time.nanoTimestamp() > 0)
+                std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             self.mutex.lock();
-            std.debug.print("[RetroServer] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{ (self.bytesIn - lastBytesIn) * 8 / 1000 / 5, (self.bytesOut - lastBytesOut) * 8 / 1000 / 5 });
+            std.debug.print("[RetroServer] Bandwidth: IN: {d} kbps, OUT: {d} kbps\n", .{ (self.bytesIn - lastBytesIn) * 8 / 1000 / 5, (self.bytesOut - lastBytesOut) * 8 / 1000 / 5 });
             lastBytesIn = self.bytesIn;
             lastBytesOut = self.bytesOut;
 
@@ -231,9 +238,10 @@ pub const RetroServer = struct {
         self.mutex.unlock();
 
         while (true) {
-            std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
-            self.mutex.lock();
+            if (nextTime - std.time.nanoTimestamp() > 0)
+                std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
+            self.mutex.lock();
             const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
             for (self.clients.items) |client| {
                 if (client.peer == null or client.peer.*.state != enet.ENET_PEER_STATE_CONNECTED) {
@@ -256,7 +264,7 @@ pub const RetroServer = struct {
     }
 
     fn videoSenderLoop(self: *RetroServer, fps: i32) void {
-        const interval = @divExact(std.time.ns_per_s, fps);
+        const interval = @divFloor(std.time.ns_per_s, fps);
         var nextTime = std.time.nanoTimestamp();
 
         self.mutex.lock();
@@ -264,7 +272,8 @@ pub const RetroServer = struct {
         self.mutex.unlock();
 
         while (true) {
-            std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
+            if (nextTime - std.time.nanoTimestamp() > 0)
+                std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             consoleRegistry.?.mutex.lock();
             for (consoleRegistry.?.consoles.items) |console| {
@@ -329,11 +338,11 @@ pub const RetroServer = struct {
 
     fn onMessage(self: *RetroServer, peer: [*c]enet.ENetPeer, packet: [*c]enet.ENetPacket) void {
         if (packet == null) {
-            std.debug.print("[RetroServer] Received packet is nullptr", .{});
+            std.debug.print("[RetroServer] Received packet is nullptr\n", .{});
             return;
         }
         if (packet.*.dataLength == 0) {
-            std.debug.print("[RetroServer] Received empty packet from client", .{});
+            std.debug.print("[RetroServer] Received empty packet from client\n", .{});
             return;
         }
         self.mutex.lock();
@@ -341,13 +350,13 @@ pub const RetroServer = struct {
         var client = self.findClientByPeerUnsafe(peer);
         const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
         if (packetType != net.PacketType.PACKET_AUTH and !client.?.authenticated) {
-            std.debug.print("[RetroServer] Received non-auth packet before auth from {any}", .{peer});
+            std.debug.print("[RetroServer] Received non-auth packet before auth from {any}\n", .{peer});
             return;
         }
         switch (packetType) {
             net.PacketType.PACKET_AUTH => {
                 if (client.?.authenticated) {
-                    std.debug.print("[RetroServer] Received auth packet after auth from {any}", .{peer});
+                    std.debug.print("[RetroServer] Received auth packet after auth from {any}\n", .{peer});
                     return;
                 }
                 for (self.tokens.items, 0..) |token, i| {
@@ -363,15 +372,15 @@ pub const RetroServer = struct {
                     break;
                 }
                 if (client.?.authenticated) {
-                    std.debug.print("[RetroServer] Successfully authorized connection {d}", .{peer.*.incomingPeerID});
+                    std.debug.print("[RetroServer] Successfully authorized connection {d}\n", .{peer.*.incomingPeerID});
                 } else {
                     self.kick(peer, "Invalid token");
-                    std.debug.print("[RetroServer] Kicking connection with invalid token ({d})", .{peer.*.incomingPeerID});
+                    std.debug.print("[RetroServer] Kicking connection with invalid token ({d})\n", .{peer.*.incomingPeerID});
                 }
             },
             net.PacketType.PACKET_UPDATE_CONTROLS => {
                 const parsed = Int8ArrayPacket.unpack(packet) catch {
-                    std.debug.print("[RetroServer] Failed decoding control update packet!", .{});
+                    std.debug.print("[RetroServer] Failed decoding control update packet!\n", .{});
                     return;
                 };
                 const port: usize = @intCast(parsed.data.items[0]);
@@ -381,7 +390,7 @@ pub const RetroServer = struct {
                 defer consoleRegistry.?.mutex.unlock();
                 const console = consoleRegistry.?.findConsoleUnsafe(parsed.ref);
                 if (console == null) {
-                    std.debug.print("[RetroServer] Received control update packet for non existent console!", .{});
+                    std.debug.print("[RetroServer] Received control update packet for non existent console!\n", .{});
                 }
                 console.?.input(port, data);
             },
@@ -389,7 +398,7 @@ pub const RetroServer = struct {
                 // Empty block, currently no logic
             },
             net.PacketType.PACKET_AUTH_ACK, net.PacketType.PACKET_KICK, net.PacketType.PACKET_UPDATE_DISPLAY, net.PacketType.PACKET_UPDATE_AUDIO => {
-                std.debug.print("[RetroServer] Received S2C packet on server", .{});
+                std.debug.print("[RetroServer] Received S2C packet on server\n", .{});
             },
         }
     }

@@ -27,7 +27,7 @@ pub const Int8ArrayPacket = struct {
     pub fn unpack(packet: [*c]enet.struct__ENetPacket) !Int8ArrayPacket {
         const packetType: PacketType = @enumFromInt(packet.*.data[0]);
         if (packet.*.dataLength < 25) {
-            std.debug.print("[RetroPacket] Int16arr packet too small ({d})", .{@intFromEnum(packetType)});
+            std.debug.print("[RetroPacket] Int16arr packet too small ({d})\n", .{@intFromEnum(packetType)});
         }
         const packetSize = std.mem.readInt(usize, packet.*.data[17..25], Endian.little);
         var packetData = try std.ArrayList(u8).initCapacity(std.heap.raw_c_allocator, packetSize);

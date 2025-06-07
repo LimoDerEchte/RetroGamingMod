@@ -40,7 +40,7 @@ pub const VideoEncoderInt16 = struct {
         try writer.writeByte(@intFromBool(isRawFrame));
         var stream = std.io.fixedBufferStream(std.mem.bytesAsSlice(u8, data.items));
         std.compress.zlib.compress(stream.reader(), writer, .{ .level = @enumFromInt(9) }) catch {
-            std.debug.print("[RetroServer] Failed to compress using zlib", .{});
+            std.debug.print("[RetroServer] Failed to compress using zlib\n", .{});
         };
         return encodedFrame;
     }

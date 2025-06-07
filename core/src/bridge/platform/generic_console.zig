@@ -87,7 +87,7 @@ pub const GenericConsole = struct {
     pub fn load(self: *GenericConsole, retroCore: []const u8, core: []const u8, rom: []const u8, save: []const u8) !void {
         self.mutex.lock();
         self.sharedMemory = try shm.SharedMemory(GenericShared).create(&self.id, self.allocator.allocator());
-        std.debug.print("[RetroGamingCore] Constructed shared memory {s}", .{self.id});
+        std.debug.print("[RetroGamingCore] Constructed shared memory {s}\n", .{self.id});
         self.childProcess = std.process.Child.init(&[_][]const u8{
             retroCore,
             "gn",
@@ -97,12 +97,12 @@ pub const GenericConsole = struct {
             save,
         }, self.allocator.allocator());
         try self.childProcess.?.spawn();
-        std.debug.print("[RetroGamingCore] Spawned core process for {s}", .{self.id});
+        std.debug.print("[RetroGamingCore] Spawned core process for {s}\n", .{self.id});
         self.mutex.unlock();
     }
 
     pub fn dispose(self: *GenericConsole) !void {
-        std.debug.print("[RetroGamingCore] Disposing bridge instance {s}", .{self.id});
+        std.debug.print("[RetroGamingCore] Disposing bridge instance {s}\n", .{self.id});
         consoleRegistry.?.unregister(self);
         self.mutex.lock();
         var handleBackup = self.sharedMemory;
@@ -113,7 +113,7 @@ pub const GenericConsole = struct {
                 try std.Thread.yield();
             }
             handleBackup.?.close();
-            std.debug.print("[RetroGamingCore] Emulator shutdown completed", .{});
+            std.debug.print("[RetroGamingCore] Emulator shutdown completed\n", .{});
         }
         _ = try self.childProcess.?.kill();
         self.mutex.unlock();
@@ -123,7 +123,7 @@ pub const GenericConsole = struct {
     pub fn createFrame(self: *GenericConsole) !std.ArrayList(u8) {
         if (self.videoEncoder == null) {
             self.videoEncoder = VideoEncoderInt16.init(self.width, self.height) catch {
-                std.debug.print("[RetroGamingCore] Failed to initialize video encoder", .{});
+                std.debug.print("[RetroGamingCore] Failed to initialize video encoder\n", .{});
                 return;
             };
         }

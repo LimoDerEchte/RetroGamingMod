@@ -10,7 +10,7 @@ const Int8ArrayPacket = net.Int8ArrayPacket;
 // JNI
 pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, token: jni.jstring) callconv(.C) jni.jlong {
     const client = RetroClient.init(env.*.*.GetStringUTFChars.?(env, ip, null), @intCast(port), env.*.*.GetStringUTFChars.?(env, token, null)) catch {
-        std.debug.panic("[RetroServer] Failed to create retro client; Panic", .{});
+        std.debug.panic("[RetroServer] Failed to create retro client; Panic\n", .{});
     };
     return @intCast(@intFromPtr(&client));
 }
@@ -18,7 +18,7 @@ pub fn connect(env: *jni.cEnv, _: jni.jclass, ip: jni.jstring, port: jni.jint, t
 pub fn disconnect(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong) callconv(.C) void {
     const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
     client.dispose() catch {
-        std.debug.print("[RetroClient] Something went wrong while disposing client!", .{});
+        std.debug.print("[RetroClient] Something went wrong while disposing client!\n", .{});
     };
 }
 
@@ -33,7 +33,7 @@ pub fn registerScreen(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, jUuid: jni.jl
 
     var display = NativeDisplay.init(width, height);
     client.registerDisplay(uuid, &display, sampleRate) catch {
-        std.debug.print("[RetroClient] Something went wrong while registering display!", .{});
+        std.debug.print("[RetroClient] Something went wrong while registering display!\n", .{});
     };
     return @intCast(@intFromPtr(&display));
 }
@@ -48,7 +48,7 @@ pub fn sendControlUpdate(_: *jni.cEnv, _: jni.jclass, ptr: jni.jlong, jUuid: jni
     const client: *RetroClient = @ptrFromInt(@as(usize, @intCast(ptr)));
     const uuid: *jUUID = @ptrFromInt(@as(usize, @intCast(jUuid)));
     client.sendControlsUpdate(uuid, port, data) catch {
-        std.debug.print("[RetroClient] Something went wrong while sending controls update!", .{});
+        std.debug.print("[RetroClient] Something went wrong while sending controls update!\n", .{});
     };
 }
 
@@ -82,9 +82,9 @@ pub const RetroClient = struct {
         client.enet_mutex.lock();
         defer client.enet_mutex.unlock();
 
-        std.debug.print("[RetroClient] Connecting to ENet server on {s}:{d}", .{ ip, port });
+        std.debug.print("[RetroClient] Connecting to ENet server on {s}:{d}\n", .{ ip, port });
         if (enet.enet_initialize() != 0) {
-            std.debug.print("[RetroClient] Failed to initialize ENet", .{});
+            std.debug.print("[RetroClient] Failed to initialize ENet\n", .{});
             return client;
         }
         var address: enet.ENetAddress = .{};
@@ -93,14 +93,14 @@ pub const RetroClient = struct {
 
         client.client = enet.enet_host_create(&address, 1, 2, 0, 0);
         if (client.client == null) {
-            std.debug.print("[RetroClient] Failed to create ENet client", .{});
+            std.debug.print("[RetroClient] Failed to create ENet client\n", .{});
             enet.enet_deinitialize();
             return client;
         }
 
         client.peer = enet.enet_host_connect(client.client, &address, 2, 0);
         if (client.peer == null) {
-            std.debug.print("[RetroClient] Failed to connect ENet client", .{});
+            std.debug.print("[RetroClient] Failed to connect ENet client\n", .{});
             enet.enet_deinitialize();
             return client;
         }
@@ -181,7 +181,7 @@ pub const RetroClient = struct {
             self.enet_mutex.unlock();
 
             if (status < 0) {
-                std.debug.print("[RetroClient] Failed to receive ENet event ({d})", .{status});
+                std.debug.print("[RetroClient] Failed to receive ENet event ({d})\n", .{status});
                 continue;
             } else if (status == 0) {
                 try std.Thread.yield();
@@ -190,7 +190,7 @@ pub const RetroClient = struct {
 
             switch (event.type) {
                 enet.ENET_EVENT_TYPE_NONE => {
-                    std.debug.print("[RetroClient] Event received an ENET_EVENT_TYPE_NONE", .{});
+                    std.debug.print("[RetroClient] Event received an ENET_EVENT_TYPE_NONE\n", .{});
                 },
                 enet.ENET_EVENT_TYPE_CONNECT => {
                     try self.onConnect();
@@ -205,7 +205,7 @@ pub const RetroClient = struct {
                     try self.onMessage(event.packet);
                 },
                 else => {
-                    std.debug.print("[RetroClient] Event received an invalid event type", .{});
+                    std.debug.print("[RetroClient] Event received an invalid event type\n", .{});
                 },
             }
 
@@ -232,7 +232,7 @@ pub const RetroClient = struct {
             std.Thread.sleep(@intCast(nextTime - std.time.nanoTimestamp()));
 
             self.mutex.lock();
-            std.debug.print("[RetroClient] Bandwidth: IN: {d} kbps, OUT: {d} kbps", .{ (self.bytesIn - lastBytesIn) * 8 / 1000 / 5, (self.bytesOut - lastBytesOut) * 8 / 1000 / 5 });
+            std.debug.print("[RetroClient] Bandwidth: IN: {d} kbps, OUT: {d} kbps\n", .{ (self.bytesIn - lastBytesIn) * 8 / 1000 / 5, (self.bytesOut - lastBytesOut) * 8 / 1000 / 5 });
             lastBytesIn = self.bytesIn;
             lastBytesOut = self.bytesOut;
 
@@ -247,7 +247,7 @@ pub const RetroClient = struct {
     }
 
     fn onConnect(self: *RetroClient) !void {
-        std.debug.print("[RetroClient] Connection established to {d}", .{self.peer.*.address.port});
+        std.debug.print("[RetroClient] Connection established to {d}\n", .{self.peer.*.address.port});
 
         self.enet_mutex.lock();
         defer self.enet_mutex.unlock();
@@ -261,7 +261,7 @@ pub const RetroClient = struct {
         self.bytesOut += 57;
         self.mutex.unlock();
 
-        std.debug.print("[RetroClient] Authorizing with token {s}", .{self.token});
+        std.debug.print("[RetroClient] Authorizing with token {s}\n", .{self.token});
     }
 
     fn onDisconnect(self: *RetroClient) !void {
@@ -270,11 +270,11 @@ pub const RetroClient = struct {
 
     fn onMessage(self: *RetroClient, packet: [*c]enet.ENetPacket) !void {
         if (packet == null) {
-            std.debug.print("[RetroClient] Received packet is nullptr", .{});
+            std.debug.print("[RetroClient] Received packet is nullptr\n", .{});
             return;
         }
         if (packet.*.dataLength == 0) {
-            std.debug.print("[RetroClient] Received empty packet from server", .{});
+            std.debug.print("[RetroClient] Received empty packet from server\n", .{});
             return;
         }
         const packetType: net.PacketType = @enumFromInt(packet.*.data.?[0]);
@@ -283,7 +283,7 @@ pub const RetroClient = struct {
                 self.mutex.lock();
                 self.authenticated = true;
                 self.mutex.unlock();
-                std.debug.print("[RetroClient] Connection token accepted by server", .{});
+                std.debug.print("[RetroClient] Connection token accepted by server\n", .{});
             },
             net.PacketType.PACKET_KEEP_ALIVE => {
                 const id: u8 = @intFromEnum(net.PacketType.PACKET_KEEP_ALIVE);
@@ -296,7 +296,7 @@ pub const RetroClient = struct {
             },
             net.PacketType.PACKET_KICK => {
                 const parsed = try Int8ArrayPacket.unpack(packet);
-                std.debug.print("[RetroClient] Received kick packet: {s}", .{parsed.data.items});
+                std.debug.print("[RetroClient] Received kick packet: {s}\n", .{parsed.data.items});
             },
             net.PacketType.PACKET_UPDATE_DISPLAY => {
                 var parsed = try Int8ArrayPacket.unpack(packet);
@@ -306,10 +306,10 @@ pub const RetroClient = struct {
                 self.mutex.unlock();
             },
             net.PacketType.PACKET_AUTH, net.PacketType.PACKET_UPDATE_CONTROLS => {
-                std.debug.print("[RetroClient] Received C2S packet on client", .{});
+                std.debug.print("[RetroClient] Received C2S packet on client\n", .{});
             },
             else => {
-                std.debug.print("[RetroClient] Unknown C2S packet type {d}", .{packet.*.data.?[0]});
+                std.debug.print("[RetroClient] Unknown C2S packet type {d}\n", .{packet.*.data.?[0]});
             },
         }
     }
