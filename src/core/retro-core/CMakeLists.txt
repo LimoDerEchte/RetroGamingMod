@@ -16,6 +16,12 @@ target_include_directories(retro-core PRIVATE
 target_link_libraries(retro-core PRIVATE Boost::interprocess bridge)
 
 # Post Build
-add_custom_command(TARGET retro-core POST_BUILD
-        COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/retro-core/retro-core* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
-)
+if(UNIX)
+    add_custom_command(TARGET retro-core POST_BUILD
+            COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/retro-core/retro-core* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
+    )
+elseif(WIN32)
+    add_custom_command(TARGET retro-core POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/retro-core/retro-core.exe" "${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/"
+    )
+endif()

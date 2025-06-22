@@ -7,6 +7,10 @@
 #include <vector>
 #include <memory>
 
+#ifdef WIN32
+#include <string>
+#endif
+
 #if __has_include(<libopus/opus.h>)
     #include <libopus/opus.h>
 #elif __has_include(<opus/opus.h>)

@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <iostream>
 #include <thread>
+#include <chrono>
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
 
 #include "NetworkDefinitions.hpp"
