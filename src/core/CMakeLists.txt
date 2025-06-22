@@ -3,12 +3,13 @@
 set(CFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(LDFLAGS -fsanitize=address)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # VCPKG Config
 if(UNIX AND NOT APPLE)
     set(VCPKG_TARGET_TRIPLET x64-linux)
 else()
-    set(VCPKG_TARGET_TRIPLET x64-windows)
+    set(VCPKG_TARGET_TRIPLET x64-windows-static)
     add_definitions(-D_AMD64_ -DWIN32_LEAN_AND_MEAN)
 endif()
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib;.a")

@@ -45,7 +45,7 @@ target_link_libraries(bridge PRIVATE
 )
 
 if(WIN32)
-    target_link_libraries(bridge PRIVATE winmm)
+    target_link_libraries(bridge PRIVATE winmm avrt)
 endif()
 
 # FFmpeg
