@@ -13,8 +13,8 @@
 #include "platform/GenericConsole.hpp"
 #include "util/NativeUtil.hpp"
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port) {
-    return reinterpret_cast<jlong>(new RetroServer(port));
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port, const jint maxUsers) {
+    return reinterpret_cast<jlong>(new RetroServer(port, maxUsers));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer(JNIEnv *, jclass, const jlong ptr) {
@@ -28,7 +28,7 @@ JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(
     return env->NewStringUTF(std::string(token, 32).c_str());
 }
 
-RetroServer::RetroServer(const int port) {
+RetroServer::RetroServer(const int port, const int maxUsers) : clients(new std::vector<RetroServerClient*>(maxUsers)) {
     std::lock_guard lock(mutex);
     std::lock_guard enet_lock(enet_mutex);
     if (enet_initialize() != 0) {
@@ -38,7 +38,7 @@ RetroServer::RetroServer(const int port) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
     address.port = port;
-    server = enet_host_create(&address, SERVER_MAX_CLIENTS, 2, 0, 0);
+    server = enet_host_create(&address, maxUsers, 2, 0, 0);
     if (server == nullptr) {
         std::cerr << "[RetroServer] Failed to create ENet server" << std::endl;
         enet_deinitialize();

@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     com_limo_emumod_bridge_NativeServer
  * Method:    startServer
- * Signature: (I)J
+ * Signature: (II)J
  */
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer
-  (JNIEnv *, jclass, jint);
+  (JNIEnv *, jclass, jint, jint);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeServer
