@@ -19,7 +19,7 @@ class GenericConsole {
     AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
-    bp::child* retroCoreProcess = nullptr;
+    bp::process* retroCoreProcess = nullptr;
 
 public:
     std::mutex mutex{};

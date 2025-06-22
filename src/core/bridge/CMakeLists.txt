@@ -33,7 +33,16 @@ target_include_directories(bridge PRIVATE
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
 )
-target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet OpenAL::OpenAL ZLIB::ZLIB ${OPUS_LIBRARIES})
+
+target_link_libraries(bridge PRIVATE
+        Boost::interprocess
+        Boost::process
+        unofficial::enet::enet
+        OpenAL::OpenAL
+        ZLIB::ZLIB
+        fmt::fmt
+        ${OPUS_LIBRARIES}
+)
 
 # FFmpeg
 #target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})

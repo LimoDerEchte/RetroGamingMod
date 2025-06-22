@@ -7,12 +7,15 @@
 #include <iostream>
 #include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
 #include <jni.h>
+#include <thread>
 
 #include "codec/AudioEncoder.hpp"
 #include "util/NativeUtil.hpp"
 
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
 std::mutex GenericConsoleRegistry::consoleMutex;
+
+boost::asio::io_context io_ctx;
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
@@ -57,7 +60,7 @@ void GenericConsole::load(const char *retroCore, const char *core, const char *r
     sharedMemoryHandle = new bip::managed_shared_memory(bip::create_only, strId.c_str(), 1200000);
     retroCoreHandle = sharedMemoryHandle->construct<GenericShared>("SharedData")();
     std::cout << "[RetroGamingCore] Created shared memory " << strId << std::endl;
-    retroCoreProcess = new bp::child(retroCore, bp::args({"gn", strId, core, rom, save}));
+    retroCoreProcess = new bp::process(io_ctx, retroCore, {"gn", strId, core, rom, save});
     retroCoreProcess->detach();
 }
 

@@ -1,7 +1,5 @@
 
 # Stuff
-set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/zig-cpp.sh")
-set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/zig-c.sh")
 set(CFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
 set(LDFLAGS -fsanitize=address)
@@ -30,6 +28,7 @@ find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
 find_package(OpenAL REQUIRED openal)
 find_package(ZLIB REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 # Actual Projects
 add_subdirectory(bridge)
