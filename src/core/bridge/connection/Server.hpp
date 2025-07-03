@@ -22,14 +22,14 @@ class RetroServer {
     bool running = false;
     int runningLoops = 0;
     std::mutex mutex;
-    std::vector<RetroServerClient*>* clients = new std::vector<RetroServerClient*>(SERVER_MAX_CLIENTS);
+    std::vector<RetroServerClient*>* clients{};
     std::vector<std::array<char, 32>>* tokens = new std::vector<std::array<char, 32>>();
 
     uint64_t bytesIn = 0;
     uint64_t bytesOut = 0;
 
 public:
-    explicit RetroServer(int port);
+    explicit RetroServer(int port, int maxUsers);
 
     [[nodiscard]] char* genToken();
     void dispose();

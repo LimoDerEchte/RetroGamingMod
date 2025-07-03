@@ -7,6 +7,7 @@
 #include <deque>
 #include <iostream>
 #include <thread>
+#include <chrono>
 
 #include "SharedStructs.hpp"
 #include "sys/LibRetroCore.hpp"

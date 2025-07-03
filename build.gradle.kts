@@ -77,6 +77,7 @@ tasks.withType<JavaCompile>().configureEach {
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
         options.release.set(targetJavaVersion)
     }
+    options.compilerArgs.addAll(listOf("-h", file("src/core/bridge/headers").absolutePath))
 }
 
 java {

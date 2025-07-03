@@ -8,11 +8,13 @@ pub fn build(b: *std.Build) void {
     const jni = b.dependency("jni", .{}).module("JNI");
     const shared_memory = b.dependency("shared_memory", .{}).module("shared_memory");
     const known_folders = b.dependency("known_folders", .{}).module("known-folders");
+    const zigwin32 = b.dependency("zigwin32", .{}).module("win32");
 
     const options = b.addOptions();
     options.addOption(bool, "use_shm_funcs", true);
     shared_memory.addOptions("config", options);
     shared_memory.addImport("known-folders", known_folders);
+    shared_memory.addImport("zigwin32", zigwin32);
 
     // Declare Modules
     const shared_mod = b.createModule(.{
@@ -37,6 +39,7 @@ pub fn build(b: *std.Build) void {
     bridge_mod.addImport("jni", jni);
     bridge_mod.addImport("shared_memory", shared_memory);
     bridge_mod.addImport("shared", shared_mod);
+    core_mod.addImport("shared_memory", shared_memory);
     core_mod.addImport("shared", shared_mod);
 
     // Compile Shared Code
@@ -55,20 +58,17 @@ pub fn build(b: *std.Build) void {
     });
     lib.linkLibC();
     lib.addIncludePath(std.Build.path(b, "lib/enet/include"));
-    lib.addCSourceFiles(.{
-        .root = std.Build.path(b, "lib/enet"),
-        .files = &.{
-            "callbacks.c",
-            "compress.c",
-            "host.c",
-            "list.c",
-            "packet.c",
-            "peer.c",
-            "protocol.c",
-            "unix.c",
-            "win32.c",
-        }
-    });
+    lib.addCSourceFiles(.{ .root = std.Build.path(b, "lib/enet"), .files = &.{
+        "callbacks.c",
+        "compress.c",
+        "host.c",
+        "list.c",
+        "packet.c",
+        "peer.c",
+        "protocol.c",
+        "unix.c",
+        "win32.c",
+    } });
     b.installArtifact(lib);
 
     // Compile Core
@@ -76,6 +76,8 @@ pub fn build(b: *std.Build) void {
         .name = "retrocore",
         .root_module = core_mod,
     });
+    exe.linkLibC();
+    exe.addIncludePath(std.Build.path(b, "lib/libretro-common/include"));
     b.installArtifact(exe);
 
     // Declare Artifacts

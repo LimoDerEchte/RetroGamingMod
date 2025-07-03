@@ -33,7 +33,20 @@ target_include_directories(bridge PRIVATE
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
 )
-target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unofficial::enet::enet OpenAL::OpenAL ZLIB::ZLIB ${OPUS_LIBRARIES})
+
+target_link_libraries(bridge PRIVATE
+        Boost::interprocess
+        Boost::process
+        unofficial::enet::enet
+        OpenAL::OpenAL
+        ZLIB::ZLIB
+        fmt::fmt
+        ${OPUS_LIBRARIES}
+)
+
+if(WIN32)
+    target_link_libraries(bridge PRIVATE winmm avrt)
+endif()
 
 # FFmpeg
 #target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
@@ -41,6 +54,12 @@ target_link_libraries(bridge PRIVATE Boost::interprocess Boost::process unoffici
 #target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
 
 # Post Build
-add_custom_command(TARGET bridge POST_BUILD
-        COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/libbridge.* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
-)
+if(UNIX)
+    add_custom_command(TARGET bridge POST_BUILD
+            COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/libbridge.* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
+    )
+elseif(WIN32)
+    add_custom_command(TARGET bridge POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/bridge.dll" "${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/"
+    )
+endif()
