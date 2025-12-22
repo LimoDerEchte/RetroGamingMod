@@ -14,6 +14,7 @@ import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
@@ -32,6 +33,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -63,7 +65,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
             if(EmuMod.running.containsKey(con.fileId))
                 EmuMod.running.get(con.fileId).stop();
             EmuMod.running.remove(con.fileId);
-            player.getInventory().insertStack(con.cartridge);
+            player.getInventory().insertStack(con.cartridge.copyFirstStack());
             PlayerLookup.all(mcs).forEach(sp ->
                 ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload(con.fileId, 0, 0, 0)));
             con.cartridge = null;
@@ -84,7 +86,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
         } else {
             if(start.apply(player, id)) {
                 con.fileId = id;
-                con.cartridge = stack.copy();
+                con.cartridge = ContainerComponent.fromStacks(List.of(stack.copy()));
                 con.markDirty();
                 stack.setCount(0);
                 player.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);

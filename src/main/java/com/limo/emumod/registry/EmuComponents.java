@@ -4,6 +4,7 @@ import com.limo.emumod.components.GameComponent;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.item.v1.ComponentTooltipAppenderRegistry;
 import net.minecraft.component.ComponentType;
+import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.Registries;
@@ -22,8 +23,8 @@ public class EmuComponents {
 
     public static final ComponentType<GameComponent> GAME = register("game", builder -> builder
             .codec(GameComponent.CODEC).packetCodec(GameComponent.PACKET_CODEC));
-    public static final ComponentType<ItemStack> CARTRIDGE = register("cartridge", builder -> builder
-            .codec(ItemStack.CODEC).packetCodec(ItemStack.PACKET_CODEC));
+    public static final ComponentType<ContainerComponent> CARTRIDGE = register("cartridge", builder -> builder
+            .codec(ContainerComponent.CODEC).packetCodec(ContainerComponent.PACKET_CODEC));
 
     public static <T> ComponentType<T> register(String path, UnaryOperator<ComponentType.Builder<T>> builderOperator) {
         return Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of("emumod", path), builderOperator.apply(ComponentType.builder()).build());

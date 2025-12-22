@@ -6,7 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentsAccess;
-import net.minecraft.item.ItemStack;
+import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
@@ -22,7 +22,7 @@ import java.util.UUID;
 
 public class GenericConsoleBlockEntity extends BlockEntity {
     public UUID fileId;
-    public ItemStack cartridge;
+    public ContainerComponent cartridge;
 
     public GenericConsoleBlockEntity(BlockPos pos, BlockState state) {
         super(EmuBlockEntities.GENERIC_CONSOLE, pos, state);
@@ -32,7 +32,7 @@ public class GenericConsoleBlockEntity extends BlockEntity {
     protected void readComponents(ComponentsAccess components) {
         super.readComponents(components);
         fileId = components.getOrDefault(EmuComponents.LINK_ID, null);
-        cartridge = components.getOrDefault(EmuComponents.CARTRIDGE, null);
+        cartridge = components.getOrDefault(EmuComponents.CARTRIDGE, ContainerComponent.DEFAULT);
     }
 
     @Override
@@ -46,20 +46,19 @@ public class GenericConsoleBlockEntity extends BlockEntity {
 
     @Override
     protected void writeData(WriteView view) {
+        super.writeData(view);
+
         if(fileId != null)
             view.put("file_id", Uuids.CODEC, fileId);
-        if(cartridge != null)
-            view.put("cartridge", ItemStack.CODEC, cartridge);
-
-        super.writeData(view);
+        view.put("cartridge", ContainerComponent.CODEC, cartridge);
     }
 
     @Override
     protected void readData(ReadView view) {
         super.readData(view);
 
-        fileId = view.read("file_id", Uuids.CODEC).orElse(fileId);
-        cartridge = view.read("cartridge", ItemStack.CODEC).orElse(cartridge);
+        fileId = view.read("file_id", Uuids.CODEC).orElse(null);
+        cartridge = view.read("cartridge", ContainerComponent.CODEC).orElse(ContainerComponent.DEFAULT);
     }
 
     @Override

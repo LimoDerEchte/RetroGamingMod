@@ -2,6 +2,7 @@ package com.limo.emumod.components;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.component.ComponentsAccess;
 import net.minecraft.item.Item;
 import net.minecraft.item.tooltip.TooltipAppender;
@@ -21,10 +22,11 @@ import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public record GameComponent(UUID fileId, String gameTitle) implements TooltipAppender {
 
-    public static final Codec<GameComponent> CODEC = Codec.pair(Uuids.CODEC, Codec.STRING).xmap(
-            (pair) -> new GameComponent(pair.getFirst(), pair.getSecond()),
-            (comp) -> new Pair<>(comp.fileId, comp.gameTitle)
-    );
+    public static final Codec<GameComponent> CODEC = RecordCodecBuilder.create(inst ->
+            inst.group(
+                    Uuids.CODEC.fieldOf("fileId").forGetter(c -> c.fileId),
+                    Codec.STRING.fieldOf("gameTitle").forGetter(c -> c.gameTitle)
+            ).apply(inst, GameComponent::new));
 
     public static final PacketCodec<RegistryByteBuf, GameComponent> PACKET_CODEC = PacketCodec.tuple(
             Uuids.PACKET_CODEC, (comp) -> comp.fileId,

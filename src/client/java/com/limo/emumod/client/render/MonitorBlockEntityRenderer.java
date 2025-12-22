@@ -74,9 +74,9 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
                 r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 44, 25);
             }
             ratioCache.put(entity.getPos(), r);
-            NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(() -> iId, r.getImage());
-            textureCache.put(entity.getPos(), newAlloc);
-            mc.getTextureManager().registerTexture(id, newAlloc);
+            tex = new NativeImageBackedTexture(() -> iId, r.getImage());
+            textureCache.put(entity.getPos(), tex);
+            mc.getTextureManager().registerTexture(id, tex);
         }
         r.readFrom(newTex);
         tex.upload();
