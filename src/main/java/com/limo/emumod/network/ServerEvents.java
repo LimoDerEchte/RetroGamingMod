@@ -10,15 +10,17 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.component.ComponentMap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.NetworkUtils;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.limo.emumod.EmuMod.SERVER;
 import static com.limo.emumod.EmuMod.UUID_ZERO;
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class ServerEvents {
     public static MinecraftServer mcs;
@@ -48,13 +50,15 @@ public class ServerEvents {
             }
         });
         ServerEntityEvents.EQUIPMENT_CHANGE.register((entity, slot, previous, current) -> {
-            if(previous.getItem() instanceof GenericHandheldItem && previous.getComponents().get(FILE_ID) != null) {
+            ComponentMap pc = previous.getComponents();
+            if(previous.getItem() instanceof GenericHandheldItem && pc.contains(GAME)) {
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                        new S2C.UpdateHandheldAudio(previous.getComponents().get(FILE_ID), UUID_ZERO)));
+                        new S2C.UpdateHandheldAudio(Objects.requireNonNull(pc.get(GAME)).fileId(), UUID_ZERO)));
             }
-            if(current.getItem() instanceof GenericHandheldItem && current.getComponents().get(FILE_ID) != null && entity.getUuid() != null) {
+            ComponentMap cc = current.getComponents();
+            if(current.getItem() instanceof GenericHandheldItem && cc.contains(GAME) && entity.getUuid() != null) {
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                        new S2C.UpdateHandheldAudio(current.getComponents().get(FILE_ID), entity.getUuid())));
+                        new S2C.UpdateHandheldAudio(Objects.requireNonNull(cc.get(GAME)).fileId(), entity.getUuid())));
             }
         });
     }

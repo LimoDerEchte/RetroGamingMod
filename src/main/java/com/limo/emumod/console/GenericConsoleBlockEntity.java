@@ -5,12 +5,16 @@ import com.limo.emumod.registry.EmuComponents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.component.ComponentsAccess;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
+import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,21 +45,21 @@ public class GenericConsoleBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+    protected void writeData(WriteView view) {
         if(fileId != null)
-            nbt.putUuid("file_id", fileId);
+            view.put("file_id", Uuids.CODEC, fileId);
         if(cartridge != null)
-            nbt.put("cartridge", cartridge.toNbt(registries));
-        super.writeNbt(nbt, registries);
+            view.put("cartridge", ItemStack.CODEC, cartridge);
+
+        super.writeData(view);
     }
 
     @Override
-    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        super.readNbt(nbt, registries);
-        if(nbt.contains("file_id"))
-            fileId = nbt.getUuid("file_id");
-        if(nbt.contains("cartridge"))
-            cartridge = ItemStack.fromNbtOrEmpty(registries, nbt.getCompound("cartridge"));
+    protected void readData(ReadView view) {
+        super.readData(view);
+
+        fileId = view.read("file_id", Uuids.CODEC).orElse(fileId);
+        cartridge = view.read("cartridge", ItemStack.CODEC).orElse(cartridge);
     }
 
     @Override

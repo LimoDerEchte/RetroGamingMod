@@ -1,13 +1,11 @@
 package com.limo.emumod.monitor;
 
-import com.limo.emumod.EmuMod;
-import com.limo.emumod.cartridge.LinkedCartridgeItem;
-import com.limo.emumod.console.ControllerItem;
 import com.limo.emumod.registry.BlockId;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
+import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -22,7 +20,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import java.util.Objects;
+
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class MonitorBlock extends BlockWithEntity {
     private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((s) -> new MonitorBlock());
@@ -45,10 +45,11 @@ public class MonitorBlock extends BlockWithEntity {
         if(stack.getItem() instanceof CableItem)
             return ActionResult.PASS;
         if(!player.isSneaking()) {
-            if(LinkedCartridgeItem.hasGame(stack)) {
+            ComponentMap comp = stack.getComponents();
+            if(comp.contains(GAME)) {
                 BlockEntity entity = world.getBlockEntity(pos);
                 if(entity instanceof MonitorBlockEntity mon) {
-                    mon.fileId = stack.get(FILE_ID);
+                    mon.fileId = Objects.requireNonNull(comp.get(GAME)).fileId();
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
                     player.sendMessage(Text.translatable("item.emumod.cable.link"), true);

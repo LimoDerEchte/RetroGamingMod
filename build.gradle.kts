@@ -1,7 +1,7 @@
 @file:Suppress("PropertyName")
 
 plugins {
-    id("fabric-loom") version "1.10-SNAPSHOT"
+    id("fabric-loom") version "1.14-SNAPSHOT"
     id("maven-publish")
 }
 
@@ -77,7 +77,7 @@ tasks.processResources {
     }
 }
 
-val targetJavaVersion = 21
+val targetJavaVersion = 23
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {

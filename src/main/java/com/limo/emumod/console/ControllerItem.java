@@ -30,7 +30,7 @@ public class ControllerItem extends Item {
 
     @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if(world.isClient)
+        if(world.isClient())
             return ActionResult.PASS;
         ItemStack stack = user.getStackInHand(hand);
         if(!stack.getComponents().contains(PORT_NUM) || !stack.getComponents().contains(LINK_ID)) {
@@ -53,7 +53,7 @@ public class ControllerItem extends Item {
 
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
-        if(context.getWorld().isClient)
+        if(context.getWorld().isClient())
             return ActionResult.PASS;
         if(context.getPlayer() != null && context.getPlayer().isSneaking())
             return ActionResult.PASS;

@@ -5,11 +5,15 @@ import com.limo.emumod.registry.EmuComponents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.component.ComponentsAccess;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
+import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,19 +41,18 @@ public class MonitorBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        if(fileId != null) {
-            nbt.putUuid("file_id", fileId);
-        }
-        super.writeNbt(nbt, registries);
+    protected void writeData(WriteView view) {
+        if(fileId != null)
+            view.put("file_id", Uuids.CODEC, fileId);
+
+        super.writeData(view);
     }
 
     @Override
-    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        super.readNbt(nbt, registries);
-        if(nbt.contains("file_id")) {
-            fileId = nbt.getUuid("file_id");
-        }
+    protected void readData(ReadView view) {
+        super.readData(view);
+
+        fileId = view.read("file_id", Uuids.CODEC).orElse(fileId);
     }
 
     @Override

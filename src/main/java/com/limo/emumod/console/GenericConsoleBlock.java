@@ -13,6 +13,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
+import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
@@ -31,11 +32,12 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
 import static com.limo.emumod.network.ServerEvents.mcs;
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GenericConsoleBlock extends BlockWithEntity {
     private final MapCodec<GenericConsoleBlock> CODEC;
@@ -55,7 +57,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(world.isClient || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con))
+        if(world.isClient() || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
         if(con.fileId != null && player.isSneaking()) {
             if(EmuMod.running.containsKey(con.fileId))
@@ -69,9 +71,10 @@ public class GenericConsoleBlock extends BlockWithEntity {
             con.markDirty();
             player.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
         }
-        if(stack.getItem() != cartridgeItem || !LinkedCartridgeItem.hasGame(stack))
+        ComponentMap components = stack.getComponents();
+        if(stack.getItem() != cartridgeItem || !components.contains(GAME))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
-        UUID id = stack.getComponents().get(FILE_ID);
+        UUID id = Objects.requireNonNull(components.get(GAME)).fileId();
         File file = FileUtil.idToFile(id, fileType);
         if(!file.exists()) {
             stack.setCount(0);
