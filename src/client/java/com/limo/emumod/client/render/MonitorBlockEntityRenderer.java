@@ -20,6 +20,7 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
 import java.util.HashMap;
@@ -82,31 +83,34 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         tex.upload();
 
         // Render
-        matrices.push();
-        switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
-            case EAST -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
-                matrices.translate(0, 0, -1);
-            }
-            case WEST -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
-                matrices.translate(-1, 0, 0);
-            }
-            case SOUTH -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
-                matrices.translate(-1, 0, -1);
-            }
-        }
-
         queue.submitCustom(matrices, RenderLayers.entityTranslucent(id), (_, vertexConsumer) -> {
-            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
-                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
-                renderFace(1, 6, 15, 16, 3, vertexConsumer, 0xFFFFFF, matrices);
-            } else {
-                renderFace(-14, 2, 30, 27, 7, vertexConsumer, 0xFFFFFF, matrices);
+            matrices.push();
+            Vec3d pos = entity.getPos().toCenterPos().subtract(cameraState.pos);
+            matrices.translate(pos);
+
+            switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
+                case EAST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
+                case WEST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
+                case SOUTH -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
             }
+
+            matrices.translate(-.5D, -.5D, -.5D);
+            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR)
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
+            matrices.translate(.5D, .5D, .5D);
+
+            // CONVERSION CALCULATION (Blockbench Cube)
+            // x1: x - 7    x2: x + w - 9    z : z - 8
+            // y1: y - 7    y2: y + h - 9
+
+            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
+                renderFace(-7, -2, 7, 8, -5, vertexConsumer, 0xFFFFFF, matrices);
+            } else {
+                renderFace(-22, -6, 22, 19, -1, vertexConsumer, 0xFFFFFF, matrices);
+            }
+
+            matrices.pop();
         });
-        matrices.pop();
     }
 
     private static void renderFace(int x1, int y1, int x2, int y2, float z, VertexConsumer consumer, int light, MatrixStack stack) {
