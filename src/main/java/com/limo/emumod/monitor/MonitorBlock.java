@@ -17,7 +17,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import java.util.Objects;
@@ -25,14 +24,14 @@ import java.util.Objects;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class MonitorBlock extends BlockWithEntity {
-    private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((s) -> new MonitorBlock());
+    private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((_) -> new MonitorBlock());
 
     public MonitorBlock() {
         super(Settings.create()
-                .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((state, world, pos)
+                .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((_, world, pos)
                         -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.fileId != null)
                 .pistonBehavior(PistonBehavior.DESTROY).registryKey(BlockId.Registry.MONITOR));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
+        setDefaultState(this.stateManager.getDefaultState().with(Properties.ROTATION, 0));
     }
 
     @Override
@@ -61,16 +60,22 @@ public class MonitorBlock extends BlockWithEntity {
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+        stateManager.add(Properties.ROTATION);
     }
 
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(Properties.HORIZONTAL_FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        ctx.getWorld().markDirty(ctx.getBlockPos());
+        return this.getDefaultState().with(Properties.ROTATION, (-Math.round(ctx.getPlayerYaw() / 22.5f) + 16) % 16);
     }
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
         return new MonitorBlockEntity(pos, state);
+    }
+
+    @Override
+    protected BlockRenderType getRenderType(BlockState state) {
+        return state.get(Properties.ROTATION) == 0 ? BlockRenderType.MODEL : BlockRenderType.INVISIBLE;
     }
 }

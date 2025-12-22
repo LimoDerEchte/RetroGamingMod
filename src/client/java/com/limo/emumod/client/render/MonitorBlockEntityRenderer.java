@@ -43,11 +43,24 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
 
     @Override
     public void render(BlockEntityRenderState state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState) {
-        // Content
         assert mc.world != null;
         if(!(mc.world.getBlockEntity(state.pos) instanceof MonitorBlockEntity entity))
             return;
 
+        // Base Model
+        float rotation = entity.getCachedState().get(Properties.ROTATION) * 22.5f;
+        if(rotation != 0) {
+            matrices.push();
+            matrices.translate(.5D, .5D, .5D);
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation));
+            matrices.translate(-.5D, -.5D, -.5D);
+
+            queue.submitBlock(matrices, state.blockState.getBlock().getDefaultState(),
+                    state.lightmapCoordinates, OverlayTexture.DEFAULT_UV, 0x00000000);
+            matrices.pop();
+        }
+
+        // Content
         String iId = "monitor_" + entity.getPos().getX() + "_" + entity.getPos().getY() + "_" + entity.getPos().getZ();
         if(!idCache.containsKey(entity.getPos())) {
             idCache.put(entity.getPos(), Identifier.of("emumod", iId));
@@ -75,6 +88,7 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
                 r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 44, 25);
             }
             ratioCache.put(entity.getPos(), r);
+
             tex = new NativeImageBackedTexture(() -> iId, r.getImage());
             textureCache.put(entity.getPos(), tex);
             mc.getTextureManager().registerTexture(id, tex);
@@ -88,11 +102,7 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
             Vec3d pos = entity.getPos().toCenterPos().subtract(cameraState.pos);
             matrices.translate(pos);
 
-            switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
-                case EAST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
-                case WEST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
-                case SOUTH -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
-            }
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation));
 
             matrices.translate(-.5D, -.5D, -.5D);
             if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR)
@@ -104,9 +114,9 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
             // y1: y - 7    y2: y + h - 9
 
             if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
-                renderFace(-7, -2, 7, 8, -5, vertexConsumer, 0xFFFFFF, matrices);
+                renderFace(-7, -2, 7, 8, -5, vertexConsumer, state.lightmapCoordinates, matrices);
             } else {
-                renderFace(-22, -6, 22, 19, -1, vertexConsumer, 0xFFFFFF, matrices);
+                renderFace(-22, -6, 22, 19, -1, vertexConsumer, state.lightmapCoordinates, matrices);
             }
 
             matrices.pop();
