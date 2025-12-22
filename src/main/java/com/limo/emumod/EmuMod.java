@@ -28,15 +28,21 @@ public class EmuMod implements ModInitializer {
     public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
     public static NativeServer SERVER;
 
+    public static boolean REQUIREMENTS_MET;
+
     @Override
     public void onInitialize() {
         FileUtil.initGeneric();
-        RequirementManager.init();
+        REQUIREMENTS_MET = RequirementManager.init();
+
         EmuComponents.init();
         EmuItems.init();
         EmuBlockEntities.init();
         S2C.init();
         C2S.init();
+
+        if(!REQUIREMENTS_MET)
+            return;
         ServerHandler.init();
         ServerEvents.init();
     }

@@ -11,6 +11,8 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 
+import static com.limo.emumod.EmuMod.REQUIREMENTS_MET;
+
 public class EmuModClient implements ClientModInitializer {
     public static MinecraftClient mc;
     public static NativeClient CLIENT;
@@ -21,8 +23,10 @@ public class EmuModClient implements ClientModInitializer {
         ClientFilePath.init();
         ScreenManager.init();
         SoundManager.init();
-        ClientHandler.init();
 
+        if(!REQUIREMENTS_MET)
+            return;
+        ClientHandler.init();
         BlockEntityRendererFactories.register(EmuBlockEntities.MONITOR, MonitorBlockEntityRenderer::new);
     }
 }

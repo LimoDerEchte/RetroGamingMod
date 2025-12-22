@@ -25,11 +25,12 @@ public class RequirementManager {
     public static File FCEUmm;
     public static File bsnes;
 
-    public static void init() {
+    public static boolean init() {
         detectPlatform();
         // Required Libraries
-        checkFileLocal(bridge, false);
-        checkFileLocal(core, true);
+        if(!checkFileLocal(bridge, false)
+            || !checkFileLocal(core, true))
+            return false;
         // LibRetro Cores
         checkCore(gearBoy);
         checkCore(beetleGBA);
@@ -38,6 +39,7 @@ public class RequirementManager {
         checkCore(bsnes);
         // Load Bridge Lib
         System.load(bridge.getAbsolutePath());
+        return true;
     }
 
     private static void detectPlatform() {
@@ -77,14 +79,14 @@ public class RequirementManager {
         } catch (URISyntaxException ignore) { }
     }
 
-    private static void checkFileLocal(File file, boolean setExec) {
+    private static boolean checkFileLocal(File file, boolean setExec) {
         if(file.exists())
-            return;
+            return true;
         EmuMod.LOGGER.info("Extracting {}", file.getName());
         URL url = RequirementManager.class.getResource("/lib/" + file.getName());
         if(url == null) {
             EmuMod.LOGGER.error("Failed to find vital library");
-            return;
+            return false;
         }
         try(InputStream is = url.openStream(); OutputStream os = new FileOutputStream(file)) {
             byte[] buffer = new byte[8192];
@@ -102,6 +104,8 @@ public class RequirementManager {
             }
         } catch (IOException e) {
             EmuMod.LOGGER.error("Failed to extract vital library", e);
+            return false;
         }
+        return true;
     }
 }
