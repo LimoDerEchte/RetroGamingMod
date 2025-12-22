@@ -39,6 +39,5 @@ public class EmuMod implements ModInitializer {
         C2S.init();
         ServerHandler.init();
         ServerEvents.init();
-        System.load(FileUtil.getRequiredFile("libbridge.so").getAbsolutePath());
     }
 }

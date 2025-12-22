@@ -5,7 +5,16 @@
 
 #include "LibRetroCore.hpp"
 
+#if WIN32 // Redefine dlfcn functions on windows
+#include <libloaderapi.h>
+#define dlopen(libname, ignored) LoadLibraryA(libname)
+#define dlsym(lib, handle) GetProcAddress(lib, handle)
+#define dlclose(lib) FreeLibrary(lib)
+#define dlerror() "Unavailable on windows"
+#else // Keep dlfcn on other platforms
 #include <dlfcn.h>
+#endif
+
 #include <iostream>
 #include <thread>
 #include <chrono>

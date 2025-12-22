@@ -7,3 +7,6 @@
 [submodule "core/lib/libretro-common"]
 	path = core/lib/libretro-common
 	url = https://github.com/libretro/libretro-common.git
+[submodule "src/core/lib/libretro-common"]
+	path = src/core/lib/libretro-common
+	url = https://github.com/libretro/libretro-common.git

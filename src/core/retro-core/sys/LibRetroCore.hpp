@@ -8,6 +8,10 @@
 #include <map>
 #include <mutex>
 
+#ifdef WIN32
+#include <minwindef.h>
+#endif
+
 #include "../lib/libretro-common/include/libretro.h"
 
 class LibRetroCore {
@@ -35,7 +39,11 @@ private:
 
     std::string systemPath;
     std::string corePath;
+#ifdef WIN32
+    HMODULE coreHandle;
+#else
     void* coreHandle;
+#endif
     std::mutex saveMutex;
     std::function<void(const int*, unsigned, unsigned, size_t)> videoFrameCallback;
     std::function<void(const int16_t*, size_t)> audioCallback;
