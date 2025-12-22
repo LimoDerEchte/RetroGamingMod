@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
-import net.fabricmc.fabric.api.tag.convention.v2.TagUtil;
 import net.minecraft.data.recipe.RecipeExporter;
 import net.minecraft.data.recipe.RecipeGenerator;
 import net.minecraft.item.Items;
@@ -15,6 +14,7 @@ import net.minecraft.recipe.book.RecipeCategory;
 import net.minecraft.registry.RegistryWrapper;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class EmuModDataGenerator implements DataGeneratorEntrypoint {
@@ -27,6 +27,7 @@ public class EmuModDataGenerator implements DataGeneratorEntrypoint {
 
         FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
         pack.addProvider(EmuModRecipeProvider::new);
+
     }
 
     private static class EmuModRecipeProvider extends FabricRecipeProvider {
@@ -49,6 +50,38 @@ public class EmuModDataGenerator implements DataGeneratorEntrypoint {
                             .input('P', Items.PAPER)
                             .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT));
 
+                    createShapeless(RecipeCategory.REDSTONE, EmuItems.CABLE, 3)
+                            .input(Items.COPPER_INGOT, 3)
+                            .input(Items.REDSTONE, 2)
+                            .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT));
+
+                    createShaped(RecipeCategory.REDSTONE, EmuItems.NES_CONTROLLER)
+                            .pattern("BBB")
+                            .pattern("III")
+                            .pattern("CRC")
+                            .input('B', Items.STONE_BUTTON)
+                            .input('I', Items.IRON_INGOT)
+                            .input('C', Items.COPPER_INGOT)
+                            .input('R', Items.REDSTONE)
+                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT));
+
+                    createShaped(RecipeCategory.REDSTONE, EmuItems.MONITOR)
+                            .pattern("IGI")
+                            .pattern("GGG")
+                            .pattern("III")
+                            .input('I', Items.IRON_INGOT)
+                            .input('G', Items.TINTED_GLASS)
+                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT));
+
+                    createShaped(RecipeCategory.REDSTONE, EmuItems.LARGE_TV)
+                            .pattern("IGI")
+                            .pattern("GMG")
+                            .pattern("IGI")
+                            .input('I', Items.IRON_INGOT)
+                            .input('G', Items.TINTED_GLASS)
+                            .input('M', EmuItems.MONITOR)
+                            .criterion(hasItem(EmuItems.MONITOR), conditionsFromItem(EmuItems.MONITOR));
+
                     createShaped(RecipeCategory.REDSTONE, EmuItems.GAMEBOY)
                             .pattern("IPI")
                             .pattern("CLC")
@@ -56,7 +89,7 @@ public class EmuModDataGenerator implements DataGeneratorEntrypoint {
                             .input('I', Items.IRON_INGOT)
                             .input('C', Items.COPPER_INGOT)
                             .input('G', Items.GOLD_INGOT)
-                            .input('P', Items.GLASS_PANE)
+                            .input('P', Items.TINTED_GLASS)
                             .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT));
 
                     createShapeless(RecipeCategory.REDSTONE, EmuItems.GAMEBOY_COLOR)
@@ -93,7 +126,16 @@ public class EmuModDataGenerator implements DataGeneratorEntrypoint {
                             .input('I', Items.IRON_INGOT)
                             .input('C', Items.COPPER_INGOT)
                             .input('R', Items.REDSTONE)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT));
+                            .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT));
+
+                    offerSmelting(
+                            List.of(EmuItems.BROKEN_CARTRIDGE),
+                            RecipeCategory.REDSTONE,
+                            EmuItems.CARTRIDGE,
+                            0.1f,
+                            300,
+                            "repair"
+                    );
                 }
             };
         }
