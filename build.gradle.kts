@@ -42,6 +42,12 @@ val fabric_version: String by project
 val modmenu_version: String by project
 val cloth_config_version: String by project
 
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")
     mappings("net.fabricmc:yarn:${yarn_mappings}:v2")
