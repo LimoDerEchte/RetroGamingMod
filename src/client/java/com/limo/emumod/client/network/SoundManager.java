@@ -1,6 +1,8 @@
 package com.limo.emumod.client.network;
 
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.minecraft.client.MinecraftClient;
 
 import java.util.Map;
 import java.util.UUID;
@@ -15,10 +17,12 @@ public class SoundManager {
     private static final Map<UUID, Double> fileDistanceMap = new ConcurrentHashMap<>();
 
     public static void init() {
-        WorldRenderEvents.START.register((ctx) -> fileDistanceMap.clear());
-        WorldRenderEvents.END.register((ctx) -> {
-            ctx.world().getEntities().forEach(entity -> {
-                double distance = mc.cameraEntity == null ? 0 : mc.cameraEntity.getPos().distanceTo(entity.getPos());
+        WorldRenderEvents.START_MAIN.register((_) -> fileDistanceMap.clear());
+        WorldRenderEvents.END_MAIN.register((_) -> {
+            assert MinecraftClient.getInstance().world != null;
+            MinecraftClient.getInstance().world.getEntities().forEach(entity -> {
+                double distance = mc.getCameraEntity() == null ? 0 : mc.getCameraEntity().getEntityPos()
+                        .distanceTo(entity.getEntityPos());
                 SoundManager.updateEntityInRender(entity.getUuid(), distance);
             });
             fileDistanceMap.forEach((uuid, val) -> {

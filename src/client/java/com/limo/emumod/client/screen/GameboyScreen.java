@@ -3,8 +3,10 @@ package com.limo.emumod.client.screen;
 import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.ControlHandler;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
@@ -41,9 +43,10 @@ public class GameboyScreen extends Screen {
 
     public GameboyScreen(boolean isGbc, UUID fileId) {
         super(Text.of("Gameboy"));
+        String id = "gb_screen_" + texIncrement++;
         this.controlHandler = new ControlHandler(inputMap, fileId, 0);
-        this.frameTexture = new NativeImageBackedTexture(160, 144, false);
-        this.screenTexture = Identifier.of("emumod", "gb_screen_" + texIncrement++);
+        this.frameTexture = new NativeImageBackedTexture(id, 160, 144, false);
+        this.screenTexture = Identifier.of("emumod", id);
         MinecraftClient.getInstance().getTextureManager().registerTexture(screenTexture, frameTexture);
         this.isGbc = isGbc;
         this.fileId = fileId;
@@ -60,16 +63,16 @@ public class GameboyScreen extends Screen {
         Objects.requireNonNull(frameTexture.getImage()).copyFrom(ScreenManager.getDisplay(fileId));
         frameTexture.upload();
         // Render Actual Stuff
-        context.getMatrices().push();
-        context.getMatrices().scale(scale, scale, scale);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().scale(scale, scale);
         // Background
-        context.drawTexture(RenderLayer::getGuiTextured, isGbc ? GAMEBOY_COLOR_TEXTURE : GAMEBOY_TEXTURE,
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, isGbc ? GAMEBOY_COLOR_TEXTURE : GAMEBOY_TEXTURE,
                 (width / 2 - 512 / 2) / scale, (height / 2 - 144 - 64) / scale, 0, 0, 512, 512,
                 32, 32, 32, 32);
         // Frame
-        context.drawTexture(RenderLayer::getGuiTextured, screenTexture, (width / 2 - 80) / scale,
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, screenTexture, (width / 2 - 80) / scale,
                 (height / 2 - 144) / scale, 0, 0, 160, 144, 160, 144);
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     @Override
@@ -78,16 +81,16 @@ public class GameboyScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(controlHandler.down(keyCode))
+    public boolean keyPressed(KeyInput input) {
+        if(controlHandler.down(input.getKeycode()))
             return true;
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if(controlHandler.up(keyCode))
+    public boolean keyReleased(KeyInput input) {
+        if(controlHandler.up(input.getKeycode()))
             return true;
-        return super.keyReleased(keyCode, scanCode, modifiers);
+        return super.keyReleased(input);
     }
 }

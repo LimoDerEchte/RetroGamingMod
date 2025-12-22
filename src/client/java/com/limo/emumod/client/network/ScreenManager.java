@@ -1,7 +1,7 @@
 package com.limo.emumod.client.network;
 
 import com.limo.emumod.bridge.NativeDisplay;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.texture.NativeImage;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class ScreenManager {
     }
 
     public static void init() {
-        WorldRenderEvents.START.register((ctx) -> {
+        WorldRenderEvents.START_MAIN.register((_) -> {
             for(Map.Entry<UUID, NativeDisplay> entry : displays.entrySet()) {
                 if(!displayBuffer.containsKey(entry.getKey()))
                     continue;
@@ -46,10 +46,8 @@ public class ScreenManager {
 
     public static void unregisterDisplay(UUID id) {
         displays.remove(id);
-        if(displayBuffer.containsKey(id)) {
-            displayBuffer.get(id).close();
-            displayBuffer.remove(id);
-        }
+        if(displayBuffer.containsKey(id))
+            displayBuffer.remove(id).close();
         CLIENT.unregisterScreen(id);
     }
 
