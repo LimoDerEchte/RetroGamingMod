@@ -2,24 +2,19 @@ package com.limo.emumod.client.screen;
 
 import com.limo.emumod.client.network.ScreenManager;
 import com.limo.emumod.client.util.ControlHandler;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public class GameboyAdvanceScreen extends Screen {
-    private static int texIncrement = 0;
     private static final Identifier GAMEBOY_ADVANCE_TEXTURE = Identifier.of("emumod", "textures/item/gameboy_advance.png");
     private static final int scale = 1;
     private static final Map<Integer, Short> inputMap = Map.of(
@@ -36,18 +31,12 @@ public class GameboyAdvanceScreen extends Screen {
     );
 
     private final ControlHandler controlHandler;
-    private final NativeImageBackedTexture frameTexture;
-    private final Identifier screenTexture;
 
     public UUID fileId;
 
     public GameboyAdvanceScreen(UUID fileId) {
         super(Text.of("Gameboy"));
-        String id = "gba_screen_" + texIncrement++;
         this.controlHandler = new ControlHandler(inputMap, fileId, 0);
-        this.frameTexture = new NativeImageBackedTexture(id, 240, 160, false);
-        this.screenTexture = Identifier.of("emumod", id);
-        MinecraftClient.getInstance().getTextureManager().registerTexture(screenTexture, frameTexture);
         this.fileId = fileId;
     }
 
@@ -58,9 +47,6 @@ public class GameboyAdvanceScreen extends Screen {
                 "GPL-2.0"), 10, height - 25, Color.WHITE.getRGB(), true);
         context.drawText(textRenderer, Text.translatable("gui.emumod.emulator.license_2",
                 "https://github.com/libretro/beetle-gba-libretro/blob/master/COPYING"), 10, height - 15, Color.WHITE.getRGB(), true);
-        // Update Texture
-        Objects.requireNonNull(frameTexture.getImage()).copyFrom(ScreenManager.getDisplay(fileId));
-        frameTexture.upload();
         // Render Actual Stuff
         context.getMatrices().pushMatrix();
         context.getMatrices().scale(scale, scale);
@@ -69,7 +55,8 @@ public class GameboyAdvanceScreen extends Screen {
                 (height / 2 - 320) / scale, 0, 0, 640, 640,
                 32, 32, 32, 32);
         // Frame
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, screenTexture, (width / 2 - 120) / scale,
+        ScreenManager.retrieveDisplay(fileId);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromUUID(fileId), (width / 2 - 120) / scale,
                 (height / 2 - 100) / scale, 0, 0, 240, 160, 240, 160);
         context.getMatrices().popMatrix();
     }

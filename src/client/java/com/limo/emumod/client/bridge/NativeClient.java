@@ -1,7 +1,7 @@
 package com.limo.emumod.client.bridge;
 
-import com.limo.emumod.bridge.NativeDisplay;
 import com.limo.emumod.bridge.NativeUtil;
+import net.minecraft.client.texture.NativeImage;
 
 import java.util.UUID;
 
@@ -20,13 +20,17 @@ public class NativeClient {
         return isAuthenticated(handle);
     }
 
-    public NativeDisplay registerScreen(UUID uuid, int width, int height, int sampleRate) {
+    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate) {
         long ptr = registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, sampleRate);
-        return new NativeDisplay(ptr);
+        return new NativeImage(NativeImage.Format.RGB, width, height, false, ptr);
     }
 
     public void unregisterScreen(UUID uuid) {
         unregisterScreen(handle, NativeUtil.nativeUUID(uuid));
+    }
+
+    public boolean screenChanged(UUID uuid) {
+        return screenChanged(handle, NativeUtil.nativeUUID(uuid));
     }
 
     public void updateControls(UUID uuid, int port, short controls) {
@@ -42,6 +46,7 @@ public class NativeClient {
     private static native boolean isAuthenticated(long ptr);
     private static native long registerScreen(long ptr, long uuid, int width, int height, int sampleRate);
     private static native void unregisterScreen(long ptr, long uuid);
+    private static native boolean screenChanged(long ptr, long uuid);
     private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
     private static native void updateAudioDistance(long ptr, long uuid, double distance);
 }
