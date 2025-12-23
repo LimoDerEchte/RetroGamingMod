@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <enet/enet.h>
 
@@ -38,11 +39,10 @@ struct CharArrayPacket {
 struct Int8ArrayPacket {
     const PacketType type;
     const jUUID* ref;
-    const uint8_t* data;
-    const size_t size;
+    const std::vector<uint8_t> data;
 
-    explicit Int8ArrayPacket(PacketType type, const jUUID* ref, const uint8_t* ptr, size_t size);
+    explicit Int8ArrayPacket(PacketType type, const jUUID* ref, const std::vector<uint8_t>& data);
 
-    static Int8ArrayPacket* unpack(const ENetPacket* packet);
+    [[nodiscard]] static std::unique_ptr<Int8ArrayPacket> unpack(const ENetPacket* packet);
     [[nodiscard]] ENetPacket* pack() const;
 };

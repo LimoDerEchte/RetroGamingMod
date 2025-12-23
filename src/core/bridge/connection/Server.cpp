@@ -202,10 +202,7 @@ void RetroServer::videoSenderLoop(const int fps) {
             const auto frame = console->createFrame();
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(
-                PACKET_UPDATE_DISPLAY, console->uuid,
-                frame.data(), frame.size()
-            ).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, console->uuid, frame).pack();
             mutex.lock();
             for (const RetroServerClient* client : *clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
@@ -242,10 +239,7 @@ void RetroServer::audioSenderLoop(const int cps) {
             console->retroCoreHandle->audioChanged = false;
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(
-                PACKET_UPDATE_AUDIO, console->uuid,
-                frame.data(), frame.size()
-            ).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_AUDIO, console->uuid, frame).pack();
             mutex.lock();
             for (const RetroServerClient* client : *clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
@@ -332,14 +326,15 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
         }
         case PACKET_UPDATE_CONTROLS: {
             const auto parsed = Int8ArrayPacket::unpack(packet);
-            GenericConsoleRegistry::withConsole(parsed->ref, [parsed](const GenericConsole* entry) {
-                const int port = parsed->data[0];
+            auto* p = parsed.get();
+            GenericConsoleRegistry::withConsole(parsed->ref, [p](const GenericConsole* entry) {
+                const int port = p->data[0];
                 union {
                     uint8_t bytes[2];
                     int16_t value = 0;
                 } converter;
-                converter.bytes[0] = parsed->data[1];
-                converter.bytes[1] = parsed->data[2];
+                converter.bytes[0] = p->data[1];
+                converter.bytes[1] = p->data[2];
                 entry->input(port, converter.value);
             });
             break;

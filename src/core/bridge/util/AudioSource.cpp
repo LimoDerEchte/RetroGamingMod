@@ -70,6 +70,12 @@ AudioStreamPlayer& AudioStreamPlayer::operator=(AudioStreamPlayer&& other) noexc
     return *this;
 }
 
+void AudioStreamPlayer::receive(const std::vector<uint8_t> &data) {
+    std::lock_guard lock(queueMutex);
+    packetQueue.push(data);
+    queueCondition.notify_one();
+}
+
 void AudioStreamPlayer::initOpenAL() {
     std::lock_guard al_lock(al_mutex);
     device = alcOpenDevice(nullptr);
@@ -119,17 +125,6 @@ void AudioStreamPlayer::cleanupOpenAL() {
     if (device) {
         alcCloseDevice(device);
     }
-}
-
-void AudioStreamPlayer::receive(const uint8_t* data, const size_t size) {
-    if (!data || size == 0) {
-        return;
-    } {
-        std::vector packet(data, data + size);
-        std::lock_guard lock(queueMutex);
-        packetQueue.push(std::move(packet));
-    }
-    queueCondition.notify_one();
 }
 
 void AudioStreamPlayer::updateDistance(const double distance) {

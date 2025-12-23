@@ -48,7 +48,7 @@ public:
     AudioStreamPlayer(AudioStreamPlayer&& other) noexcept;
     AudioStreamPlayer& operator=(AudioStreamPlayer&& other) noexcept;
 
-    void receive(const uint8_t* data, size_t size);
+    void receive(const std::vector<uint8_t>& data);
     void updateDistance(double distance);
     void start();
     void stop();

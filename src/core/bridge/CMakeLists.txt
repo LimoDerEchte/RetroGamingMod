@@ -25,6 +25,8 @@ add_library(bridge SHARED
         codec/AudioDecoder.hpp
         util/AudioSource.cpp
         util/AudioSource.hpp
+        util/NativeImage.cpp
+        util/NativeImage.hpp
 )
 
 target_include_directories(bridge PRIVATE

@@ -49,6 +49,14 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
+ * Method:    screenChanged
+ * Signature: (JJ)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_screenChanged
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    sendControlUpdate
  * Signature: (JJIS)V
  */

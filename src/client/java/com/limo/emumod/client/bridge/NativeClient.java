@@ -22,7 +22,7 @@ public class NativeClient {
 
     public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate) {
         long ptr = registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, sampleRate);
-        return new NativeImage(NativeImage.Format.RGB, width, height, false, ptr);
+        return new NativeImage(NativeImage.Format.RGBA, width, height, false, ptr);
     }
 
     public void unregisterScreen(UUID uuid) {
