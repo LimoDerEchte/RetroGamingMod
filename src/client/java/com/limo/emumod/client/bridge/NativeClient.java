@@ -38,10 +38,6 @@ public class NativeClient {
         sendControlUpdate(handle, NativeUtil.nativeUUID(uuid), port, controls);
     }
 
-    public void updateAudioDistance(UUID uuid, double audioDistance) {
-        updateAudioDistance(handle, NativeUtil.nativeUUID(uuid), audioDistance);
-    }
-
     private static native long connect(String ip, int port, String token);
     private static native void disconnect(long ptr);
     private static native boolean isAuthenticated(long ptr);
@@ -49,5 +45,4 @@ public class NativeClient {
     private static native void unregisterScreen(long ptr, long uuid);
     private static native boolean screenChanged(long ptr, long uuid);
     private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
-    private static native void updateAudioDistance(long ptr, long uuid, double distance);
 }

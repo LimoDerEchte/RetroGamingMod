@@ -111,7 +111,7 @@ void test_new_codec() {
         constexpr int height = 160;
         constexpr int count = 1000;
         VideoEncoderInt16 encoder(width, height);
-        VideoDecoderInt16 decoder(width, height);
+        VideoDecoder decoder(width, height);
 
         std::vector<std::vector<int16_t>> original_frames;
         std::vector<std::vector<uint8_t>> encoded_frames;
@@ -131,7 +131,7 @@ void test_new_codec() {
             total_size += encoded_frame.size();
 
             auto decoded_frame = decoder.decodeFrame(encoded_frame);
-            decoded_frames.push_back(decoded_frame);
+            //decoded_frames.push_back(decoded_frame);
         }
 
         size_t matching_frames = 0;
@@ -145,9 +145,6 @@ void test_new_codec() {
         std::cout << "Total size: " << total_size << std::endl;
         const size_t speed = total_size * 30 / count;
         std::cout << "Speed: " << speed << std::endl;
-
-        encoder.reset();
-        decoder.reset();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -281,7 +278,7 @@ void test_audio_codec() {
 }
 
 int main() {
-    //test_new_codec();
-    test_audio_codec();
+    test_new_codec();
+    //test_audio_codec();
     return 0;
 }

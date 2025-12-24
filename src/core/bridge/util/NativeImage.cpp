@@ -4,6 +4,7 @@
 
 #include "NativeImage.hpp"
 
+#include <cstring>
 #include <memory>
 #include <mutex>
 
@@ -22,8 +23,9 @@ uint32_t* NativeImage::nativePointer() const {
 void NativeImage::receive(const std::vector<uint8_t>& data) {
     std::lock_guard lock(mutex_);
     if (decoder_ == nullptr) {
-        decoder_ = std::make_unique<VideoDecoderInt16>(width_, height_);
+        decoder_ = std::make_unique<VideoDecoder>(width_, height_);
     }
-    decoder_->decodeFrameRGB565(data, data_);
+    const auto decoded = decoder_->decodeFrame(data);\
+    memcpy(data_, decoded.data(), sizeof(uint32_t) * width_ * height_);
     changed_ = true;
 }

@@ -63,14 +63,6 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_scree
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate
   (JNIEnv *, jclass, jlong, jlong, jint, jshort);
 
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    updateAudioDistance
- * Signature: (JJD)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_updateAudioDistance
-  (JNIEnv *, jclass, jlong, jlong, jdouble);
-
 #ifdef __cplusplus
 }
 #endif

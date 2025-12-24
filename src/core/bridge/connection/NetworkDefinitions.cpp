@@ -50,13 +50,13 @@ std::unique_ptr<Int8ArrayPacket> Int8ArrayPacket::unpack(const ENetPacket *packe
     const auto uuid = new jUUID();
     memcpy(uuid, &packet->data[1], sizeof(jUUID));
     memcpy(&size, &packet->data[17], sizeof(size_t));
-    return std::make_unique<Int8ArrayPacket>(type, uuid, std::vector<uint8_t>(&packet->data[25], &packet->data[25+size]));
+    return std::make_unique<Int8ArrayPacket>(type, uuid, std::vector(&packet->data[25], &packet->data[25+size]));
 }
 
 ENetPacket* Int8ArrayPacket::pack() const{
     const auto packetSize = data.size() + 25;
     const auto packed = new int8_t[packetSize]{};
-    const auto sizeB = reinterpret_cast<int16_t*>(data.size());
+    const auto sizeB = data.size();
     memcpy(&packed[0], &type, 1);
     memcpy(&packed[1], ref, sizeof(jUUID));
     memcpy(&packed[17], &sizeB, sizeof(size_t));

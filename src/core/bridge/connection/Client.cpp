@@ -13,7 +13,6 @@
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
 
 #include "NetworkDefinitions.hpp"
-#include "util/AudioSource.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_connect(JNIEnv *env, jclass, const jstring ip, const jint port, const jstring token) {
     return reinterpret_cast<jlong>(new RetroClient(
@@ -54,12 +53,6 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendContr
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
     client->sendControlsUpdate(uuid, port, controls);
-}
-
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_updateAudioDistance(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jdouble dst) {
-    const auto client = reinterpret_cast<RetroClient*>(ptr);
-    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    client->updateAudioDistance(uuid, dst);
 }
 
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
@@ -120,11 +113,8 @@ void RetroClient::dispose() {
 uint32_t* RetroClient::registerDisplay(const jUUID *uuid, int width, int height, uint32_t *data, int sampleRate) {
     std::unique_lock lock(mapMutex);
     const auto display = std::make_shared<NativeImage>(width, height, data);
-    const auto audio = std::make_shared<AudioStreamPlayer>(sampleRate, 2);
-    audio->start();
     const long uuidCombine = uuid->combine();
     displays.insert_or_assign(uuidCombine, display);
-    playbacks.insert_or_assign(uuidCombine, audio);
     return display->nativePointer();
 }
 
@@ -132,7 +122,6 @@ void RetroClient::unregisterDisplay(const jUUID* uuid) {
     std::unique_lock lock(mapMutex);
     const long uuidCombine = uuid->combine();
     displays.erase(uuidCombine);
-    playbacks.erase(uuidCombine);
 }
 
 std::shared_ptr<NativeImage> RetroClient::getDisplay(const jUUID *uuid) {
@@ -150,16 +139,7 @@ void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const in
 
     std::unique_lock enet_lock(enetMutex);
     enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, content).pack());
-    bytesOut += sizeof(content) + 25;
-}
-
-void RetroClient::updateAudioDistance(const jUUID *uuid, const double distance) {
-    std::shared_lock lock(mapMutex);
-    const auto it = playbacks.find(uuid->combine());
-    if (it == playbacks.end()) {
-        return;
-    }
-    it->second->updateDistance(distance);
+    bytesOut += 25 + content.size();
 }
 
 void RetroClient::mainLoop() {
@@ -314,19 +294,11 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_AUDIO: {
-            const auto parsed = Int8ArrayPacket::unpack(packet);
-            if (parsed == nullptr) {
+            if (const auto parsed = Int8ArrayPacket::unpack(packet); parsed == nullptr) {
                 std::cerr << "[RetroClient] Received invalid audio packet" << std::endl;
                 return;
             }
-            mapMutex.lock_shared();
-            const auto it = playbacks.find(parsed->ref->combine());
-            if (it == playbacks.end()) {
-                std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
-                return;
-            }
-            it->second->receive(parsed->data);
-            mapMutex.unlock_shared();
+            // TODO: Add to playback queue and transfer to java
             break;
         }
         case PACKET_AUTH:

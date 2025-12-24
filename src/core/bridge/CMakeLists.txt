@@ -3,8 +3,6 @@ add_library(bridge SHARED
         ../shared/SharedStructs.hpp
         platform/GenericConsole.cpp
         platform/GenericConsole.hpp
-        util/NativeAudio.cpp
-        util/NativeAudio.hpp
         connection/Server.cpp
         connection/Server.hpp
         connection/Client.cpp
@@ -21,8 +19,6 @@ add_library(bridge SHARED
         codec/AudioEncoder.hpp
         codec/AudioDecoder.cpp
         codec/AudioDecoder.hpp
-        util/AudioSource.cpp
-        util/AudioSource.hpp
         util/NativeImage.cpp
         util/NativeImage.hpp
 )
@@ -38,9 +34,9 @@ target_link_libraries(bridge PRIVATE
         Boost::interprocess
         Boost::process
         unofficial::enet::enet
-        OpenAL::OpenAL
         ZLIB::ZLIB
         fmt::fmt
+        openh264
         ${OPUS_LIBRARIES}
 )
 

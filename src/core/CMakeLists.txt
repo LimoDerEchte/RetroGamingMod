@@ -28,7 +28,6 @@ find_package(boost_interprocess CONFIG REQUIRED)
 find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
-find_package(OpenAL REQUIRED openal)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
@@ -36,15 +35,3 @@ find_package(fmt CONFIG REQUIRED)
 add_subdirectory(bridge)
 add_subdirectory(retro-core)
 add_subdirectory(test)
-
-# Statically include CXX
-if(UNIX AND NOT APPLE)
-    target_link_options(bridge PRIVATE
-            "-static-libgcc"
-            "-static-libstdc++"
-    )
-    target_link_options(retro-core PRIVATE
-            "-static-libgcc"
-            "-static-libstdc++"
-    )
-endif()

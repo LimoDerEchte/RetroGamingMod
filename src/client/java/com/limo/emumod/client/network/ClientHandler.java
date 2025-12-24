@@ -63,8 +63,5 @@ public class ClientHandler {
                 ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate);
             }
         }));
-        ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateHandheldAudio.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            SoundManager.updateEntity(payload.uuid(), payload.entity());
-        }));
     }
 }

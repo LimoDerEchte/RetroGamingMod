@@ -7,9 +7,8 @@
 #include <unordered_map>
 #include <enet/enet.h>
 
-#include "util/AudioSource.hpp"
-#include "util/NativeImage.hpp"
-#include "util/NativeUtil.hpp"
+#include <util/NativeImage.hpp>
+#include <util/NativeUtil.hpp>
 
 class RetroClient {
     std::shared_mutex enetMutex;
@@ -18,7 +17,6 @@ class RetroClient {
 
     std::shared_mutex mapMutex;
     std::unordered_map<long, std::shared_ptr<NativeImage>> displays;
-    std::unordered_map<long, std::shared_ptr<AudioStreamPlayer>> playbacks;
 
     bool running = false;
     int runningLoops = 0;
@@ -37,7 +35,6 @@ public:
     void unregisterDisplay(const jUUID* uuid);
     std::shared_ptr<NativeImage> getDisplay(const jUUID* uuid);
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
-    void updateAudioDistance(const jUUID* uuid, double distance);
 
     void mainLoop();
     void bandwidthMonitorLoop();

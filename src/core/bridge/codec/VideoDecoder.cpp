@@ -4,78 +4,78 @@
 
 #include "VideoDecoder.hpp"
 
-#include <cstring>
-#include <stdexcept>
-#include <zlib.h>
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <ostream>
 
-std::vector<int16_t> VideoDecoderInt16::performInverseDeltaEncoding(const std::vector<int16_t> &delta_frame) {
-    std::vector<int16_t> decoded_frame(delta_frame.size());
-    if (previous_frame.empty()) {
-        decoded_frame = delta_frame;
-    } else {
-        int16_t prevVal = 0;
-        for (size_t i = 0; i < delta_frame.size(); ++i) {
-            const auto packet_delta = static_cast<int16_t>(prevVal - delta_frame[i]);
-            const auto frame_delta = static_cast<int16_t>(previous_frame[i] + packet_delta);
-            decoded_frame[i] = frame_delta;
-            prevVal = packet_delta;
+VideoDecoder::VideoDecoder(const int width, const int height) : width(width), height(height), decoder(nullptr) {
+    SDecodingParam param = {};
+    param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_DEFAULT;
+
+    param.uiTargetDqLayer = UCHAR_MAX;
+    param.eEcActiveIdc = ERROR_CON_SLICE_COPY;
+
+    WelsCreateDecoder(&decoder);
+    decoder->Initialize(&param);
+}
+
+VideoDecoder::~VideoDecoder() {
+    decoder->Uninitialize();
+    WelsDestroyDecoder(decoder);
+}
+
+std::vector<int32_t> VideoDecoder::decodeFrame(const std::vector<uint8_t> &encoded_data) const {
+    if (!decoder) return {};
+    std::cout << "Decoding " << encoded_data.size() << " bytes" << std::endl;
+
+    SBufferInfo bufInfo = {};
+    if (const int ret = decoder->DecodeFrameNoDelay(encoded_data.data(), static_cast<int>(encoded_data.size()),
+            nullptr, &bufInfo); ret != 0 || bufInfo.iBufferStatus != 1)
+        return {};
+
+    const int frameWidth  = bufInfo.UsrData.sSystemBuffer.iWidth;
+    const int frameHeight = bufInfo.UsrData.sSystemBuffer.iHeight;
+
+    const uint8_t* yPlane  = bufInfo.pDst[0];
+    const uint8_t* uvPlane = bufInfo.pDst[1];
+
+    const int yStride  = bufInfo.UsrData.sSystemBuffer.iStride[0];
+    const int uvStride = bufInfo.UsrData.sSystemBuffer.iStride[1];
+
+    std::vector<int32_t> rgba(frameWidth * frameHeight);
+    for (int j = 0; j < frameHeight; ++j) {
+        for (int i = 0; i < frameWidth; ++i) {
+            const int yIdx = j * yStride + i;
+            const int uvIdx = (j / 2) * uvStride + (i / 2) * 2; // *2 because U+V
+
+            const uint8_t Y = yPlane[yIdx];
+            const uint8_t U = uvPlane[uvIdx + 0];
+            const uint8_t V = uvPlane[uvIdx + 1];
+
+            // convert YUV->RGB
+            const int C = Y - 16;
+            const int D = U - 128;
+            const int E = V - 128;
+
+            int R = (298 * C + 409 * E + 128) >> 8;
+            int G = (298 * C - 100 * D - 208 * E + 128) >> 8;
+            int B = (298 * C + 516 * D + 128) >> 8;
+
+            R = std::clamp(R, 0, 255);
+            G = std::clamp(G, 0, 255);
+            B = std::clamp(B, 0, 255);
+
+            rgba[j * frameWidth + i] = (R << 24) | (G << 16) | (B << 8) | 0xFF;
         }
     }
-    previous_frame = decoded_frame;
-    return decoded_frame;
+    return rgba;
 }
 
-std::vector<int16_t> VideoDecoderInt16::decompressWithZlib(const std::vector<uint8_t> &compressed_data) const {
-    uLongf decompressed_size = width * height * sizeof(int16_t);
-    std::vector<uint8_t> decompressed_buffer(decompressed_size);
-
-    const int zlib_result = uncompress(
-        decompressed_buffer.data(),
-        &decompressed_size,
-        compressed_data.data() + 1,
-        compressed_data.size() - 1
-    );
-
-    if (zlib_result != Z_OK) {
-        throw std::runtime_error("Decompression failed");
-    }
-
-    std::vector<int16_t> decompressed_frame(width * height);
-    memcpy(decompressed_frame.data(), decompressed_buffer.data(), decompressed_size);
-    return decompressed_frame;
-}
-
-VideoDecoderInt16::VideoDecoderInt16(const int width, const int height) : width(width), height(height) {
-}
-
-std::vector<int16_t> VideoDecoderInt16::decodeFrame(const std::vector<uint8_t> &encoded_data) {
-    std::vector<int16_t> decompressed_frame = decompressWithZlib(encoded_data);
-    if (encoded_data[0] == 1) {
-        previous_frame = decompressed_frame;
-        return decompressed_frame;
-    }
-    return performInverseDeltaEncoding(decompressed_frame);
-}
-
-void VideoDecoderInt16::decodeFrameRGB565(const std::vector<uint8_t> &encoded_data, uint32_t* buf) {
-    const std::vector<int16_t> decompressed_565 = decodeFrame(encoded_data);
-    for (size_t i = 0; i < width * height; ++i) {
-        const uint16_t p = decompressed_565[i];
-        buf[i] = 0xFF000000 |
-                 (((p >> 11) & 0x1F) << 19) |
-                 (((p >> 5) & 0x3F) << 10) |
-                 ((p & 0x1F) << 3);
-    }
-}
-
-void VideoDecoderInt16::reset() {
-    previous_frame.clear();
-}
-
-int VideoDecoderInt16::getWidth() const {
+int VideoDecoder::getWidth() const {
     return width;
 }
 
-int VideoDecoderInt16::getHeight() const {
+int VideoDecoder::getHeight() const {
     return height;
 }

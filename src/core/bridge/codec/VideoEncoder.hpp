@@ -3,24 +3,23 @@
 //
 
 #pragma once
+
 #include <cstdint>
 #include <vector>
+#include <wels/codec_api.h>
 
 class VideoEncoderInt16 {
     static constexpr int RAW_FRAME_INTERVAL = 30;
+    static constexpr int TARGET_BITRATE = 800000;
 
     const int width, height;
-    int frame_count = 0;
-    std::vector<int16_t> previous_frame;
-
-    std::vector<int16_t> performDeltaEncoding(const std::vector<int16_t>& current_frame);
-    static std::vector<uint8_t> compressWithZlib(const std::vector<int16_t>& data, bool is_raw_frame);
+    ISVCEncoder* encoder;
 
 public:
     VideoEncoderInt16(int width, int height);
+    ~VideoEncoderInt16();
 
-    std::vector<uint8_t> encodeFrame(const std::vector<int16_t>& frame);
-    void reset();
+    [[nodiscard]] std::vector<uint8_t> encodeFrame(const std::vector<int16_t>& frame) const;
 
     [[nodiscard]] int getWidth() const;
     [[nodiscard]] int getHeight() const;
