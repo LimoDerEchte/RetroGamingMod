@@ -10,7 +10,6 @@
 
 class VideoEncoderInt16 {
     static constexpr int RAW_FRAME_INTERVAL = 30;
-    static constexpr int TARGET_BITRATE = 800000;
 
     const int width, height;
     ISVCEncoder* encoder;

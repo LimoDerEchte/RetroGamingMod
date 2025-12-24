@@ -15,19 +15,21 @@ VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(
     param.iUsageType = SCREEN_CONTENT_REAL_TIME;
     param.iPicWidth = width;
     param.iPicHeight = height;
-    param.iTargetBitrate = TARGET_BITRATE;
-    param.iRCMode = RC_BITRATE_MODE;
+    param.iTargetBitrate = 800000;
+    param.iRCMode = RC_OFF_MODE;
     param.fMaxFrameRate = 30.0f;
     param.uiIntraPeriod = 60;
     param.bEnableBackgroundDetection = false;
     param.bEnableAdaptiveQuant = false;
+    param.bEnableDenoise = false;
+    param.iSpatialLayerNum = 1;
 
     param.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
     param.sSpatialLayers[0].uiLevelIdc   = LEVEL_3_1;
     param.sSpatialLayers[0].iVideoWidth  = width;
     param.sSpatialLayers[0].iVideoHeight = height;
     param.sSpatialLayers[0].fFrameRate   = 30.0f;
-    param.sSpatialLayers[0].iSpatialBitrate = TARGET_BITRATE;
+    param.sSpatialLayers[0].iSpatialBitrate = 800000;
 
     encoder->InitializeExt(&param);
 }

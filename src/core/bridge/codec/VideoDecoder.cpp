@@ -6,7 +6,6 @@
 
 #include <libyuv.h>
 #include <climits>
-#include <iostream>
 #include <ostream>
 
 VideoDecoder::VideoDecoder(const int width, const int height) : width(width), height(height), decoder(nullptr) {
