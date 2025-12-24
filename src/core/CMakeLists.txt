@@ -30,6 +30,7 @@ find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
+find_package(libyuv CONFIG REQUIRED)
 
 # Actual Projects
 add_subdirectory(bridge)

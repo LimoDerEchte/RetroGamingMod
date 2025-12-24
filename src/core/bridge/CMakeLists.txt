@@ -37,6 +37,7 @@ target_link_libraries(bridge PRIVATE
         ZLIB::ZLIB
         fmt::fmt
         openh264
+        yuv
         ${OPUS_LIBRARIES}
 )
 

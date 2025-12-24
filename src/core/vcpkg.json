@@ -9,6 +9,7 @@
     "openal-soft",
     "zlib",
     "fmt",
-    "openh264"
+    "openh264",
+    "libyuv"
   ]
 }

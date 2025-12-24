@@ -12,6 +12,8 @@
 #include "connection/NetworkDefinitions.hpp"
 
 #include <cmath>
+#include <cstring>
+#include <fstream>
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
@@ -277,8 +279,35 @@ void test_audio_codec() {
     }
 }
 
+void manual_codec_test() {
+    std::vector<int16_t> testFrame(240 * 160, 0xF800);
+
+    VideoEncoderInt16 encoder(240, 160);
+    VideoDecoder decoder(240, 160);
+
+    auto data = encoder.encodeFrame(testFrame);
+    auto decoded = decoder.decodeFrame(data);
+
+    auto data2 = encoder.encodeFrame(testFrame);
+    auto decoded2 = decoder.decodeFrame(data);
+
+    auto data3 = encoder.encodeFrame(testFrame);
+    auto decoded3 = decoder.decodeFrame(data);
+
+    bool dataMatchesData2 = memcmp(data.data(), data2.data(), data.size());
+    bool data2MatchesData3 = memcmp(data2.data(), data3.data(), data2.size());
+
+    std::cout << "Result 1 matches result 2: " << dataMatchesData2 << std::endl;
+    std::cout << "Result 2 matches result 3: " << data2MatchesData3 << std::endl;
+
+    /*std::ofstream out("sussy.h264", std::ios::binary | std::ios::app);
+    out.write(reinterpret_cast<const std::ostream::char_type *>(data.data()), data.size());
+    out.close();*/
+}
+
 int main() {
-    test_new_codec();
+    manual_codec_test();
+    //test_new_codec();
     //test_audio_codec();
     return 0;
 }
