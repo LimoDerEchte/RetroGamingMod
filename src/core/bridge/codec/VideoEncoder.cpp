@@ -17,7 +17,7 @@ VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(
     param.iPicHeight = height;
     param.iTargetBitrate = TARGET_BITRATE;
     param.iRCMode = RC_BITRATE_MODE;
-    param.fMaxFrameRate = 60.0f;
+    param.fMaxFrameRate = 30.0f;
     param.uiIntraPeriod = 60;
     param.bEnableBackgroundDetection = false;
     param.bEnableAdaptiveQuant = false;
@@ -26,7 +26,7 @@ VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(
     param.sSpatialLayers[0].uiLevelIdc   = LEVEL_3_1;
     param.sSpatialLayers[0].iVideoWidth  = width;
     param.sSpatialLayers[0].iVideoHeight = height;
-    param.sSpatialLayers[0].fFrameRate   = 60.0f;
+    param.sSpatialLayers[0].fFrameRate   = 30.0f;
     param.sSpatialLayers[0].iSpatialBitrate = TARGET_BITRATE;
 
     encoder->InitializeExt(&param);

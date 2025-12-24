@@ -42,18 +42,18 @@ std::vector<int32_t> VideoDecoder::decodeFrame(const std::vector<uint8_t> &encod
     const int frameWidth = bufInfo.UsrData.sSystemBuffer.iWidth;
     const int frameHeight = bufInfo.UsrData.sSystemBuffer.iHeight;
 
-    std::vector<uint8_t> argb(frameWidth * frameHeight * 4);
-    libyuv::I420ToARGB(bufInfo.pDst[0], bufInfo.UsrData.sSystemBuffer.iStride[0],
+    std::vector<int32_t> argb(frameWidth * frameHeight);
+    libyuv::I420ToABGR(bufInfo.pDst[0], bufInfo.UsrData.sSystemBuffer.iStride[0],
                        bufInfo.pDst[1], bufInfo.UsrData.sSystemBuffer.iStride[1],
                        bufInfo.pDst[2], bufInfo.UsrData.sSystemBuffer.iStride[1],
-                       argb.data(), frameWidth*4,
+                       reinterpret_cast<uint8_t *>(argb.data()), frameWidth*4,
                        frameWidth, frameHeight);
 
-    std::vector<int32_t> rgba32(frameWidth * frameHeight);
-    for (int i = 0; i < frameWidth * frameHeight; ++i)
-        rgba32[i] = (argb[i*4+2]<<24)|(argb[i*4+1]<<16)|(argb[i*4+0]<<8)|0xFF;
+    //std::vector<int32_t> rgba32(frameWidth * frameHeight);
+    //for (int i = 0; i < frameWidth * frameHeight; ++i)
+    //    rgba32[i] = (argb[i*4+2]<<24)|(argb[i*4+1]<<16)|(argb[i*4+0]<<8)|0xFF;
 
-    return rgba32;
+    return argb;
 }
 
 int VideoDecoder::getWidth() const {
