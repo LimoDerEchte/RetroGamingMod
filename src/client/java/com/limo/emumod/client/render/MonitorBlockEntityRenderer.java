@@ -74,14 +74,14 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
             matrices.translate(.5D, .5D, .5D);
 
             // CONVERSION CALCULATION (Blockbench Cube)
-            // z : z - 8  y1: y - 7 + w / 2
+            // z : z - 8  y1: y - 7 + h / 2
 
             assert tex.getImage() != null;
             if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
                 renderFace(3, 14, 10, -5, tex.getImage().getWidth(), tex.getImage().getHeight(),
                         vertexConsumer, state.lightmapCoordinates, matrices);
             } else {
-                renderFace(-6, 44, 19, -1, tex.getImage().getWidth(), tex.getImage().getHeight(),
+                renderFace(6.5f, 44, 25, -1, tex.getImage().getWidth(), tex.getImage().getHeight(),
                         vertexConsumer, state.lightmapCoordinates, matrices);
             }
 
@@ -96,18 +96,18 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         float fW = 1.0f;
         float fH = 1.0f;
 
-        if(sourceRatio > ratio) {
-            fW = ratio / sourceRatio; // width shrinks
+        if(sourceRatio < ratio) {
+            fW = sourceRatio / ratio; // height shrinks
         } else {
-            fH = sourceRatio / ratio; // height shrinks
+            fH = ratio / sourceRatio; // width shrinks
         }
 
         Matrix4f modelMatrix = stack.peek().getPositionMatrix();
         MatrixStack.Entry normalMatrix = stack.peek();
         float _x1 = (-w / 2 * fW) / 16F;
-        float _y1 = (y - y / 2 * fH) / 16F;
+        float _y1 = (y - h / 2 * fH) / 16F;
         float _x2 = (w / 2 * fW) / 16F;
-        float _y2 = (y + y / 2 * fH) / 16F;
+        float _y2 = (y + h / 2 * fH) / 16F;
         float _z = (z - 0.01F) / 16F;
         consumer.vertex(modelMatrix, _x1, _y1, _z).color(255, 255, 255, 255).texture
                 (1.0f, 1.0f).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
