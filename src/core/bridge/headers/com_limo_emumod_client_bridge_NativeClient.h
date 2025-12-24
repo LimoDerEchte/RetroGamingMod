@@ -34,10 +34,10 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    registerScreen
- * Signature: (JJIIJI)V
+ * Signature: (JJIIJII)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen
-  (JNIEnv *, jclass, jlong, jlong, jint, jint, jlong, jint);
+  (JNIEnv *, jclass, jlong, jlong, jint, jint, jlong, jint, jint);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient

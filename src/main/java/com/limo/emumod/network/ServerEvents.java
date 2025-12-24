@@ -38,7 +38,8 @@ public class ServerEvents {
             sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
             for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
                 sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
-                        console.getValue().getWidth(), console.getValue().getHeight(), console.getValue().getSampleRate()));
+                        console.getValue().getWidth(), console.getValue().getHeight(),
+                        console.getValue().getSampleRate(), console.getValue().getCodec()));
             }
         });
     }

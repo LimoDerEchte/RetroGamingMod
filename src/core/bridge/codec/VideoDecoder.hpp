@@ -8,13 +8,13 @@
 #include <vector>
 #include <wels/codec_api.h>
 
-class VideoDecoder {
+class VideoDecoderH264 {
     const int width, height;
     ISVCDecoder* decoder;
 
 public:
-    VideoDecoder(int width, int height);
-    ~VideoDecoder();
+    VideoDecoderH264(int width, int height);
+    ~VideoDecoderH264();
 
     [[nodiscard]] std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const;
     [[nodiscard]] int getWidth() const;

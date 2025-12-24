@@ -8,18 +8,21 @@
 #include <iostream>
 #include <thread>
 #include <headers/com_limo_emumod_bridge_NativeServer.h>
+#include <algorithm>
 
 #include "NetworkDefinitions.hpp"
 #include "platform/GenericConsole.hpp"
 #include "util/NativeUtil.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port, const jint maxUsers) {
+    // ReSharper disable once CppDFAMemoryLeak
     return reinterpret_cast<jlong>(new RetroServer(port, maxUsers));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer(JNIEnv *, jclass, const jlong ptr) {
     const auto server = reinterpret_cast<RetroServer*>(ptr);
     server->dispose();
+    delete server;
 }
 
 JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(JNIEnv *env, jclass, const jlong ptr) {
@@ -28,7 +31,7 @@ JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(
     return env->NewStringUTF(std::string(token, 32).c_str());
 }
 
-RetroServer::RetroServer(const int port, const int maxUsers) : clients(new std::vector<RetroServerClient*>(maxUsers)) {
+RetroServer::RetroServer(const int port, const int maxUsers) {
     std::lock_guard lock(mutex);
     std::lock_guard enet_lock(enet_mutex);
     if (enet_initialize() != 0) {
@@ -59,7 +62,7 @@ char* RetroServer::genToken() {
     std::array<char, 32> stdArr = {};
     memcpy(stdArr.data(), data, 32);
     std::lock_guard lock(mutex);
-    tokens->push_back(stdArr);
+    tokens.push_back(stdArr);
     return data;
 }
 
@@ -170,7 +173,7 @@ void RetroServer::mainKeepAliveLoop() {
     mutex.unlock();
     while (true) {
         mutex.lock();
-        for (const RetroServerClient* client : *clients) {
+        for (const auto& client : clients) {
             if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                 continue;
             constexpr int8_t id = PACKET_KEEP_ALIVE;
@@ -204,7 +207,7 @@ void RetroServer::videoSenderLoop(const int fps) {
                 return;
             const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, console->uuid, frame).pack();
             mutex.lock();
-            for (const RetroServerClient* client : *clients) {
+            for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
                 enet_mutex.lock();
@@ -241,7 +244,7 @@ void RetroServer::audioSenderLoop(const int cps) {
                 return;
             const auto packet = Int8ArrayPacket(PACKET_UPDATE_AUDIO, console->uuid, frame).pack();
             mutex.lock();
-            for (const RetroServerClient* client : *clients) {
+            for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
                 enet_mutex.lock();
@@ -264,13 +267,12 @@ void RetroServer::audioSenderLoop(const int cps) {
 
 void RetroServer::onConnect(ENetPeer *peer) {
     std::lock_guard lock(mutex);
-    const auto client = new RetroServerClient(peer);
-    clients->push_back(client);
+    clients.push_back(std::make_shared<RetroServerClient>(peer));
 }
 
 void RetroServer::onDisconnect(ENetPeer *peer) {
     std::lock_guard lock(mutex);
-    std::erase_if(*clients, [peer](const RetroServerClient* client) {
+    std::erase_if(clients, [peer](const auto& client) {
         return client != nullptr && client->peer == peer;
     });
 }
@@ -301,7 +303,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
                 return;
             }
             mutex.lock();
-            std::erase_if(*tokens, [&, packet, client, peer](const std::array<char, 32>& token) {
+            std::erase_if(tokens, [&, packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
                     enet_mutex.lock();
@@ -361,8 +363,8 @@ void RetroServer::kick(ENetPeer *peer, const char *message) {
     bytesOut += packet->dataLength;
 }
 
-RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
-    for (const auto element : *clients) {
+std::shared_ptr<RetroServerClient> RetroServer::findClientByPeer(const ENetPeer* peer) const {
+    for (const auto& element : clients) {
         if (element == nullptr || element->peer != peer) {
             continue;
         }

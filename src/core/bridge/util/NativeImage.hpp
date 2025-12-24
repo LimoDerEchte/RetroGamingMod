@@ -14,12 +14,13 @@ class NativeImage {
     bool changed_;
     int width_;
     int height_;
+    int codec_;
 
     std::mutex mutex_;
-    std::unique_ptr<VideoDecoder> decoder_;
+    std::unique_ptr<VideoDecoderH264> decoder_;
 
 public:
-    NativeImage(int width, int height, uint32_t* data);
+    NativeImage(int width, int height, uint32_t* data, int codec);
 
     [[nodiscard]] bool changed() const;
     [[nodiscard]] uint32_t* nativePointer() const;

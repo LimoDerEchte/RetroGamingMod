@@ -34,8 +34,8 @@ target_link_libraries(bridge PRIVATE
         Boost::interprocess
         Boost::process
         unofficial::enet::enet
-        ZLIB::ZLIB
         fmt::fmt
+        WebP::sharpyuv WebP::webp WebP::webpdecoder WebP::libwebpmux
         openh264
         yuv
         ${OPUS_LIBRARIES}

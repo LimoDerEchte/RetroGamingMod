@@ -112,8 +112,8 @@ void test_new_codec() {
         constexpr int width = 240;
         constexpr int height = 160;
         constexpr int count = 1000;
-        VideoEncoderInt16 encoder(width, height);
-        VideoDecoder decoder(width, height);
+        VideoEncoderH264 encoder(width, height);
+        VideoDecoderH264 decoder(width, height);
 
         std::vector<std::vector<int16_t>> original_frames;
         std::vector<std::vector<uint8_t>> encoded_frames;
@@ -127,7 +127,7 @@ void test_new_codec() {
             }
             original_frames.push_back(frame);
 
-            auto encoded_frame = encoder.encodeFrame(frame);
+            auto encoded_frame = encoder.encodeFrameRGB565(frame);
             encoded_frames.push_back(encoded_frame);
 
             total_size += encoded_frame.size();
@@ -282,16 +282,16 @@ void test_audio_codec() {
 void manual_codec_test() {
     std::vector<int16_t> testFrame(240 * 160, 0xF800);
 
-    VideoEncoderInt16 encoder(240, 160);
-    VideoDecoder decoder(240, 160);
+    VideoEncoderH264 encoder(240, 160);
+    VideoDecoderH264 decoder(240, 160);
 
-    auto data = encoder.encodeFrame(testFrame);
+    auto data = encoder.encodeFrameRGB565(testFrame);
     auto decoded = decoder.decodeFrame(data);
 
-    auto data2 = encoder.encodeFrame(testFrame);
+    auto data2 = encoder.encodeFrameRGB565(testFrame);
     auto decoded2 = decoder.decodeFrame(data);
 
-    auto data3 = encoder.encodeFrame(testFrame);
+    auto data3 = encoder.encodeFrameRGB565(testFrame);
     auto decoded3 = decoder.decodeFrame(data);
 
     bool dataMatchesData2 = memcmp(data.data(), data2.data(), data.size());

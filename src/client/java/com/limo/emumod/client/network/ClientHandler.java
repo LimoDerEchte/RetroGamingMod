@@ -57,10 +57,11 @@ public class ClientHandler {
             int width = payload.width();
             int height = payload.height();
             int sampleRate = payload.sampleRate();
+            int codec = payload.codec();
             if(width == 0 || height == 0 || sampleRate == 0) {
                 ScreenManager.unregisterDisplay(payload.uuid());
             } else {
-                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate);
+                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate, codec);
             }
         }));
     }

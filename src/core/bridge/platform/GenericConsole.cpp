@@ -17,9 +17,10 @@ std::mutex GenericConsoleRegistry::consoleMutex;
 
 boost::asio::io_context io_ctx;
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate, const jint codec) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, uuid));
+    // ReSharper disable once CppDFAMemoryLeak
+    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, codec, uuid));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, const jstring save) { // NOLINT(*-misplaced-const)
@@ -31,6 +32,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JN
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
     gameboy->dispose();
+    delete gameboy;
 }
 
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth(JNIEnv *, jclass, const jlong ptr) {
@@ -48,7 +50,8 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampl
     return gameboy->sampleRate;
 }
 
-GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const jUUID* uuid): width(width), height(height), sampleRate(sampleRate), uuid(uuid) {
+GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const int codec, const jUUID* uuid)
+                                : width(width), height(height), sampleRate(sampleRate), codec(codec), uuid(uuid) {
     GenerateID(id);
     GenericConsoleRegistry::registerConsole(this);
 }
@@ -88,9 +91,9 @@ void GenericConsole::dispose() {
 
 std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
-        videoEncoder = new VideoEncoderInt16(width, height);
+        videoEncoder = new VideoEncoderH264(width, height);
     }
-    return videoEncoder->encodeFrame(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
+    return videoEncoder->encodeFrameRGB565(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
 }
 
 std::vector<uint8_t> GenericConsole::createClip() {

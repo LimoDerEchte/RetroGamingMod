@@ -18,10 +18,10 @@ public class ScreenManager {
         WorldRenderEvents.START_MAIN.register((_) -> updatedThisFrame.clear());
     }
 
-    public static void registerDisplay(UUID id, int width, int height, int sampleRate) {
+    public static void registerDisplay(UUID id, int width, int height, int sampleRate, int codec) {
         unregisterDisplay(id);
         NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "emu-dp-" + id.toString(),
-                CLIENT.registerScreen(id, width, height, sampleRate));
+                CLIENT.registerScreen(id, width, height, sampleRate, codec));
         displays.put(id, tex);
         mc.getTextureManager().registerTexture(texFromUUID(id), tex);
     }

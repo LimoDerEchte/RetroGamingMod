@@ -5,8 +5,24 @@
 #include "VideoEncoder.hpp"
 
 #include <libyuv.h>
+#include <webp/encode.h>
 
-VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(width), height(height), encoder(nullptr) {
+VideoEncoder::VideoEncoder(const int width, const int height) : width(width), height(height) {
+}
+
+std::vector<uint8_t> VideoEncoder::encodeFrameRGB565(const std::vector<int16_t> &frame) const {
+    return {};
+}
+
+int VideoEncoder::getWidth() const {
+    return width;
+}
+
+int VideoEncoder::getHeight() const {
+    return height;
+}
+
+VideoEncoderH264::VideoEncoderH264(const int width, const int height) : VideoEncoder(width, height), encoder(nullptr) {
     WelsCreateSVCEncoder(&encoder);
 
     SEncParamExt param = {};
@@ -15,31 +31,29 @@ VideoEncoderInt16::VideoEncoderInt16(const int width, const int height) : width(
     param.iUsageType = SCREEN_CONTENT_REAL_TIME;
     param.iPicWidth = width;
     param.iPicHeight = height;
-    param.iTargetBitrate = 800000;
-    param.iRCMode = RC_OFF_MODE;
-    param.fMaxFrameRate = 30.0f;
+    param.iTargetBitrate = 1000000;
+    param.iRCMode = RC_QUALITY_MODE;
+    param.fMaxFrameRate = 60.0f;
     param.uiIntraPeriod = 60;
     param.bEnableBackgroundDetection = false;
     param.bEnableAdaptiveQuant = false;
-    param.bEnableDenoise = false;
-    param.iSpatialLayerNum = 1;
 
     param.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
     param.sSpatialLayers[0].uiLevelIdc   = LEVEL_3_1;
     param.sSpatialLayers[0].iVideoWidth  = width;
     param.sSpatialLayers[0].iVideoHeight = height;
-    param.sSpatialLayers[0].fFrameRate   = 30.0f;
-    param.sSpatialLayers[0].iSpatialBitrate = 800000;
+    param.sSpatialLayers[0].fFrameRate   = 60.0f;
+    param.sSpatialLayers[0].iSpatialBitrate = 1000000;
 
     encoder->InitializeExt(&param);
 }
 
-VideoEncoderInt16::~VideoEncoderInt16() {
+VideoEncoderH264::~VideoEncoderH264() {
     encoder->Uninitialize();
     WelsDestroySVCEncoder(encoder);
 }
 
-std::vector<uint8_t> VideoEncoderInt16::encodeFrame(const std::vector<int16_t> &frame) const {
+std::vector<uint8_t> VideoEncoderH264::encodeFrameRGB565(const std::vector<int16_t> &frame) const {
     std::vector<uint8_t> y(width*height), u(width*height/4), v(width*height/4);
     libyuv::RGB565ToI420(reinterpret_cast<const uint8_t*>(frame.data()), width*2,
                        y.data(), width,
@@ -68,10 +82,26 @@ std::vector<uint8_t> VideoEncoderInt16::encodeFrame(const std::vector<int16_t> &
     return output;
 }
 
-int VideoEncoderInt16::getWidth() const {
-    return width;
+VideoEncoderWebP::VideoEncoderWebP(const int width, const int height) : VideoEncoder(width, height) {
 }
 
-int VideoEncoderInt16::getHeight() const {
-    return height;
+std::vector<uint8_t> VideoEncoderWebP::encodeFrameRGB565(const std::vector<int16_t> &frame) const {
+    if (frame.empty()) return {};
+
+    std::vector<uint8_t> argb(width * height * 4);
+    libyuv::RGB565ToARGB(
+        reinterpret_cast<const uint8_t*>(frame.data()),width * 2,
+        argb.data(), width * 4,
+        width, height
+    );
+
+    uint8_t* encoded = nullptr;
+    const size_t encodedSize = WebPEncodeLosslessRGBA(argb.data(), width, height, width * 4, &encoded);
+
+    if (encoded == nullptr || encodedSize == 0)
+        return {};
+
+    std::vector output(encoded, encoded + encodedSize);
+    WebPFree(encoded);
+    return output;
 }

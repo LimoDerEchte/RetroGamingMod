@@ -20,9 +20,9 @@ public class NativeClient {
         return isAuthenticated(handle);
     }
 
-    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate) {
+    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate, int codec) {
         NativeImage img = new NativeImage(NativeImage.Format.RGBA, width, height, true);
-        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, img.imageId(), sampleRate);
+        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, img.imageId(), sampleRate, codec);
         return img;
     }
 
@@ -41,7 +41,7 @@ public class NativeClient {
     private static native long connect(String ip, int port, String token);
     private static native void disconnect(long ptr);
     private static native boolean isAuthenticated(long ptr);
-    private static native void registerScreen(long ptr, long uuid, int width, int height, long data, int sampleRate);
+    private static native void registerScreen(long ptr, long uuid, int width, int height, long data, int sampleRate, int codec);
     private static native void unregisterScreen(long ptr, long uuid);
     private static native boolean screenChanged(long ptr, long uuid);
     private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);

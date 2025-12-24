@@ -15,7 +15,7 @@ namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    VideoEncoderInt16* videoEncoder = nullptr;
+    VideoEncoderH264* videoEncoder = nullptr;
     AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
@@ -24,11 +24,11 @@ class GenericConsole {
 public:
     std::mutex mutex{};
     char id[32] = {};
-    const int width, height, sampleRate;
+    const int width, height, sampleRate, codec;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;
 
-    explicit GenericConsole(int width, int height, int sampleRate, const jUUID* uuid);
+    explicit GenericConsole(int width, int height, int sampleRate, int codec, const jUUID* uuid);
 
     void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();

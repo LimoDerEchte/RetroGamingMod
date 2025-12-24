@@ -8,7 +8,7 @@
 #include <climits>
 #include <ostream>
 
-VideoDecoder::VideoDecoder(const int width, const int height) : width(width), height(height), decoder(nullptr) {
+VideoDecoderH264::VideoDecoderH264(const int width, const int height) : width(width), height(height), decoder(nullptr) {
     SDecodingParam param = {};
     param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_DEFAULT;
 
@@ -19,12 +19,12 @@ VideoDecoder::VideoDecoder(const int width, const int height) : width(width), he
     decoder->Initialize(&param);
 }
 
-VideoDecoder::~VideoDecoder() {
+VideoDecoderH264::~VideoDecoderH264() {
     decoder->Uninitialize();
     WelsDestroyDecoder(decoder);
 }
 
-std::vector<int32_t> VideoDecoder::decodeFrame(const std::vector<uint8_t> &encoded_data) const {
+std::vector<int32_t> VideoDecoderH264::decodeFrame(const std::vector<uint8_t> &encoded_data) const {
     if (!decoder) return {};
 
     std::vector<uint8_t> y(width * height);
@@ -47,18 +47,13 @@ std::vector<int32_t> VideoDecoder::decodeFrame(const std::vector<uint8_t> &encod
                        bufInfo.pDst[2], bufInfo.UsrData.sSystemBuffer.iStride[1],
                        reinterpret_cast<uint8_t *>(argb.data()), frameWidth*4,
                        frameWidth, frameHeight);
-
-    //std::vector<int32_t> rgba32(frameWidth * frameHeight);
-    //for (int i = 0; i < frameWidth * frameHeight; ++i)
-    //    rgba32[i] = (argb[i*4+2]<<24)|(argb[i*4+1]<<16)|(argb[i*4+0]<<8)|0xFF;
-
     return argb;
 }
 
-int VideoDecoder::getWidth() const {
+int VideoDecoderH264::getWidth() const {
     return width;
 }
 
-int VideoDecoder::getHeight() const {
+int VideoDecoderH264::getHeight() const {
     return height;
 }
