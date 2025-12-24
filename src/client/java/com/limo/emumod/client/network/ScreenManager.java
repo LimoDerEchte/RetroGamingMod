@@ -1,5 +1,6 @@
 package com.limo.emumod.client.network;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
@@ -28,9 +29,9 @@ public class ScreenManager {
     public static void unregisterDisplay(UUID id) {
         if(!displays.containsKey(id))
             return;
-        CLIENT.unregisterScreen(id);
-        mc.getTextureManager().destroyTexture(texFromUUID(id));
         displays.remove(id);
+        CLIENT.unregisterScreen(id);
+        RenderSystem.queueFencedTask(() -> mc.getTextureManager().destroyTexture(texFromUUID(id)));
     }
 
     public static NativeImageBackedTexture retrieveDisplay(UUID id) {

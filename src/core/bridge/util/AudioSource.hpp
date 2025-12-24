@@ -10,7 +10,6 @@
 #include <thread>
 #include <atomic>
 #include <condition_variable>
-#include <jni.h>
 
 #include "codec/AudioDecoder.hpp"
 

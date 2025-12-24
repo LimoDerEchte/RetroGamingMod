@@ -141,21 +141,27 @@ void AudioStreamPlayer::start() {
 }
 
 void AudioStreamPlayer::stop() {
-    std::lock_guard al_lock(al_mutex);
-    if (!running) {
-        return;
+    {
+        std::lock_guard al_lock(al_mutex);
+        if (!running)
+            return;
+        running = false;
     }
-    running = false;
+
     queueCondition.notify_all();
     if (playbackThread.joinable()) {
         playbackThread.join();
     }
-    alSourceStop(source);
-    ALint queued;
-    alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-    ALuint buffer;
-    while (queued--) {
-        alSourceUnqueueBuffers(source, 1, &buffer);
+
+    {
+        std::lock_guard al_lock(al_mutex);
+        alSourceStop(source);
+        ALint queued;
+        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+        ALuint buffer;
+        while (queued--) {
+            alSourceUnqueueBuffers(source, 1, &buffer);
+        }
     }
     std::lock_guard lock(queueMutex);
     std::queue<std::vector<uint8_t>> empty;

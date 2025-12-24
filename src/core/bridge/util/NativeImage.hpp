@@ -21,7 +21,7 @@ class NativeImage {
 public:
     NativeImage(int width, int height);
 
-    bool changed() const;
-    uint32_t* nativePointer() const;
+    [[nodiscard]] bool changed() const;
+    [[nodiscard]] uint32_t* nativePointer() const;
     void receive(const std::vector<uint8_t>& data);
 };
