@@ -33,7 +33,7 @@ public:
 
     void dispose();
 
-    uint32_t* registerDisplay(const jUUID* uuid, int width, int height, int sampleRate);
+    uint32_t* registerDisplay(const jUUID* uuid, int width, int height, uint32_t *data, int sampleRate);
     void unregisterDisplay(const jUUID* uuid);
     std::shared_ptr<NativeImage> getDisplay(const jUUID* uuid);
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);

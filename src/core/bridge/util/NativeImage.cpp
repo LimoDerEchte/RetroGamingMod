@@ -4,12 +4,10 @@
 
 #include "NativeImage.hpp"
 
-#include <cstdlib>
 #include <memory>
 #include <mutex>
 
-NativeImage::NativeImage(const int width, const int height) : width_(width), height_(height) {
-    data_ = static_cast<uint32_t*>(calloc(width_ * height_, sizeof(uint32_t))); // Memory will be managed by Minecraft
+NativeImage::NativeImage(const int width, const int height, uint32_t* data) : data_(data), width_(width), height_(height) {
     changed_ = true;
 }
 

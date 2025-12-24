@@ -19,7 +19,7 @@ class NativeImage {
     std::unique_ptr<VideoDecoderInt16> decoder_;
 
 public:
-    NativeImage(int width, int height);
+    NativeImage(int width, int height, uint32_t* data);
 
     [[nodiscard]] bool changed() const;
     [[nodiscard]] uint32_t* nativePointer() const;
