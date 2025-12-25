@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <shared_mutex>
 #include <boost/process.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
@@ -42,11 +43,11 @@ public:
 
 class GenericConsoleRegistry {
     static std::vector<GenericConsole*> consoles;
-    static std::mutex consoleMutex;
+    static std::shared_mutex consoleMutex;
 
 public:
     static void registerConsole(GenericConsole *console);
     static void unregisterConsole(GenericConsole *console);
-    static void withConsoles(const std::function<void(GenericConsole*)>& func);
-    static void withConsole(const jUUID* uuid, const std::function<void(GenericConsole*)>& func);
+    static void withConsoles(bool writing, const std::function<void(GenericConsole *)> &func);
+    static void withConsole(bool writing, const jUUID *uuid, const std::function<void(GenericConsole *)> &func);
 };

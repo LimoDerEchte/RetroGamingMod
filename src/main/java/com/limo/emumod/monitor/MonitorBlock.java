@@ -41,6 +41,8 @@ public class MonitorBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if(world.isClient())
+            return ActionResult.PASS;
         if(stack.getItem() instanceof CableItem)
             return ActionResult.PASS;
         if(!player.isSneaking()) {
@@ -52,10 +54,11 @@ public class MonitorBlock extends BlockWithEntity {
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
                     player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
+                    return ActionResult.SUCCESS_SERVER;
                 }
             }
         }
-        return ActionResult.SUCCESS;
+        return ActionResult.PASS;
     }
 
     @Override

@@ -199,7 +199,7 @@ void RetroServer::videoSenderLoop(const int fps) {
     runningLoops++;
     mutex.unlock();
     while (true) {
-        GenericConsoleRegistry::withConsoles([this](const auto console) {
+        GenericConsoleRegistry::withConsoles(false, [this](const auto console) {
             if (!console->retroCoreHandle->displayChanged)
                 return;
             const auto frame = console->createFrame();
@@ -235,7 +235,7 @@ void RetroServer::audioSenderLoop(const int cps) {
     runningLoops++;
     mutex.unlock();
     while (true) {
-        GenericConsoleRegistry::withConsoles([this](const auto console) {
+        GenericConsoleRegistry::withConsoles(false, [this](const auto console) {
             if (!console->retroCoreHandle->audioChanged)
                 return;
             const auto frame = console->createClip();
@@ -329,7 +329,10 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
         case PACKET_UPDATE_CONTROLS: {
             const auto parsed = Int8ArrayPacket::unpack(packet);
             auto* p = parsed.get();
-            GenericConsoleRegistry::withConsole(parsed->ref, [p](const GenericConsole* entry) {
+            const auto pCombine = p->ref->combine();
+            GenericConsoleRegistry::withConsoles(false, [p, pCombine](const GenericConsole* entry) {
+                if (entry->consoleId->combine() != pCombine)
+                    return;
                 const int port = p->data[0];
                 union {
                     uint8_t bytes[2];

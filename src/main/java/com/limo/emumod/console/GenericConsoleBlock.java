@@ -68,7 +68,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
             PlayerLookup.all(mcs).forEach(sp ->
                 ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload
                         (con.consoleId.consoleId(), 0, 0, 0, 0)));
-            con.cartridge = null;
+            con.cartridge = ContainerComponent.DEFAULT;
             con.fileId = null;
             con.markDirty();
             player.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);

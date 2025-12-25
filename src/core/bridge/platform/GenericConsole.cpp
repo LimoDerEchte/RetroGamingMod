@@ -13,7 +13,7 @@
 #include "util/NativeUtil.hpp"
 
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
-std::mutex GenericConsoleRegistry::consoleMutex;
+std::shared_mutex GenericConsoleRegistry::consoleMutex;
 
 boost::asio::io_context io_ctx;
 
@@ -120,7 +120,7 @@ void GenericConsole::input(const int port, const int16_t input) const {
 }
 
 void GenericConsoleRegistry::registerConsole(GenericConsole *console) {
-    std::lock_guard guard(consoleMutex);
+    std::unique_lock guard(consoleMutex);
     consoles.emplace_back(console);
 }
 
@@ -129,8 +129,12 @@ void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
     consoles.erase(std::ranges::remove(consoles, console).begin(), consoles.end());
 }
 
-void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole*)>& func) {
-    std::lock_guard guard(consoleMutex);
+void GenericConsoleRegistry::withConsoles(const bool writing, const std::function<void(GenericConsole*)>& func) {
+    if (writing)
+        std::unique_lock guard(consoleMutex);
+    else
+        std::shared_lock guard(consoleMutex);
+
     for (const auto &console : consoles) {
         console->mutex.lock();
         func(console);
@@ -138,8 +142,12 @@ void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsol
     }
 }
 
-void GenericConsoleRegistry::withConsole(const jUUID *uuid, const std::function<void(GenericConsole*)> &func) {
-    std::lock_guard guard(consoleMutex);
+void GenericConsoleRegistry::withConsole(const bool writing, const jUUID *uuid, const std::function<void(GenericConsole*)> &func) {
+    if (writing)
+        std::unique_lock guard(consoleMutex);
+    else
+        std::shared_lock guard(consoleMutex);
+
     for (const auto &console : consoles) {
         console->mutex.lock();
         if (memcmp(uuid, console->uuid, sizeof(jUUID)) == 0) {
