@@ -7,8 +7,24 @@
 #include <libyuv.h>
 #include <climits>
 #include <ostream>
+#include <webp/decode.h>
 
-VideoDecoderH264::VideoDecoderH264(const int width, const int height) : width(width), height(height), decoder(nullptr) {
+VideoDecoder::VideoDecoder(const int width, const int height) : width(width), height(height) {
+}
+
+std::vector<int32_t> VideoDecoder::decodeFrame(const std::vector<uint8_t> &encoded_data) const {
+    return {};
+}
+
+int VideoDecoder::getWidth() const {
+    return width;
+}
+
+int VideoDecoder::getHeight() const {
+    return height;
+}
+
+VideoDecoderH264::VideoDecoderH264(const int width, const int height) : VideoDecoder(width, height), decoder(nullptr) {
     SDecodingParam param = {};
     param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_DEFAULT;
 
@@ -50,10 +66,22 @@ std::vector<int32_t> VideoDecoderH264::decodeFrame(const std::vector<uint8_t> &e
     return argb;
 }
 
-int VideoDecoderH264::getWidth() const {
-    return width;
+VideoDecoderWebP::VideoDecoderWebP(const int width, const int height) : VideoDecoder(width, height) {
 }
 
-int VideoDecoderH264::getHeight() const {
-    return height;
+std::vector<int32_t> VideoDecoderWebP::decodeFrame(const std::vector<uint8_t> &encoded_data) const {
+    if (encoded_data.empty())
+        return {};
+
+    int width = 0, height = 0;
+    uint8_t* rgba = WebPDecodeRGBA(encoded_data.data(), encoded_data.size(), &width, &height);
+    if (!rgba)
+        return {};
+
+    std::vector<int32_t> output(width * height);
+    libyuv::ARGBToABGR(rgba, width * 4,
+                        reinterpret_cast<uint8_t *>(output.data()), width * 4,
+                        width, height);
+    WebPFree(rgba);
+    return output;
 }

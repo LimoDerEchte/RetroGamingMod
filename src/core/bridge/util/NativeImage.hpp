@@ -17,7 +17,7 @@ class NativeImage {
     int codec_;
 
     std::mutex mutex_;
-    std::unique_ptr<VideoDecoderH264> decoder_;
+    std::unique_ptr<VideoDecoder> decoder_;
 
 public:
     NativeImage(int width, int height, uint32_t* data, int codec);

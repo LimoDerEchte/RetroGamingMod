@@ -15,7 +15,7 @@ namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    VideoEncoderH264* videoEncoder = nullptr;
+    VideoEncoder* videoEncoder = nullptr;
     AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;

@@ -91,7 +91,16 @@ void GenericConsole::dispose() {
 
 std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
-        videoEncoder = new VideoEncoderH264(width, height);
+        switch (codec) {
+            case 0:
+                videoEncoder = new VideoEncoderWebP(width, height);
+                break;
+            case 1:
+                videoEncoder = new VideoEncoderH264(width, height);
+                break;
+            default:
+                return {};
+        }
     }
     return videoEncoder->encodeFrameRGB565(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
 }

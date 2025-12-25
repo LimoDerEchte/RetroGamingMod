@@ -12,10 +12,10 @@ class VideoEncoder {
 protected:
     const int width, height;
 
+public:
     VideoEncoder(int width, int height);
     virtual ~VideoEncoder() = default;
 
-public:
     [[nodiscard]] virtual std::vector<uint8_t> encodeFrameRGB565(const std::vector<int16_t>& frame) const;
 
     [[nodiscard]] int getWidth() const;

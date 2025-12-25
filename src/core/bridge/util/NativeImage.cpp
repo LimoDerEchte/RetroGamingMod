@@ -24,7 +24,16 @@ void NativeImage::receive(const std::vector<uint8_t>& data) {
     // TODO: Auto Decoder Selection
     std::lock_guard lock(mutex_);
     if (decoder_ == nullptr) {
-        decoder_ = std::make_unique<VideoDecoderH264>(width_, height_);
+        switch (codec_) {
+            case 0:
+                decoder_ = std::make_unique<VideoDecoderWebP>(width_, height_);
+                break;
+            case 1:
+                decoder_ = std::make_unique<VideoDecoderH264>(width_, height_);
+                break;
+            default:
+                return;
+        }
     }
     const auto decoded = decoder_->decodeFrame(data);\
     memcpy(data_, decoded.data(), sizeof(uint32_t) * width_ * height_);
