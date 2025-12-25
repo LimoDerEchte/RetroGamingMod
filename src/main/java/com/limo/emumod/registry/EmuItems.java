@@ -63,10 +63,10 @@ public class EmuItems {
     public static final Item GAME_GEAR = register(new GenericHandheldItem(ItemId.Registry.GAME_GEAR,
             NetworkId.ScreenType.GAME_GEAR, GAME_GEAR_CARTRIDGE), ItemId.Registry.GAME_GEAR);
 
-    public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Settings().maxCount(8)
-            .registryKey(ItemId.Registry.NES)), ItemId.Registry.NES);
     public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
     public static final Item NES_CONTROLLER = register(new ControllerItem(ItemId.Registry.NES_CONTROLLER, 2), ItemId.Registry.NES_CONTROLLER);
+    public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Settings().maxCount(8)
+            .registryKey(ItemId.Registry.NES)), ItemId.Registry.NES);
 
     public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8)
             .registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);

@@ -58,7 +58,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(world.isClient() || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con))
+        if(world.isClient() || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con) || !hand.equals(Hand.MAIN_HAND))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
         if(con.fileId != null && player.isSneaking()) {
             if(EmuMod.running.containsKey(con.fileId))
