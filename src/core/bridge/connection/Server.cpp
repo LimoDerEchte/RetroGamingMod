@@ -200,7 +200,7 @@ void RetroServer::videoSenderLoop(const int fps) {
     mutex.unlock();
     while (true) {
         GenericConsoleRegistry::withConsoles(false, [this](const auto console) {
-            if (!console->retroCoreHandle->displayChanged)
+            if (!console->retroCoreHandle || !console->retroCoreHandle->displayChanged)
                 return;
             const auto frame = console->createFrame();
             if (frame.empty())
