@@ -41,11 +41,11 @@ public class ClientHandler {
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenGameScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
                 ctx.client().setScreen(switch (payload.type()) {
-                    case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.fileId());
-                    case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.fileId());
-                    case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.fileId());
-                    case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.fileId());
-                    case NetworkId.ScreenType.CONTROLLER -> new RawControllerScreen(payload.fileId(), payload.port().orElse(0));
+                    case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.uuid());
+                    case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.uuid());
+                    case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.uuid());
+                    case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.uuid());
+                    case NetworkId.ScreenType.CONTROLLER -> new RawControllerScreen(payload.uuid(), payload.port().orElse(0));
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {

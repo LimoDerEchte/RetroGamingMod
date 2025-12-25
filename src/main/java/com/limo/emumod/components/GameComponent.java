@@ -24,7 +24,7 @@ public record GameComponent(UUID fileId, String gameTitle) implements TooltipApp
 
     public static final Codec<GameComponent> CODEC = RecordCodecBuilder.create(inst ->
             inst.group(
-                    Uuids.CODEC.fieldOf("fileId").forGetter(c -> c.fileId),
+                    Uuids.CODEC.fieldOf("uuid").forGetter(c -> c.fileId),
                     Codec.STRING.fieldOf("gameTitle").forGetter(c -> c.gameTitle)
             ).apply(inst, GameComponent::new));
 

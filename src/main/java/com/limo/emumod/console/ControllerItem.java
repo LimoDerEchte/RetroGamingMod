@@ -33,7 +33,7 @@ public class ControllerItem extends Item {
         if(world.isClient())
             return ActionResult.PASS;
         ItemStack stack = user.getStackInHand(hand);
-        if(!stack.getComponents().contains(PORT_NUM) || !stack.getComponents().contains(LINK_ID)) {
+        if(!stack.getComponents().contains(PORT_NUM) || !stack.getComponents().contains(CONSOLE_LINK_ID)) {
             user.sendMessage(Text.literal("Controller not linked"), true);
             return ActionResult.PASS;
         }
@@ -44,11 +44,11 @@ public class ControllerItem extends Item {
                 port = 0;
             user.sendMessage(Text.literal("Switched to Player " + (port + 1)), true);
             stack.set(PORT_NUM, port);
-            return ActionResult.PASS;
+            return ActionResult.SUCCESS_SERVER;
         }
         ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
-                NetworkId.ScreenType.CONTROLLER, stack.getComponents().get(LINK_ID), OptionalInt.of(port)));
-        return ActionResult.PASS;
+                NetworkId.ScreenType.CONTROLLER, stack.getComponents().get(CONSOLE_LINK_ID), OptionalInt.of(port)));
+        return ActionResult.SUCCESS_SERVER;
     }
 
     @Override
@@ -60,16 +60,12 @@ public class ControllerItem extends Item {
         ItemStack stack = context.getStack();
         BlockEntity entity = context.getWorld().getBlockEntity(context.getBlockPos());
         if (entity instanceof GenericConsoleBlockEntity con) {
-            if(con.fileId == null) {
-                context.getPlayer().sendMessage(Text.literal("No cartridge inserted to console"), true);
-                return ActionResult.SUCCESS;
-            }
             stack.applyComponentsFrom(ComponentMap.builder()
-                    .add(LINK_ID, con.fileId)
+                    .add(CONSOLE_LINK_ID, con.consoleId.consoleId())
                     .add(PORT_NUM, 0).build());
             context.getPlayer().sendMessage(Text.literal("Controller linked (Player 1)"), true);
-            return ActionResult.SUCCESS;
+            return ActionResult.SUCCESS_SERVER;
         }
-        return ActionResult.SUCCESS;
+        return ActionResult.SUCCESS_SERVER;
     }
 }

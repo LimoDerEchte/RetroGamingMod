@@ -27,8 +27,9 @@ public:
     const int width, height, sampleRate, codec;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;
+    const jUUID* consoleId;
 
-    explicit GenericConsole(int width, int height, int sampleRate, int codec, const jUUID* uuid);
+    explicit GenericConsole(int width, int height, int sampleRate, int codec, const jUUID* uuid, const jUUID* consoleId);
 
     void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();

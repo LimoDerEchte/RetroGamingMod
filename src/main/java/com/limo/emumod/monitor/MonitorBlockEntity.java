@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public class MonitorBlockEntity extends BlockEntity {
-    public UUID fileId;
+    public UUID consoleId;
 
     public MonitorBlockEntity(BlockPos pos, BlockState state) {
         super(EmuBlockEntities.MONITOR, pos, state);
@@ -29,21 +29,21 @@ public class MonitorBlockEntity extends BlockEntity {
     @Override
     protected void readComponents(ComponentsAccess components) {
         super.readComponents(components);
-        fileId = components.getOrDefault(EmuComponents.LINK_ID, null);
+        consoleId = components.getOrDefault(EmuComponents.CONSOLE_LINK_ID, null);
     }
 
     @Override
     protected void addComponents(ComponentMap.Builder builder) {
         super.addComponents(builder);
-        if(fileId != null) {
-            builder.add(EmuComponents.LINK_ID, fileId);
+        if(consoleId != null) {
+            builder.add(EmuComponents.CONSOLE_LINK_ID, consoleId);
         }
     }
 
     @Override
     protected void writeData(WriteView view) {
-        if(fileId != null)
-            view.put("file_id", Uuids.CODEC, fileId);
+        if(consoleId != null)
+            view.put("file_id", Uuids.CODEC, consoleId);
 
         super.writeData(view);
     }
@@ -52,7 +52,7 @@ public class MonitorBlockEntity extends BlockEntity {
     protected void readData(ReadView view) {
         super.readData(view);
 
-        fileId = view.read("file_id", Uuids.CODEC).orElse(fileId);
+        consoleId = view.read("file_id", Uuids.CODEC).orElse(consoleId);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.limo.emumod.console;
 
+import com.limo.emumod.components.ConsoleComponent;
 import com.limo.emumod.registry.EmuBlockEntities;
 import com.limo.emumod.registry.EmuComponents;
 import net.minecraft.block.BlockState;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 public class GenericConsoleBlockEntity extends BlockEntity {
     public UUID fileId;
+    public ConsoleComponent consoleId;
     public ContainerComponent cartridge;
 
     public GenericConsoleBlockEntity(BlockPos pos, BlockState state) {
@@ -31,7 +33,8 @@ public class GenericConsoleBlockEntity extends BlockEntity {
     @Override
     protected void readComponents(ComponentsAccess components) {
         super.readComponents(components);
-        fileId = components.getOrDefault(EmuComponents.LINK_ID, null);
+        fileId = components.getOrDefault(EmuComponents.CONSOLE_LINK_ID, null);
+        consoleId = components.getOrDefault(EmuComponents.CONSOLE, new ConsoleComponent(UUID.randomUUID()));
         cartridge = components.getOrDefault(EmuComponents.CARTRIDGE, ContainerComponent.DEFAULT);
     }
 
@@ -39,7 +42,9 @@ public class GenericConsoleBlockEntity extends BlockEntity {
     protected void addComponents(ComponentMap.Builder builder) {
         super.addComponents(builder);
         if(fileId != null)
-            builder.add(EmuComponents.LINK_ID, fileId);
+            builder.add(EmuComponents.CONSOLE_LINK_ID, fileId);
+        if(consoleId != null)
+            builder.add(EmuComponents.CONSOLE, consoleId);
         if(cartridge != null)
             builder.add(EmuComponents.CARTRIDGE, cartridge);
     }
@@ -50,6 +55,7 @@ public class GenericConsoleBlockEntity extends BlockEntity {
 
         if(fileId != null)
             view.put("file_id", Uuids.CODEC, fileId);
+        view.put("console_id", ConsoleComponent.CODEC, consoleId);
         view.put("cartridge", ContainerComponent.CODEC, cartridge);
     }
 
@@ -58,6 +64,7 @@ public class GenericConsoleBlockEntity extends BlockEntity {
         super.readData(view);
 
         fileId = view.read("file_id", Uuids.CODEC).orElse(null);
+        consoleId = view.read("console_id", ConsoleComponent.CODEC).orElse(new ConsoleComponent(UUID.randomUUID()));
         cartridge = view.read("cartridge", ContainerComponent.CODEC).orElse(ContainerComponent.DEFAULT);
     }
 

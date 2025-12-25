@@ -25,11 +25,11 @@ public class S2C {
         }
     }
 
-    public record OpenGameScreenPayload(byte type, UUID fileId, OptionalInt port) implements CustomPayload {
+    public record OpenGameScreenPayload(byte type, UUID uuid, OptionalInt port) implements CustomPayload {
         public static final Id<OpenGameScreenPayload> ID = new Id<>(NetworkId.OPEN_GAME_SCREEN);
         public static final PacketCodec<RegistryByteBuf, OpenGameScreenPayload> CODEC = PacketCodec.tuple(
                 PacketCodecs.BYTE, OpenGameScreenPayload::type,
-                Uuids.PACKET_CODEC, OpenGameScreenPayload::fileId,
+                Uuids.PACKET_CODEC, OpenGameScreenPayload::uuid,
                 PacketCodecs.OPTIONAL_INT, OpenGameScreenPayload::port,
                 OpenGameScreenPayload::new
         );

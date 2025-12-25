@@ -16,8 +16,8 @@ public class EmuBlocks {
     public static final Block LARGE_TV = register(new MonitorBlock(), BlockId.Registry.LARGE_TV);
 
     public static final Block NES = register(new GenericConsoleBlock(BlockId.Registry.NES, EmuItems.NES_CARTRIDGE, "nes",
-            (user, file) -> runGenericConsole(RequirementManager.FCEUmm, file, "nes",
-                    256, 240, 48000, Codec.CODEC_H264)), BlockId.Registry.NES);
+            (user, file, console) -> runGenericConsole(RequirementManager.FCEUmm, file, console,
+                    "nes", 256, 240, 48000, Codec.CODEC_H264)), BlockId.Registry.NES);
 
     public static Block register(Block block, RegistryKey<Block> blockKey) {
         return Registry.register(Registries.BLOCK, blockKey, block);

@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 
 import java.util.Objects;
 
-import static com.limo.emumod.registry.EmuComponents.GAME;
+import static com.limo.emumod.registry.EmuComponents.CONSOLE;
 
 public class MonitorBlock extends BlockWithEntity {
     private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((_) -> new MonitorBlock());
@@ -29,7 +29,7 @@ public class MonitorBlock extends BlockWithEntity {
     public MonitorBlock() {
         super(Settings.create()
                 .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((_, world, pos)
-                        -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.fileId != null)
+                        -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.consoleId != null)
                 .pistonBehavior(PistonBehavior.DESTROY).registryKey(BlockId.Registry.MONITOR));
         setDefaultState(this.stateManager.getDefaultState().with(Properties.ROTATION, 0));
     }
@@ -45,10 +45,10 @@ public class MonitorBlock extends BlockWithEntity {
             return ActionResult.PASS;
         if(!player.isSneaking()) {
             ComponentMap comp = stack.getComponents();
-            if(comp.contains(GAME)) {
+            if(comp.contains(CONSOLE)) {
                 BlockEntity entity = world.getBlockEntity(pos);
                 if(entity instanceof MonitorBlockEntity mon) {
-                    mon.fileId = Objects.requireNonNull(comp.get(GAME)).fileId();
+                    mon.consoleId = Objects.requireNonNull(comp.get(CONSOLE)).consoleId();
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
                     player.sendMessage(Text.translatable("item.emumod.cable.link"), true);

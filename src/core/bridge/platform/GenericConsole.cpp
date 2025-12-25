@@ -17,10 +17,11 @@ std::mutex GenericConsoleRegistry::consoleMutex;
 
 boost::asio::io_context io_ctx;
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate, const jint codec) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jlong jConsoleId, const jint width, const jint height, const jint sampleRate, const jint codec) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    const auto consoleId = reinterpret_cast<jUUID*>(jConsoleId);
     // ReSharper disable once CppDFAMemoryLeak
-    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, codec, uuid));
+    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, codec, uuid, consoleId));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, const jstring save) { // NOLINT(*-misplaced-const)
@@ -50,8 +51,8 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampl
     return gameboy->sampleRate;
 }
 
-GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const int codec, const jUUID* uuid)
-                                : width(width), height(height), sampleRate(sampleRate), codec(codec), uuid(uuid) {
+GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const int codec, const jUUID* uuid, const jUUID* consoleId)
+                                : width(width), height(height), sampleRate(sampleRate), codec(codec), uuid(uuid), consoleId(consoleId) {
     GenerateID(id);
     GenericConsoleRegistry::registerConsole(this);
 }

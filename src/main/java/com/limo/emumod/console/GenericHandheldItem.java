@@ -1,6 +1,7 @@
 package com.limo.emumod.console;
 
 import com.limo.emumod.EmuMod;
+import com.limo.emumod.components.ConsoleComponent;
 import com.limo.emumod.components.GameComponent;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -20,6 +21,7 @@ import net.minecraft.world.World;
 import java.util.*;
 
 import static com.limo.emumod.network.ServerEvents.mcs;
+import static com.limo.emumod.registry.EmuComponents.CONSOLE;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GenericHandheldItem extends Item {
@@ -49,10 +51,14 @@ public class GenericHandheldItem extends Item {
         if(world.isClient())
             return super.use(world, user, hand);
         ItemStack stack = user.getStackInHand(hand);
+
+        ComponentMap comp = stack.getComponents();
+        if(!comp.contains(CONSOLE))
+            stack.applyComponentsFrom(ComponentMap.builder().add(CONSOLE, new ConsoleComponent(UUID.randomUUID())).build());
+
         if(user.isSneaking() && System.currentTimeMillis() > lastInteractionTime + 1000) {
             lastInteractionTime = System.currentTimeMillis();
 
-            ComponentMap comp = stack.getComponents();
             if(comp.contains(GAME)) {
                 GameComponent game = Objects.requireNonNull(comp.get(GAME));
 
@@ -68,7 +74,8 @@ public class GenericHandheldItem extends Item {
                 stack.remove(GAME);
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
                 PlayerLookup.all(mcs).forEach(player ->
-                        ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, 0, 0, 0, 0)));
+                        ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(Objects.requireNonNull(stack
+                                .getComponents().get(CONSOLE)).consoleId(), 0, 0, 0, 0)));
             } else {
                 if(link != null) {
                     link = null;
@@ -84,7 +91,7 @@ public class GenericHandheldItem extends Item {
                 return ActionResult.PASS;
             }
             ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType,
-                    Objects.requireNonNull(stack.getComponents().get(GAME)).fileId(), OptionalInt.empty()));
+                    Objects.requireNonNull(stack.getComponents().get(CONSOLE)).consoleId(), OptionalInt.empty()));
         }
         return ActionResult.PASS;
     }

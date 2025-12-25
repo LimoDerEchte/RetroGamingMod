@@ -205,7 +205,7 @@ void RetroServer::videoSenderLoop(const int fps) {
             const auto frame = console->createFrame();
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, console->uuid, frame).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, console->consoleId, frame).pack();
             mutex.lock();
             for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
@@ -242,7 +242,7 @@ void RetroServer::audioSenderLoop(const int cps) {
             console->retroCoreHandle->audioChanged = false;
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(PACKET_UPDATE_AUDIO, console->uuid, frame).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_AUDIO, console->consoleId, frame).pack();
             mutex.lock();
             for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)

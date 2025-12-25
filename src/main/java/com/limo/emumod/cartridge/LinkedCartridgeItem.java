@@ -1,5 +1,6 @@
 package com.limo.emumod.cartridge;
 
+import com.limo.emumod.components.ConsoleComponent;
 import com.limo.emumod.components.GameComponent;
 import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.registry.EmuItems;
@@ -12,11 +13,12 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.function.TriFunction;
 
 import java.io.File;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
+import static com.limo.emumod.registry.EmuComponents.CONSOLE;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class LinkedCartridgeItem extends Item {
@@ -24,9 +26,9 @@ public class LinkedCartridgeItem extends Item {
     private final boolean isHandheld;
     private String fileType;
     private Runnable clearLinkItem;
-    private BiFunction<PlayerEntity, UUID, Boolean> start;
+    private TriFunction<PlayerEntity, UUID, UUID, Boolean> start;
 
-    public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, BiFunction<PlayerEntity, UUID, Boolean> start) {
+    public LinkedCartridgeItem(RegistryKey<Item> key, String fileType, Runnable clearLinkItem, TriFunction<PlayerEntity, UUID, UUID, Boolean> start) {
         super(new Settings().maxCount(1).registryKey(key));
         this.isHandheld = true;
         this.fileType = fileType;
@@ -62,7 +64,10 @@ public class LinkedCartridgeItem extends Item {
                         .formatted(Formatting.RED), true);
             } else {
                 clearLinkItem.run();
-                if(start.apply(user, game.fileId())) {
+                ConsoleComponent console = link.getComponents().get(CONSOLE);
+                if(console == null)
+                    throw new RuntimeException();
+                if(start.apply(user, game.fileId(), console.consoleId())) {
                     link.applyComponentsFrom(ComponentMap.builder().add(GAME, game).build());
                     stack.setCount(0);
                     user.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);

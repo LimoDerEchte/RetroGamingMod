@@ -52,7 +52,7 @@ public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBl
         }
 
         // Content Loading
-        UUID file = entity.fileId;
+        UUID file = entity.consoleId;
         if(file == null)
             return;
         NativeImageBackedTexture tex = ScreenManager.retrieveDisplay(file);
