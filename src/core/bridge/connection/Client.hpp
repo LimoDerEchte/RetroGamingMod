@@ -3,22 +3,20 @@
 //
 
 #pragma once
-#include <jni.h>
+#include <shared_mutex>
 #include <unordered_map>
 #include <enet/enet.h>
 
-#include "util/AudioSource.hpp"
-#include "util/NativeDisplay.hpp"
-#include "util/NativeUtil.hpp"
+#include <util/NativeImage.hpp>
+#include <util/NativeUtil.hpp>
 
 class RetroClient {
-    std::mutex enet_mutex;
+    std::shared_mutex enetMutex;
     ENetHost* client;
     ENetPeer* peer;
 
-    std::mutex mutex;
-    std::unordered_map<long, NativeDisplay*> displays;
-    std::unordered_map<long, AudioStreamPlayer*> playbacks;
+    std::shared_mutex mapMutex;
+    std::unordered_map<long, std::shared_ptr<NativeImage>> displays;
 
     bool running = false;
     int runningLoops = 0;
@@ -33,10 +31,10 @@ public:
 
     void dispose();
 
-    void registerDisplay(const jUUID* uuid, NativeDisplay* display, int sampleRate);
+    uint32_t* registerDisplay(const jUUID* uuid, int width, int height, uint32_t *data, int sampleRate, int codec);
     void unregisterDisplay(const jUUID* uuid);
+    std::shared_ptr<NativeImage> getDisplay(const jUUID* uuid);
     void sendControlsUpdate(const jUUID* link, int port, int16_t controls);
-    void updateAudioDistance(const jUUID* uuid, double distance);
 
     void mainLoop();
     void bandwidthMonitorLoop();

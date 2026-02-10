@@ -12,6 +12,9 @@
   "icon": "assets/emumod/icon.png",
   "environment": "*",
   "entrypoints": {
+     "fabric-datagen": [
+        "com.limo.emumod.data.EmuModDataGenerator"
+     ],
     "client": [
       "com.limo.emumod.client.EmuModClient"
     ],

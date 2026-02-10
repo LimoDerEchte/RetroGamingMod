@@ -1,12 +1,8 @@
 
 add_library(bridge SHARED
         ../shared/SharedStructs.hpp
-        util/NativeDisplay.cpp
         platform/GenericConsole.cpp
         platform/GenericConsole.hpp
-        util/NativeDisplay.hpp
-        util/NativeAudio.cpp
-        util/NativeAudio.hpp
         connection/Server.cpp
         connection/Server.hpp
         connection/Client.cpp
@@ -23,8 +19,8 @@ add_library(bridge SHARED
         codec/AudioEncoder.hpp
         codec/AudioDecoder.cpp
         codec/AudioDecoder.hpp
-        util/AudioSource.cpp
-        util/AudioSource.hpp
+        util/NativeImage.cpp
+        util/NativeImage.hpp
 )
 
 target_include_directories(bridge PRIVATE
@@ -38,9 +34,10 @@ target_link_libraries(bridge PRIVATE
         Boost::interprocess
         Boost::process
         unofficial::enet::enet
-        OpenAL::OpenAL
-        ZLIB::ZLIB
         fmt::fmt
+        WebP::sharpyuv WebP::webp WebP::webpdecoder WebP::libwebpmux
+        openh264
+        yuv
         ${OPUS_LIBRARIES}
 )
 

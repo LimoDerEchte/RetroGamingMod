@@ -3,25 +3,38 @@
 //
 
 #pragma once
+
 #include <cstdint>
 #include <vector>
+#include <wels/codec_api.h>
 
-class VideoEncoderInt16 {
-    static constexpr int RAW_FRAME_INTERVAL = 30;
-
+class VideoEncoder {
+protected:
     const int width, height;
-    int frame_count = 0;
-    std::vector<int16_t> previous_frame;
-
-    std::vector<int16_t> performDeltaEncoding(const std::vector<int16_t>& current_frame);
-    static std::vector<uint8_t> compressWithZlib(const std::vector<int16_t>& data, bool is_raw_frame);
 
 public:
-    VideoEncoderInt16(int width, int height);
+    VideoEncoder(int width, int height);
+    virtual ~VideoEncoder() = default;
 
-    std::vector<uint8_t> encodeFrame(const std::vector<int16_t>& frame);
-    void reset();
+    [[nodiscard]] virtual std::vector<uint8_t> encodeFrameRGB565(const std::vector<int16_t>& frame) const;
 
     [[nodiscard]] int getWidth() const;
     [[nodiscard]] int getHeight() const;
+};
+
+class VideoEncoderH264 final : public VideoEncoder {
+    ISVCEncoder* encoder;
+
+public:
+    VideoEncoderH264(int width, int height);
+    ~VideoEncoderH264() override;
+
+    [[nodiscard]] std::vector<uint8_t> encodeFrameRGB565(const std::vector<int16_t>& frame) const override;
+};
+
+class VideoEncoderWebP final : public VideoEncoder {
+public:
+    VideoEncoderWebP(int width, int height);
+
+    [[nodiscard]] std::vector<uint8_t> encodeFrameRGB565(const std::vector<int16_t>& frame) const override;
 };

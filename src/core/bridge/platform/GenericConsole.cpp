@@ -13,13 +13,15 @@
 #include "util/NativeUtil.hpp"
 
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
-std::mutex GenericConsoleRegistry::consoleMutex;
+std::shared_mutex GenericConsoleRegistry::consoleMutex;
 
 boost::asio::io_context io_ctx;
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
+JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jlong jConsoleId, const jint width, const jint height, const jint sampleRate, const jint codec) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, uuid));
+    const auto consoleId = reinterpret_cast<jUUID*>(jConsoleId);
+    // ReSharper disable once CppDFAMemoryLeak
+    return reinterpret_cast<jlong>(new GenericConsole(width, height, sampleRate, codec, uuid, consoleId));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JNIEnv *env, jclass, const jlong ptr, const jstring retroCore, const jstring core, const jstring rom, const jstring save) { // NOLINT(*-misplaced-const)
@@ -31,6 +33,7 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start(JN
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop(JNIEnv *, jclass, const jlong ptr) {
     const auto gameboy = reinterpret_cast<GenericConsole*>(ptr);
     gameboy->dispose();
+    delete gameboy;
 }
 
 JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth(JNIEnv *, jclass, const jlong ptr) {
@@ -48,7 +51,8 @@ JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampl
     return gameboy->sampleRate;
 }
 
-GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const jUUID* uuid): width(width), height(height), sampleRate(sampleRate), uuid(uuid) {
+GenericConsole::GenericConsole(const int width, const int height, const int sampleRate, const int codec, const jUUID* uuid, const jUUID* consoleId)
+                                : width(width), height(height), sampleRate(sampleRate), codec(codec), uuid(uuid), consoleId(consoleId) {
     GenerateID(id);
     GenericConsoleRegistry::registerConsole(this);
 }
@@ -88,9 +92,18 @@ void GenericConsole::dispose() {
 
 std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
-        videoEncoder = new VideoEncoderInt16(width, height);
+        switch (codec) {
+            case 0:
+                videoEncoder = new VideoEncoderWebP(width, height);
+                break;
+            case 1:
+                videoEncoder = new VideoEncoderH264(width, height);
+                break;
+            default:
+                return {};
+        }
     }
-    return videoEncoder->encodeFrame(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
+    return videoEncoder->encodeFrameRGB565(std::vector<int16_t>(retroCoreHandle->display, retroCoreHandle->display + width * height));
 }
 
 std::vector<uint8_t> GenericConsole::createClip() {
@@ -107,7 +120,7 @@ void GenericConsole::input(const int port, const int16_t input) const {
 }
 
 void GenericConsoleRegistry::registerConsole(GenericConsole *console) {
-    std::lock_guard guard(consoleMutex);
+    std::unique_lock guard(consoleMutex);
     consoles.emplace_back(console);
 }
 
@@ -116,8 +129,12 @@ void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
     consoles.erase(std::ranges::remove(consoles, console).begin(), consoles.end());
 }
 
-void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsole*)>& func) {
-    std::lock_guard guard(consoleMutex);
+void GenericConsoleRegistry::withConsoles(const bool writing, const std::function<void(GenericConsole*)>& func) {
+    if (writing)
+        std::unique_lock guard(consoleMutex);
+    else
+        std::shared_lock guard(consoleMutex);
+
     for (const auto &console : consoles) {
         console->mutex.lock();
         func(console);
@@ -125,8 +142,12 @@ void GenericConsoleRegistry::withConsoles(const std::function<void(GenericConsol
     }
 }
 
-void GenericConsoleRegistry::withConsole(const jUUID *uuid, const std::function<void(GenericConsole*)> &func) {
-    std::lock_guard guard(consoleMutex);
+void GenericConsoleRegistry::withConsole(const bool writing, const jUUID *uuid, const std::function<void(GenericConsole*)> &func) {
+    if (writing)
+        std::unique_lock guard(consoleMutex);
+    else
+        std::shared_lock guard(consoleMutex);
+
     for (const auto &console : consoles) {
         console->mutex.lock();
         if (memcmp(uuid, console->uuid, sizeof(jUUID)) == 0) {

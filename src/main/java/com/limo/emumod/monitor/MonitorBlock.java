@@ -1,13 +1,11 @@
 package com.limo.emumod.monitor;
 
-import com.limo.emumod.EmuMod;
-import com.limo.emumod.cartridge.LinkedCartridgeItem;
-import com.limo.emumod.console.ControllerItem;
 import com.limo.emumod.registry.BlockId;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
+import net.minecraft.component.ComponentMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -19,20 +17,21 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import java.util.Objects;
+
+import static com.limo.emumod.registry.EmuComponents.CONSOLE;
 
 public class MonitorBlock extends BlockWithEntity {
-    private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((s) -> new MonitorBlock());
+    private static final MapCodec<MonitorBlock> CODEC = Block.createCodec((_) -> new MonitorBlock());
 
     public MonitorBlock() {
         super(Settings.create()
-                .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((state, world, pos)
-                        -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.fileId != null)
+                .nonOpaque().sounds(BlockSoundGroup.GLASS).emissiveLighting((_, world, pos)
+                        -> world.getBlockEntity(pos) instanceof MonitorBlockEntity mon && mon.consoleId != null)
                 .pistonBehavior(PistonBehavior.DESTROY).registryKey(BlockId.Registry.MONITOR));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
+        setDefaultState(this.stateManager.getDefaultState().with(Properties.ROTATION, 0));
     }
 
     @Override
@@ -42,34 +41,44 @@ public class MonitorBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if(world.isClient())
+            return ActionResult.PASS;
         if(stack.getItem() instanceof CableItem)
             return ActionResult.PASS;
         if(!player.isSneaking()) {
-            if(LinkedCartridgeItem.hasGame(stack)) {
+            ComponentMap comp = stack.getComponents();
+            if(comp.contains(CONSOLE)) {
                 BlockEntity entity = world.getBlockEntity(pos);
                 if(entity instanceof MonitorBlockEntity mon) {
-                    mon.fileId = stack.get(FILE_ID);
+                    mon.consoleId = Objects.requireNonNull(comp.get(CONSOLE)).consoleId();
                     mon.markDirty();
                     world.updateListeners(pos, state, state, 0);
                     player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
+                    return ActionResult.SUCCESS_SERVER;
                 }
             }
         }
-        return ActionResult.SUCCESS;
+        return ActionResult.PASS;
     }
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+        stateManager.add(Properties.ROTATION);
     }
 
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(Properties.HORIZONTAL_FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        ctx.getWorld().markDirty(ctx.getBlockPos());
+        return this.getDefaultState().with(Properties.ROTATION, (-Math.round(ctx.getPlayerYaw() / 22.5f) + 16) % 16);
     }
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
         return new MonitorBlockEntity(pos, state);
+    }
+
+    @Override
+    protected BlockRenderType getRenderType(BlockState state) {
+        return state.get(Properties.ROTATION) == 0 ? BlockRenderType.MODEL : BlockRenderType.INVISIBLE;
     }
 }

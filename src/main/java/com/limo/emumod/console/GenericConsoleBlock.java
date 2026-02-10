@@ -1,7 +1,6 @@
 package com.limo.emumod.console;
 
 import com.limo.emumod.EmuMod;
-import com.limo.emumod.cartridge.LinkedCartridgeItem;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
@@ -13,6 +12,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.piston.PistonBehavior;
+import net.minecraft.component.ComponentMap;
+import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
@@ -29,21 +30,23 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.function.TriFunction;
 
 import java.io.File;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
 import static com.limo.emumod.network.ServerEvents.mcs;
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
+import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class GenericConsoleBlock extends BlockWithEntity {
     private final MapCodec<GenericConsoleBlock> CODEC;
     private final Item cartridgeItem;
     private final String fileType;
-    private final BiFunction<PlayerEntity, UUID, Boolean> start;
+    private final TriFunction<PlayerEntity, UUID, UUID, Boolean> start;
 
-    public GenericConsoleBlock(RegistryKey<Block> registryKey, Item cartridgeItem, String fileType, BiFunction<PlayerEntity, UUID, Boolean> start) {
+    public GenericConsoleBlock(RegistryKey<Block> registryKey, Item cartridgeItem, String fileType, TriFunction<PlayerEntity, UUID, UUID, Boolean> start) {
         super(Settings.create().nonOpaque().sounds(BlockSoundGroup.METAL)
                 .pistonBehavior(PistonBehavior.DESTROY).registryKey(registryKey));
         this.cartridgeItem = cartridgeItem;
@@ -55,23 +58,25 @@ public class GenericConsoleBlock extends BlockWithEntity {
 
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if(world.isClient || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con))
+        if(world.isClient() || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con) || !hand.equals(Hand.MAIN_HAND))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
         if(con.fileId != null && player.isSneaking()) {
             if(EmuMod.running.containsKey(con.fileId))
                 EmuMod.running.get(con.fileId).stop();
             EmuMod.running.remove(con.fileId);
-            player.getInventory().insertStack(con.cartridge);
+            player.getInventory().insertStack(con.cartridge.copyFirstStack());
             PlayerLookup.all(mcs).forEach(sp ->
-                ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload(con.fileId, 0, 0, 0)));
-            con.cartridge = null;
+                ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload
+                        (con.consoleId.consoleId(), 0, 0, 0, 0)));
+            con.cartridge = ContainerComponent.DEFAULT;
             con.fileId = null;
             con.markDirty();
             player.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
         }
-        if(stack.getItem() != cartridgeItem || !LinkedCartridgeItem.hasGame(stack))
+        ComponentMap components = stack.getComponents();
+        if(stack.getItem() != cartridgeItem || !components.contains(GAME))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
-        UUID id = stack.getComponents().get(FILE_ID);
+        UUID id = Objects.requireNonNull(components.get(GAME)).fileId();
         File file = FileUtil.idToFile(id, fileType);
         if(!file.exists()) {
             stack.setCount(0);
@@ -79,9 +84,9 @@ public class GenericConsoleBlock extends BlockWithEntity {
             player.sendMessage(Text.translatable("item.emumod.handheld.file_deleted")
                     .formatted(Formatting.RED), true);
         } else {
-            if(start.apply(player, id)) {
+            if(start.apply(player, id, con.consoleId.consoleId())) {
                 con.fileId = id;
-                con.cartridge = stack.copy();
+                con.cartridge = ContainerComponent.fromStacks(List.of(stack.copy()));
                 con.markDirty();
                 stack.setCount(0);
                 player.sendMessage(Text.translatable("item.emumod.handheld.insert"), true);

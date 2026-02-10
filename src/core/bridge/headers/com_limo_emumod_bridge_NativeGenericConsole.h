@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole
  * Method:    init
- * Signature: (JIII)J
+ * Signature: (JJIIII)J
  */
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init
-  (JNIEnv *, jclass, jlong, jint, jint, jint);
+  (JNIEnv *, jclass, jlong, jlong, jint, jint, jint, jint);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole

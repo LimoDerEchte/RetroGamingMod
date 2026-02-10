@@ -7,7 +7,14 @@
     "enet",
     "opus",
     "openal-soft",
-    "zlib",
-    "fmt"
+    "fmt",
+    "openh264",
+    "libyuv",
+    {
+      "name": "libwebp",
+      "features": [
+        "nearlossless"
+      ]
+    }
   ]
 }

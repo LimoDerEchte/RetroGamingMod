@@ -1,7 +1,7 @@
 @file:Suppress("PropertyName")
 
 plugins {
-    id("fabric-loom") version "1.10-SNAPSHOT"
+    id("fabric-loom") version "1.14-SNAPSHOT"
     id("maven-publish")
 }
 
@@ -42,6 +42,12 @@ val fabric_version: String by project
 val modmenu_version: String by project
 val cloth_config_version: String by project
 
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")
     mappings("net.fabricmc:yarn:${yarn_mappings}:v2")
@@ -71,7 +77,7 @@ tasks.processResources {
     }
 }
 
-val targetJavaVersion = 21
+val targetJavaVersion = 23
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <shared_mutex>
 #include <boost/process.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "SharedStructs.hpp"
@@ -15,7 +16,7 @@ namespace bip = boost::interprocess;
 namespace bp  = boost::process;
 
 class GenericConsole {
-    VideoEncoderInt16* videoEncoder = nullptr;
+    VideoEncoder* videoEncoder = nullptr;
     AudioEncoderOpus* audioEncoder = nullptr;
 
     bip::managed_shared_memory* sharedMemoryHandle = nullptr;
@@ -24,11 +25,12 @@ class GenericConsole {
 public:
     std::mutex mutex{};
     char id[32] = {};
-    const int width, height, sampleRate;
+    const int width, height, sampleRate, codec;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;
+    const jUUID* consoleId;
 
-    explicit GenericConsole(int width, int height, int sampleRate, const jUUID* uuid);
+    explicit GenericConsole(int width, int height, int sampleRate, int codec, const jUUID* uuid, const jUUID* consoleId);
 
     void load(const char *retroCore, const char *core, const char *rom, const char *save);
     void dispose();
@@ -41,11 +43,11 @@ public:
 
 class GenericConsoleRegistry {
     static std::vector<GenericConsole*> consoles;
-    static std::mutex consoleMutex;
+    static std::shared_mutex consoleMutex;
 
 public:
     static void registerConsole(GenericConsole *console);
     static void unregisterConsole(GenericConsole *console);
-    static void withConsoles(const std::function<void(GenericConsole*)>& func);
-    static void withConsole(const jUUID* uuid, const std::function<void(GenericConsole*)>& func);
+    static void withConsoles(bool writing, const std::function<void(GenericConsole *)> &func);
+    static void withConsole(bool writing, const jUUID *uuid, const std::function<void(GenericConsole *)> &func);
 };

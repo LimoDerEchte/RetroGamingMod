@@ -12,6 +12,8 @@
 #include "connection/NetworkDefinitions.hpp"
 
 #include <cmath>
+#include <cstring>
+#include <fstream>
 
 #define log(msg) std::cout << "[Test] " << msg << std::endl
 
@@ -110,8 +112,8 @@ void test_new_codec() {
         constexpr int width = 240;
         constexpr int height = 160;
         constexpr int count = 1000;
-        VideoEncoderInt16 encoder(width, height);
-        VideoDecoderInt16 decoder(width, height);
+        VideoEncoderH264 encoder(width, height);
+        VideoDecoderH264 decoder(width, height);
 
         std::vector<std::vector<int16_t>> original_frames;
         std::vector<std::vector<uint8_t>> encoded_frames;
@@ -125,13 +127,13 @@ void test_new_codec() {
             }
             original_frames.push_back(frame);
 
-            auto encoded_frame = encoder.encodeFrame(frame);
+            auto encoded_frame = encoder.encodeFrameRGB565(frame);
             encoded_frames.push_back(encoded_frame);
 
             total_size += encoded_frame.size();
 
             auto decoded_frame = decoder.decodeFrame(encoded_frame);
-            decoded_frames.push_back(decoded_frame);
+            //decoded_frames.push_back(decoded_frame);
         }
 
         size_t matching_frames = 0;
@@ -145,9 +147,6 @@ void test_new_codec() {
         std::cout << "Total size: " << total_size << std::endl;
         const size_t speed = total_size * 30 / count;
         std::cout << "Speed: " << speed << std::endl;
-
-        encoder.reset();
-        decoder.reset();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -280,8 +279,35 @@ void test_audio_codec() {
     }
 }
 
+void manual_codec_test() {
+    std::vector<int16_t> testFrame(240 * 160, 0xF800);
+
+    VideoEncoderH264 encoder(240, 160);
+    VideoDecoderH264 decoder(240, 160);
+
+    auto data = encoder.encodeFrameRGB565(testFrame);
+    auto decoded = decoder.decodeFrame(data);
+
+    auto data2 = encoder.encodeFrameRGB565(testFrame);
+    auto decoded2 = decoder.decodeFrame(data);
+
+    auto data3 = encoder.encodeFrameRGB565(testFrame);
+    auto decoded3 = decoder.decodeFrame(data);
+
+    bool dataMatchesData2 = memcmp(data.data(), data2.data(), data.size());
+    bool data2MatchesData3 = memcmp(data2.data(), data3.data(), data2.size());
+
+    std::cout << "Result 1 matches result 2: " << dataMatchesData2 << std::endl;
+    std::cout << "Result 2 matches result 3: " << data2MatchesData3 << std::endl;
+
+    /*std::ofstream out("sussy.h264", std::ios::binary | std::ios::app);
+    out.write(reinterpret_cast<const std::ostream::char_type *>(data.data()), data.size());
+    out.close();*/
+}
+
 int main() {
+    manual_codec_test();
     //test_new_codec();
-    test_audio_codec();
+    //test_audio_codec();
     return 0;
 }

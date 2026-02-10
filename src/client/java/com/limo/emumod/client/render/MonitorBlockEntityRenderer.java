@@ -1,109 +1,121 @@
 package com.limo.emumod.client.render;
 
 import com.limo.emumod.client.network.ScreenManager;
-import com.limo.emumod.client.network.SoundManager;
-import com.limo.emumod.client.util.NativeImageRatio;
 import com.limo.emumod.monitor.MonitorBlockEntity;
 import com.limo.emumod.registry.EmuBlocks;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.limo.emumod.client.EmuModClient.mc;
 
-public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBlockEntity> {
-    private static final Map<BlockPos, NativeImageRatio> ratioCache = new HashMap<>();
-    private static final Map<BlockPos, NativeImageBackedTexture> textureCache = new HashMap<>();
-    private static final Map<BlockPos, Identifier> idCache = new HashMap<>();
+public class MonitorBlockEntityRenderer implements BlockEntityRenderer<MonitorBlockEntity, BlockEntityRenderState> {
 
     public MonitorBlockEntityRenderer(BlockEntityRendererFactory.Context ctx) {}
 
     @Override
-    public void render(MonitorBlockEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        // Content
-        if(!idCache.containsKey(entity.getPos())) {
-            idCache.put(entity.getPos(), Identifier.of("emumod", "monitor_" + entity.getPos().getX() + "_" + entity.getPos().getY() + "_" + entity.getPos().getZ()));
-            textureCache.put(entity.getPos(), new NativeImageBackedTexture(new NativeImage(1, 1, false)));
-            ratioCache.put(entity.getPos(), new NativeImageRatio(1, 1, 1,  1));
-            mc.getTextureManager().registerTexture(idCache.get(entity.getPos()), textureCache.get(entity.getPos()));
-        }
-        UUID file = entity.fileId;
-        if(file == null)
-            return;
-        double distance = mc.cameraEntity == null ? 0 : mc.cameraEntity.getPos().distanceTo(entity.getPos().toCenterPos());
-        SoundManager.updateInRender(file, distance);
-        Identifier id = idCache.get(entity.getPos());
-        NativeImageBackedTexture tex = textureCache.get(entity.getPos());
-        NativeImage newTex = ScreenManager.getDisplay(file);
-        NativeImageRatio r = ratioCache.get(entity.getPos());
-        if(!r.matches(newTex)) {
-            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
-                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 7, 5);
-            } else {
-                r = new NativeImageRatio(newTex.getWidth(), newTex.getHeight(), 44, 25);
-            }
-            ratioCache.put(entity.getPos(), r);
-            NativeImageBackedTexture newAlloc = new NativeImageBackedTexture(r.getImage());
-            textureCache.put(entity.getPos(), newAlloc);
-            mc.getTextureManager().registerTexture(id, newAlloc);
-        }
-        r.readFrom(newTex);
-        tex.upload();
-        // Render
-        matrices.push();
-        switch (entity.getCachedState().get(Properties.HORIZONTAL_FACING)) {
-            case EAST -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90));
-                matrices.translate(0, 0, -1);
-            }
-            case WEST -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
-                matrices.translate(-1, 0, 0);
-            }
-            case SOUTH -> {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
-                matrices.translate(-1, 0, -1);
-            }
-        }
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(id));
-        if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
-            renderFace(1, 6, 15, 16, 3, vertexConsumer, overlay, light, matrices);
-        } else {
-            renderFace(-14, 2, 30, 27, 7, vertexConsumer, overlay, light, matrices);
-        }
-        matrices.pop();
+    public BlockEntityRenderState createRenderState() {
+        return new BlockEntityRenderState();
     }
 
-    private static void renderFace(int x1, int y1, int x2, int y2, float z, VertexConsumer consumer, int overlay, int light, MatrixStack stack) {
+    @Override
+    public void render(BlockEntityRenderState state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState) {
+        assert mc.world != null;
+        if(!(mc.world.getBlockEntity(state.pos) instanceof MonitorBlockEntity entity))
+            return;
+
+        // Base Model
+        float rotation = entity.getCachedState().get(Properties.ROTATION) * 22.5f;
+        if(rotation != 0) {
+            matrices.push();
+            matrices.translate(.5D, .5D, .5D);
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation));
+            matrices.translate(-.5D, -.5D, -.5D);
+
+            queue.submitBlock(matrices, state.blockState.getBlock().getDefaultState(),
+                    state.lightmapCoordinates, OverlayTexture.DEFAULT_UV, 0x00000000);
+            matrices.pop();
+        }
+
+        // Content Loading
+        UUID file = entity.consoleId;
+        if(file == null)
+            return;
+        NativeImageBackedTexture tex = ScreenManager.retrieveDisplay(file);
+        if(tex == null)
+            return;
+        Identifier texId = ScreenManager.texFromUUID(file);
+
+        // Content Render
+        queue.submitCustom(matrices, RenderLayers.entityTranslucent(texId), (_, vertexConsumer) -> {
+            matrices.push();
+            Vec3d pos = entity.getPos().toCenterPos().subtract(cameraState.pos);
+            matrices.translate(pos);
+
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation));
+
+            matrices.translate(-.5D, -.5D, -.5D);
+            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR)
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(22.5f));
+            matrices.translate(.5D, .5D, .5D);
+
+            // CONVERSION CALCULATION (Blockbench Cube)
+            // z : z - 8  y1: y - 7 + h / 2
+
+            assert tex.getImage() != null;
+            if(entity.getCachedState().getBlock() == EmuBlocks.MONITOR) {
+                renderFace(3, 14, 10, -5, tex.getImage().getWidth(), tex.getImage().getHeight(),
+                        vertexConsumer, state.lightmapCoordinates, matrices);
+            } else {
+                renderFace(6.5f, 44, 25, -1, tex.getImage().getWidth(), tex.getImage().getHeight(),
+                        vertexConsumer, state.lightmapCoordinates, matrices);
+            }
+
+            matrices.pop();
+        });
+    }
+
+    private static void renderFace(float y, float w, float h, float z, float oW, float oH, VertexConsumer consumer, int light, MatrixStack stack) {
+        float sourceRatio = oW / oH;
+        float ratio = w / h;
+
+        float fW = 1.0f;
+        float fH = 1.0f;
+
+        if(sourceRatio < ratio) {
+            fW = sourceRatio / ratio; // height shrinks
+        } else {
+            fH = ratio / sourceRatio; // width shrinks
+        }
+
         Matrix4f modelMatrix = stack.peek().getPositionMatrix();
         MatrixStack.Entry normalMatrix = stack.peek();
-        float _x1 = x1 / 16F;
-        float _y1 = y1 / 16F;
-        float _x2 = x2 / 16F;
-        float _y2 = y2 / 16F;
+        float _x1 = (-w / 2 * fW) / 16F;
+        float _y1 = (y - h / 2 * fH) / 16F;
+        float _x2 = (w / 2 * fW) / 16F;
+        float _y2 = (y + h / 2 * fH) / 16F;
         float _z = (z - 0.01F) / 16F;
         consumer.vertex(modelMatrix, _x1, _y1, _z).color(255, 255, 255, 255).texture
-                (1.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+                (1.0f, 1.0f).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
         consumer.vertex(modelMatrix, _x2, _y1, _z).color(255, 255, 255, 255).texture
-                (0.0f, 1.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+                (0.0f, 1.0f).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
         consumer.vertex(modelMatrix, _x2, _y2, _z).color(255, 255, 255, 255).texture
-                (0.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+                (0.0f, 0.0f).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
         consumer.vertex(modelMatrix, _x1, _y2, _z).color(255, 255, 255, 255).texture
-                (1.0f, 0.0f).overlay(overlay).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
+                (1.0f, 0.0f).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalMatrix, 0.0f, 0.0f, 1.0f);
     }
 }

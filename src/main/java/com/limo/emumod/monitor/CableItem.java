@@ -15,7 +15,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import static com.limo.emumod.registry.EmuComponents.LINK_ID;
+import static com.limo.emumod.registry.EmuComponents.CONSOLE_LINK_ID;
 
 public class CableItem extends Item {
 
@@ -37,24 +37,20 @@ public class CableItem extends Item {
         BlockEntity entity = world.getBlockEntity(pos);
         // Link Game to Monitor
         if(entity instanceof MonitorBlockEntity mon) {
-            if(!stack.hasChangedComponent(LINK_ID)) {
+            if(!stack.hasChangedComponent(CONSOLE_LINK_ID)) {
                 player.sendMessage(Text.translatable("item.emumod.cable.no_link"), true);
                 return ActionResult.SUCCESS;
             }
-            mon.fileId = stack.get(LINK_ID);
+            mon.consoleId = stack.get(CONSOLE_LINK_ID);
             mon.markDirty();
             world.updateListeners(pos, state, state, 0);
-            stack.remove(LINK_ID);
+            stack.remove(CONSOLE_LINK_ID);
             player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
             return ActionResult.SUCCESS;
         }
         // Read Game from Console
         if(entity instanceof GenericConsoleBlockEntity con) {
-            if(con.fileId == null) {
-                player.sendMessage(Text.translatable("item.emumod.cable.no_game"), true);
-                return ActionResult.SUCCESS;
-            }
-            stack.applyComponentsFrom(ComponentMap.builder().add(LINK_ID, con.fileId).build());
+            stack.applyComponentsFrom(ComponentMap.builder().add(CONSOLE_LINK_ID, con.consoleId.consoleId()).build());
             player.sendMessage(Text.translatable("item.emumod.cable.read"), true);
         }
         return ActionResult.SUCCESS;

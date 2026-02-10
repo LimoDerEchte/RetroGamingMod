@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <shared_mutex>
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
 
 #include "NetworkDefinitions.hpp"
@@ -29,12 +30,11 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
     return client->isAuthenticated();
 }
 
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height, const jint sampleRate) {
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint width, const jint height, const jlong dataPtr, const jint sampleRate, const jint codec) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    const auto display = new NativeDisplay(width, height);
-    client->registerDisplay(uuid, display, sampleRate);
-    return reinterpret_cast<jlong>(display);
+    const auto data = reinterpret_cast<uint32_t*>(dataPtr);
+    client->registerDisplay(uuid, width, height, data, sampleRate, codec);
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
@@ -43,21 +43,21 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     client->unregisterDisplay(uuid);
 }
 
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_screenChanged(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    return client->getDisplay(uuid)->changed();
+}
+
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jint port, const jshort controls) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
     client->sendControlsUpdate(uuid, port, controls);
 }
 
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_updateAudioDistance(JNIEnv *, jclass, const jlong ptr, const jlong jUuid, const jdouble dst) {
-    const auto client = reinterpret_cast<RetroClient*>(ptr);
-    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
-    client->updateAudioDistance(uuid, dst);
-}
-
 RetroClient::RetroClient(const char *ip, const int port, const char *token): token(token) {
-    std::lock_guard lock(mutex);
-    std::lock_guard enet_lock(enet_mutex);
+    std::lock_guard lock(mapMutex);
+    std::lock_guard enet_lock(enetMutex);
     std::cout << "[RetroClient] Connecting to ENet server on " << ip << ":" << port << std::endl;
     if (enet_initialize() != 0) {
         std::cerr << "[RetroClient] Failed to initialize ENet" << std::endl;
@@ -88,74 +88,71 @@ RetroClient::RetroClient(const char *ip, const int port, const char *token): tok
 }
 
 void RetroClient::dispose() {
-    mutex.lock();
+    mapMutex.lock();
     running = false;
-    mutex.unlock();
+    mapMutex.unlock();
 
     while (true) {
-        mutex.lock();
+        mapMutex.lock();
         if (runningLoops == 0)
             break;
-        mutex.unlock();
+        mapMutex.unlock();
         std::this_thread::yield();
     }
 
-    std::lock_guard enet_lock(enet_mutex);
+    std::lock_guard enet_lock(enetMutex);
     if (client != nullptr) {
         enet_host_destroy(client);
         client = nullptr;
     }
     enet_deinitialize();
-    mutex.unlock();
+    mapMutex.unlock();
     std::cout << "[RetroClient] Disconnected from ENet server" << std::endl;
 }
 
-void RetroClient::registerDisplay(const jUUID* uuid, NativeDisplay* display, const int sampleRate) {
-    std::lock_guard lock(mutex);
-    const auto audio = new AudioStreamPlayer(sampleRate, 2);
-    audio->start();
+uint32_t* RetroClient::registerDisplay(const jUUID *uuid, int width, int height, uint32_t *data, int sampleRate, int codec) {
+    std::unique_lock lock(mapMutex);
+    const auto display = std::make_shared<NativeImage>(width, height, data, codec);
     const long uuidCombine = uuid->combine();
     displays.insert_or_assign(uuidCombine, display);
-    playbacks.insert_or_assign(uuidCombine, audio);
+    return display->nativePointer();
 }
 
 void RetroClient::unregisterDisplay(const jUUID* uuid) {
-    std::lock_guard lock(mutex);
+    std::unique_lock lock(mapMutex);
     const long uuidCombine = uuid->combine();
     displays.erase(uuidCombine);
-    playbacks.erase(uuidCombine);
+}
+
+std::shared_ptr<NativeImage> RetroClient::getDisplay(const jUUID *uuid) {
+    std::shared_lock lock(mapMutex);
+    const long uuidCombine = uuid->combine();
+    const auto display = displays.find(uuidCombine);
+    return display->second;
 }
 
 void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) {
-    std::lock_guard lock(mutex);
-    int8_t content[3];
+    std::shared_lock lock(mapMutex);
+    std::vector<uint8_t> content(3);
     content[0] = static_cast<int8_t>(port);
     memcpy(&content[1], &controls, sizeof(controls));
-    std::lock_guard enet_lock(enet_mutex);
-    enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, reinterpret_cast<const uint8_t*>(content), sizeof(content)).pack());
-    bytesOut += sizeof(content) + 25;
-}
 
-void RetroClient::updateAudioDistance(const jUUID *uuid, const double distance) {
-    std::lock_guard lock(mutex);
-    const auto it = playbacks.find(uuid->combine());
-    if (it == playbacks.end()) {
-        return;
-    }
-    it->second->updateDistance(distance);
+    std::unique_lock enet_lock(enetMutex);
+    enet_peer_send(peer, 0, Int8ArrayPacket(PACKET_UPDATE_CONTROLS, link, content).pack());
+    bytesOut += 25 + content.size();
 }
 
 void RetroClient::mainLoop() {
     if (client == nullptr)
         return;
-    mutex.lock();
+    mapMutex.lock();
     runningLoops++;
-    mutex.unlock();
+    mapMutex.unlock();
     while (true) {
         ENetEvent event;
-        enet_mutex.lock();
+        enetMutex.lock();
         const auto status = enet_host_service(client, &event, 0);
-        enet_mutex.unlock();
+        enetMutex.unlock();
         if (status < 0) {
             std::cerr << "[RetroClient] Failed to receive ENet event (" << status << ")" << std::endl;
         } else if (status == 0) {
@@ -176,20 +173,22 @@ void RetroClient::mainLoop() {
                 break;
             }
             case ENET_EVENT_TYPE_RECEIVE: {
-                mutex.lock();
+                mapMutex.lock();
                 bytesIn += event.packet->dataLength;
-                mutex.unlock();
+                mapMutex.unlock();
                 onMessage(event.packet);
                 break;
             }
         }
-        mutex.lock();
+        mapMutex.lock_shared();
         if (!running)
             break;
-        mutex.unlock();
+        mapMutex.unlock_shared();
     }
+    mapMutex.unlock_shared();
+    mapMutex.lock();
     runningLoops--;
-    mutex.unlock();
+    mapMutex.unlock();
 }
 
 void RetroClient::bandwidthMonitorLoop() {
@@ -197,15 +196,15 @@ void RetroClient::bandwidthMonitorLoop() {
     auto lastTime = std::chrono::high_resolution_clock::now();
     uint64_t lastBytesIn = 0;
     uint64_t lastBytesOut = 0;
-    mutex.lock();
+    mapMutex.lock();
     runningLoops++;
-    mutex.unlock();
+    mapMutex.unlock();
     while (true) {
         std::this_thread::sleep_for(interval);
         auto currentTime = std::chrono::high_resolution_clock::now();
         const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
 
-        mutex.lock();
+        mapMutex.lock();
         const auto incomingKbps = static_cast<double>(bytesIn - lastBytesIn) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
         const auto outgoingKbps = static_cast<double>(bytesOut - lastBytesOut) * 8 / 1000 / (static_cast<double>(duration) / 1000.0);
         std::cout << "[RetroClient] Bandwidth: IN: " << std::fixed << std::setprecision(2) << incomingKbps
@@ -215,24 +214,24 @@ void RetroClient::bandwidthMonitorLoop() {
         lastBytesOut = bytesOut;
         if (!running)
             break;
-        mutex.unlock();
+        mapMutex.unlock();
         lastTime = currentTime;
     }
     runningLoops--;
-    mutex.unlock();
+    mapMutex.unlock();
 }
 
 void RetroClient::onConnect() {
     std::cout << "[RetroClient] Connection established to " << peer->address.port << std::endl;
     // Auth Packet
-    std::lock_guard enet_lock(enet_mutex);
+    std::lock_guard enet_lock(enetMutex);
     int8_t pak[33]{};
     pak[0] = PACKET_AUTH;
     memcpy(&pak[1], token, 32);
     enet_peer_send(peer, 0, enet_packet_create(pak, 33, ENET_PACKET_FLAG_RELIABLE));
-    mutex.lock();
+    mapMutex.lock();
     bytesOut += 33;
-    mutex.unlock();
+    mapMutex.unlock();
     std::cout << "[RetroClient] Authorizing with token " << token << std::endl;
 }
 
@@ -241,10 +240,10 @@ void RetroClient::onDisconnect() {
 }
 
 void RetroClient::onMessage(const ENetPacket *packet) {
-    mutex.lock();
+    mapMutex.lock_shared();
     if (!running)
         return;
-    mutex.unlock();
+    mapMutex.unlock_shared();
     if (packet == nullptr) {
         std::cerr << "[RetroClient] Received packet is nullptr" << std::endl;
         return;
@@ -260,13 +259,13 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_KEEP_ALIVE: {
-            enet_mutex.lock();
+            enetMutex.lock();
             constexpr int8_t id = PACKET_KEEP_ALIVE;
             enet_peer_send(peer, 0, enet_packet_create(&id, 1, ENET_PACKET_FLAG_RELIABLE));
-            enet_mutex.unlock();
-            mutex.lock();
+            enetMutex.unlock();
+            mapMutex.lock();
             bytesOut += 1;
-            mutex.unlock();
+            mapMutex.unlock();
             break;
         }
         case PACKET_KICK: {
@@ -284,30 +283,22 @@ void RetroClient::onMessage(const ENetPacket *packet) {
                 std::cerr << "[RetroClient] Received invalid display packet" << std::endl;
                 return;
             }
-            mutex.lock();
+            mapMutex.lock_shared();
             const auto it = displays.find(parsed->ref->combine());
             if (it == displays.end()) {
                 std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
                 return;
             }
-            it->second->receive(parsed->data, parsed->size);
-            mutex.unlock();
+            it->second->receive(parsed->data);
+            mapMutex.unlock_shared();
             break;
         }
         case PACKET_UPDATE_AUDIO: {
-            const auto parsed = Int8ArrayPacket::unpack(packet);
-            if (parsed == nullptr) {
+            if (const auto parsed = Int8ArrayPacket::unpack(packet); parsed == nullptr) {
                 std::cerr << "[RetroClient] Received invalid audio packet" << std::endl;
                 return;
             }
-            mutex.lock();
-            const auto it = playbacks.find(parsed->ref->combine());
-            if (it == playbacks.end()) {
-                std::cerr << "[RetroClient] Received audio packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
-                return;
-            }
-            it->second->receive(parsed->data, parsed->size);
-            mutex.unlock();
+            // TODO: Add to playback queue and transfer to java
             break;
         }
         case PACKET_AUTH:

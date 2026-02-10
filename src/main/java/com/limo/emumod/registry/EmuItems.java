@@ -9,6 +9,7 @@ import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.monitor.CableItem;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.Codec;
 import com.limo.emumod.util.FileUtil;
 import com.limo.emumod.util.RequirementManager;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -34,21 +35,24 @@ public class EmuItems {
     public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
 
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE,
-            "gb", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.gearBoy, file, "gb", 160, 144, 44100)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+            "gb", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            runGenericConsole(RequirementManager.gearBoy, file, console, "gb", 160, 144,
+                    44100, Codec.CODEC_WEBP)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE,
-            "gbc", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.gearBoy, file, "gbc", 160, 144, 44100)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+            "gbc", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            runGenericConsole(RequirementManager.gearBoy, file, console, "gbc", 160, 144,
+                    44100, Codec.CODEC_WEBP)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
-            "gba", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheld(RequirementManager.beetleGBA, file, "gba", 240, 160, 44100)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+            "gba", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            runGenericConsole(RequirementManager.beetleGBA, file, console, "gba", 240, 160,
+                    44100, Codec.CODEC_WEBP)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
-            "gg", () -> GenericHandheldItem.link = null, (user, file) ->
-            runGenericHandheldWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, "gg", 160, 144, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
-
-    public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
-
-    public static final Item NES_CONTROLLER = register(new ControllerItem(ItemId.Registry.NES_CONTROLLER, 2), ItemId.Registry.NES_CONTROLLER);
+            "gg", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            runGenericConsoleWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, console, "gg", 160, 144,
+                    44100, Codec.CODEC_WEBP)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -59,6 +63,8 @@ public class EmuItems {
     public static final Item GAME_GEAR = register(new GenericHandheldItem(ItemId.Registry.GAME_GEAR,
             NetworkId.ScreenType.GAME_GEAR, GAME_GEAR_CARTRIDGE), ItemId.Registry.GAME_GEAR);
 
+    public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
+    public static final Item NES_CONTROLLER = register(new ControllerItem(ItemId.Registry.NES_CONTROLLER, 2), ItemId.Registry.NES_CONTROLLER);
     public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Settings().maxCount(8)
             .registryKey(ItemId.Registry.NES)), ItemId.Registry.NES);
 
@@ -106,25 +112,21 @@ public class EmuItems {
         });
     }
 
-    private static boolean runGenericHandheld(File core, UUID file, String fileType, int width, int height, int sampleRate) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, file, fileType);
+    public static boolean runGenericConsole(File core, UUID file, UUID consoleId, String fileType, int width, int height, int sampleRate, int codec) {
+        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, codec, file, consoleId, fileType);
         con.load(core);
         EmuMod.running.put(file, con);
         PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, width, height, sampleRate)));
+                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(consoleId, width, height, sampleRate, codec)));
         return true;
     }
 
-    private static boolean runGenericHandheldWithBios(PlayerEntity user, File core, String bios, UUID file, String fileType, int width, int height, int sampleRate) {
+    private static boolean runGenericConsoleWithBios(PlayerEntity user, File core, String bios, UUID file, UUID consoleId,
+                                                     String fileType, int width, int height, int sampleRate, int codec) {
         if(!FileUtil.getRequiredFile(bios).exists()) {
             user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
             return false;
         }
-        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, file, fileType);
-        con.load(core);
-        EmuMod.running.put(file, con);
-        PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(file, width, height, sampleRate)));
-        return true;
+        return runGenericConsole(core, file, consoleId, fileType, width, height, sampleRate, codec);
     }
 }

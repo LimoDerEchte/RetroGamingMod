@@ -10,11 +10,13 @@ public class NativeGenericConsole {
     private final long pointer;
     private final UUID file;
     private final String fileType;
+    private final int codec;
 
-    public NativeGenericConsole(int width, int height, int sampleRate, UUID file, String fileType) {
+    public NativeGenericConsole(int width, int height, int sampleRate, int codec, UUID file, UUID consoleId, String fileType) {
         this.file = file;
         this.fileType = fileType;
-        pointer = init(NativeUtil.nativeUUID(file), width, height, sampleRate);
+        this.codec = codec;
+        pointer = init(NativeUtil.nativeUUID(file), NativeUtil.nativeUUID(consoleId), width, height, sampleRate, codec);
     }
 
     public void load(File core) {
@@ -39,7 +41,11 @@ public class NativeGenericConsole {
         return getSampleRate(pointer);
     }
 
-    private native static long init(long uuid, int width, int height, int sampleRate);
+    public int getCodec() {
+        return codec;
+    }
+
+    private native static long init(long uuid, long consoleId, int width, int height, int sampleRate, int codec);
     private native static void start(long pointer, String retroCore, String core, String rom, String save);
     private native static void stop(long pointer);
 

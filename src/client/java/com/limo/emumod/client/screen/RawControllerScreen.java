@@ -3,6 +3,7 @@ package com.limo.emumod.client.screen;
 import com.limo.emumod.client.util.ControlHandler;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
@@ -36,17 +37,17 @@ public class RawControllerScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(controlHandler.down(keyCode))
+    public boolean keyPressed(KeyInput input) {
+        if(controlHandler.down(input.getKeycode()))
             return true;
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if(controlHandler.up(keyCode))
+    public boolean keyReleased(KeyInput input) {
+        if(controlHandler.up(input.getKeycode()))
             return true;
-        return super.keyReleased(keyCode, scanCode, modifiers);
+        return super.keyReleased(input);
     }
 
     @Override

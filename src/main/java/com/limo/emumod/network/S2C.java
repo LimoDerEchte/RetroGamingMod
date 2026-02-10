@@ -25,11 +25,11 @@ public class S2C {
         }
     }
 
-    public record OpenGameScreenPayload(byte type, UUID fileId, OptionalInt port) implements CustomPayload {
+    public record OpenGameScreenPayload(byte type, UUID uuid, OptionalInt port) implements CustomPayload {
         public static final Id<OpenGameScreenPayload> ID = new Id<>(NetworkId.OPEN_GAME_SCREEN);
         public static final PacketCodec<RegistryByteBuf, OpenGameScreenPayload> CODEC = PacketCodec.tuple(
                 PacketCodecs.BYTE, OpenGameScreenPayload::type,
-                Uuids.PACKET_CODEC, OpenGameScreenPayload::fileId,
+                Uuids.PACKET_CODEC, OpenGameScreenPayload::uuid,
                 PacketCodecs.OPTIONAL_INT, OpenGameScreenPayload::port,
                 OpenGameScreenPayload::new
         );
@@ -67,28 +67,15 @@ public class S2C {
         }
     }
 
-    public record UpdateEmulatorPayload(UUID uuid, int width, int height, int sampleRate) implements CustomPayload {
+    public record UpdateEmulatorPayload(UUID uuid, int width, int height, int sampleRate, int codec) implements CustomPayload {
         public static final Id<UpdateEmulatorPayload> ID = new Id<>(NetworkId.UPDATE_EMULATOR);
         public static final PacketCodec<RegistryByteBuf, UpdateEmulatorPayload> CODEC = PacketCodec.tuple(
                 Uuids.PACKET_CODEC, UpdateEmulatorPayload::uuid,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::width,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::height,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::codec,
                 UpdateEmulatorPayload::new
-        );
-
-        @Override
-        public Id<? extends CustomPayload> getId() {
-            return ID;
-        }
-    }
-
-    public record UpdateHandheldAudio(UUID uuid, UUID entity) implements CustomPayload {
-        public static final Id<UpdateHandheldAudio> ID = new Id<>(NetworkId.UPDATE_AUDIO);
-        public static final PacketCodec<RegistryByteBuf, UpdateHandheldAudio> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateHandheldAudio::uuid,
-                Uuids.PACKET_CODEC, UpdateHandheldAudio::entity,
-                UpdateHandheldAudio::new
         );
 
         @Override
@@ -103,6 +90,5 @@ public class S2C {
         PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ENetTokenPayload.ID, ENetTokenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateEmulatorPayload.ID, UpdateEmulatorPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(UpdateHandheldAudio.ID, UpdateHandheldAudio.CODEC);
     }
 }

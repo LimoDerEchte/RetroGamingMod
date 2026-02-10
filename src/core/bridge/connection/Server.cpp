@@ -8,18 +8,21 @@
 #include <iostream>
 #include <thread>
 #include <headers/com_limo_emumod_bridge_NativeServer.h>
+#include <algorithm>
 
 #include "NetworkDefinitions.hpp"
 #include "platform/GenericConsole.hpp"
 #include "util/NativeUtil.hpp"
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port, const jint maxUsers) {
+    // ReSharper disable once CppDFAMemoryLeak
     return reinterpret_cast<jlong>(new RetroServer(port, maxUsers));
 }
 
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer(JNIEnv *, jclass, const jlong ptr) {
     const auto server = reinterpret_cast<RetroServer*>(ptr);
     server->dispose();
+    delete server;
 }
 
 JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(JNIEnv *env, jclass, const jlong ptr) {
@@ -28,7 +31,7 @@ JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken(
     return env->NewStringUTF(std::string(token, 32).c_str());
 }
 
-RetroServer::RetroServer(const int port, const int maxUsers) : clients(new std::vector<RetroServerClient*>(maxUsers)) {
+RetroServer::RetroServer(const int port, const int maxUsers) {
     std::lock_guard lock(mutex);
     std::lock_guard enet_lock(enet_mutex);
     if (enet_initialize() != 0) {
@@ -59,7 +62,7 @@ char* RetroServer::genToken() {
     std::array<char, 32> stdArr = {};
     memcpy(stdArr.data(), data, 32);
     std::lock_guard lock(mutex);
-    tokens->push_back(stdArr);
+    tokens.push_back(stdArr);
     return data;
 }
 
@@ -170,7 +173,7 @@ void RetroServer::mainKeepAliveLoop() {
     mutex.unlock();
     while (true) {
         mutex.lock();
-        for (const RetroServerClient* client : *clients) {
+        for (const auto& client : clients) {
             if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                 continue;
             constexpr int8_t id = PACKET_KEEP_ALIVE;
@@ -196,18 +199,15 @@ void RetroServer::videoSenderLoop(const int fps) {
     runningLoops++;
     mutex.unlock();
     while (true) {
-        GenericConsoleRegistry::withConsoles([this](const auto console) {
-            if (!console->retroCoreHandle->displayChanged)
+        GenericConsoleRegistry::withConsoles(false, [this](const auto console) {
+            if (!console->retroCoreHandle || !console->retroCoreHandle->displayChanged)
                 return;
             const auto frame = console->createFrame();
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(
-                PACKET_UPDATE_DISPLAY, console->uuid,
-                frame.data(), frame.size()
-            ).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_DISPLAY, console->consoleId, frame).pack();
             mutex.lock();
-            for (const RetroServerClient* client : *clients) {
+            for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
                 enet_mutex.lock();
@@ -235,19 +235,16 @@ void RetroServer::audioSenderLoop(const int cps) {
     runningLoops++;
     mutex.unlock();
     while (true) {
-        GenericConsoleRegistry::withConsoles([this](const auto console) {
+        GenericConsoleRegistry::withConsoles(false, [this](const auto console) {
             if (!console->retroCoreHandle->audioChanged)
                 return;
             const auto frame = console->createClip();
             console->retroCoreHandle->audioChanged = false;
             if (frame.empty())
                 return;
-            const auto packet = Int8ArrayPacket(
-                PACKET_UPDATE_AUDIO, console->uuid,
-                frame.data(), frame.size()
-            ).pack();
+            const auto packet = Int8ArrayPacket(PACKET_UPDATE_AUDIO, console->consoleId, frame).pack();
             mutex.lock();
-            for (const RetroServerClient* client : *clients) {
+            for (const auto& client : clients) {
                 if (client == nullptr || client->peer == nullptr || client->peer->state != ENET_PEER_STATE_CONNECTED)
                     continue;
                 enet_mutex.lock();
@@ -270,13 +267,12 @@ void RetroServer::audioSenderLoop(const int cps) {
 
 void RetroServer::onConnect(ENetPeer *peer) {
     std::lock_guard lock(mutex);
-    const auto client = new RetroServerClient(peer);
-    clients->push_back(client);
+    clients.push_back(std::make_shared<RetroServerClient>(peer));
 }
 
 void RetroServer::onDisconnect(ENetPeer *peer) {
     std::lock_guard lock(mutex);
-    std::erase_if(*clients, [peer](const RetroServerClient* client) {
+    std::erase_if(clients, [peer](const auto& client) {
         return client != nullptr && client->peer == peer;
     });
 }
@@ -307,7 +303,7 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
                 return;
             }
             mutex.lock();
-            std::erase_if(*tokens, [&, packet, client, peer](const std::array<char, 32>& token) {
+            std::erase_if(tokens, [&, packet, client, peer](const std::array<char, 32>& token) {
                 if (memcmp(token.data(), &packet->data[1], 32) == 0) {
                     client->isAuthenticated = true;
                     enet_mutex.lock();
@@ -332,14 +328,18 @@ void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
         }
         case PACKET_UPDATE_CONTROLS: {
             const auto parsed = Int8ArrayPacket::unpack(packet);
-            GenericConsoleRegistry::withConsole(parsed->ref, [parsed](const GenericConsole* entry) {
-                const int port = parsed->data[0];
+            auto* p = parsed.get();
+            const auto pCombine = p->ref->combine();
+            GenericConsoleRegistry::withConsoles(false, [p, pCombine](const GenericConsole* entry) {
+                if (entry->consoleId->combine() != pCombine)
+                    return;
+                const int port = p->data[0];
                 union {
                     uint8_t bytes[2];
                     int16_t value = 0;
                 } converter;
-                converter.bytes[0] = parsed->data[1];
-                converter.bytes[1] = parsed->data[2];
+                converter.bytes[0] = p->data[1];
+                converter.bytes[1] = p->data[2];
                 entry->input(port, converter.value);
             });
             break;
@@ -366,8 +366,8 @@ void RetroServer::kick(ENetPeer *peer, const char *message) {
     bytesOut += packet->dataLength;
 }
 
-RetroServerClient* RetroServer::findClientByPeer(const ENetPeer* peer) const {
-    for (const auto element : *clients) {
+std::shared_ptr<RetroServerClient> RetroServer::findClientByPeer(const ENetPeer* peer) const {
+    for (const auto& element : clients) {
         if (element == nullptr || element->peer != peer) {
             continue;
         }

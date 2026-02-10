@@ -3,24 +3,38 @@
 //
 
 #pragma once
+
 #include <cstdint>
 #include <vector>
+#include <wels/codec_api.h>
 
-class VideoDecoderInt16 {
+class VideoDecoder {
+protected:
     const int width, height;
-    std::vector<int16_t> previous_frame;
-
-    std::vector<int16_t> performInverseDeltaEncoding(const std::vector<int16_t>& delta_frame);
-    [[nodiscard]] std::vector<int16_t> decompressWithZlib(const std::vector<uint8_t>& compressed_data) const;
 
 public:
-    VideoDecoderInt16(int width, int height);
+    VideoDecoder(int width, int height);
+    virtual ~VideoDecoder() = default;
 
-    std::vector<int16_t> decodeFrame(const std::vector<uint8_t>& encoded_data);
-    void decodeFrameRGB565(const std::vector<uint8_t> &encoded_data, uint32_t* buf);
-
-    void reset();
+    [[nodiscard]] virtual std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const;
 
     [[nodiscard]] int getWidth() const;
     [[nodiscard]] int getHeight() const;
+};
+
+class VideoDecoderH264 final : public VideoDecoder {
+    ISVCDecoder* decoder;
+
+public:
+    VideoDecoderH264(int width, int height);
+    ~VideoDecoderH264() override;
+
+    [[nodiscard]] std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const override;
+};
+
+class VideoDecoderWebP final : public VideoDecoder {
+public:
+    VideoDecoderWebP(int width, int height);
+
+    [[nodiscard]] std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const override;
 };

@@ -1,59 +1,53 @@
 package com.limo.emumod.client.network;
 
-import com.limo.emumod.bridge.NativeDisplay;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.minecraft.client.texture.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.util.Identifier;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.limo.emumod.client.EmuModClient.CLIENT;
+import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ScreenManager {
-    private static final Map<UUID, NativeDisplay> displays = new HashMap<>();
-    private static final Map<UUID, NativeImage> displayBuffer = new HashMap<>();
-    private static final NativeImage BLACK = new NativeImage(1, 1, false);
-
-    static {
-        BLACK.setColorArgb(0, 0, 0xFF000000);
-    }
+    private static final Map<UUID, NativeImageBackedTexture> displays = new HashMap<>();
+    private static final List<UUID> updatedThisFrame = new ArrayList<>();
 
     public static void init() {
-        WorldRenderEvents.START.register((ctx) -> {
-            for(Map.Entry<UUID, NativeDisplay> entry : displays.entrySet()) {
-                if(!displayBuffer.containsKey(entry.getKey()))
-                    continue;
-                if(!entry.getValue().hasChanged())
-                    continue;
-                NativeImage img = displayBuffer.get(entry.getKey());
-                int[] display = entry.getValue().getBuf();
-                int height = img.getHeight();
-                int width = img.getWidth();
-                for(int y = 0; y < height; y++) {
-                    for(int x = 0; x < width; x++) {
-                        img.setColorArgb(x, y, display[y * width + x]);
-                    }
-                }
-            }
-        });
+        WorldRenderEvents.START_MAIN.register((_) -> updatedThisFrame.clear());
     }
 
-    public static void registerDisplay(UUID id, int width, int height, int sampleRate) {
-        displays.put(id, CLIENT.registerScreen(id, width, height, sampleRate));
-        displayBuffer.put(id, new NativeImage(width, height, false));
+    public static void registerDisplay(UUID id, int width, int height, int sampleRate, int codec) {
+        unregisterDisplay(id);
+        NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "emu-dp-" + id.toString(),
+                CLIENT.registerScreen(id, width, height, sampleRate, codec));
+        displays.put(id, tex);
+        mc.getTextureManager().registerTexture(texFromUUID(id), tex);
     }
 
     public static void unregisterDisplay(UUID id) {
+        if(!displays.containsKey(id))
+            return;
         displays.remove(id);
-        if(displayBuffer.containsKey(id)) {
-            displayBuffer.get(id).close();
-            displayBuffer.remove(id);
-        }
         CLIENT.unregisterScreen(id);
+        RenderSystem.queueFencedTask(() -> mc.getTextureManager().destroyTexture(texFromUUID(id)));
     }
 
-    public static NativeImage getDisplay(UUID id) {
-        return displayBuffer.getOrDefault(id, BLACK);
+    public static NativeImageBackedTexture retrieveDisplay(UUID id) {
+        if(!displays.containsKey(id))
+            return null;
+        if(updatedThisFrame.contains(id))
+            return displays.get(id);
+        NativeImageBackedTexture tex = displays.get(id);
+        updatedThisFrame.add(id);
+        if(!CLIENT.screenChanged(id))
+            return tex;
+        tex.upload();
+        return tex;
+    }
+
+    public static Identifier texFromUUID(UUID uuid) {
+        return Identifier.of("emumod", "emu-dp-" + uuid.toString());
     }
 }

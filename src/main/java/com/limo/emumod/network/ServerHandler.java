@@ -1,30 +1,21 @@
 package com.limo.emumod.network;
 
-import com.limo.emumod.EmuMod;
-import com.limo.emumod.bridge.NativeGenericConsole;
-import com.limo.emumod.bridge.NativeServer;
 import com.limo.emumod.cartridge.CartridgeItem;
+import com.limo.emumod.components.GameComponent;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
-import net.minecraft.util.NetworkUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.UUID;
 
-import static com.limo.emumod.EmuMod.SERVER;
-import static com.limo.emumod.registry.EmuComponents.FILE_ID;
 import static com.limo.emumod.registry.EmuComponents.GAME;
 
 public class ServerHandler {
@@ -76,6 +67,7 @@ public class ServerHandler {
             }
             UUID fileUuid = UUID.randomUUID();
             String game = new String(nameBytes).replace("\u0000", "");
+            //noinspection resource
             ctx.server().execute(() -> {
                 File rom = FileUtil.idToFile(fileUuid, fileExtension);
                 try(FileOutputStream fos = new FileOutputStream(rom)) {
@@ -91,9 +83,7 @@ public class ServerHandler {
                 }
                 ctx.player().getMainHandStack().decrement(1);
                 ItemStack stack = new ItemStack(item);
-                stack.applyComponentsFrom(ComponentMap.builder()
-                        .add(GAME, game)
-                        .add(FILE_ID, fileUuid).build());
+                stack.applyComponentsFrom(ComponentMap.builder().add(GAME, new GameComponent(fileUuid, game)).build());
                 ctx.player().getInventory().insertStack(stack);
                 ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
             });

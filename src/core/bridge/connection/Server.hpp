@@ -22,8 +22,8 @@ class RetroServer {
     bool running = false;
     int runningLoops = 0;
     std::mutex mutex;
-    std::vector<RetroServerClient*>* clients{};
-    std::vector<std::array<char, 32>>* tokens = new std::vector<std::array<char, 32>>();
+    std::vector<std::shared_ptr<RetroServerClient>> clients = {};
+    std::vector<std::array<char, 32>> tokens = {};
 
     uint64_t bytesIn = 0;
     uint64_t bytesOut = 0;
@@ -44,5 +44,5 @@ public:
     void onMessage(ENetPeer* peer, const ENetPacket* packet);
 
     void kick(ENetPeer *peer, const char *message);
-    RetroServerClient* findClientByPeer(const ENetPeer* peer) const;
+    std::shared_ptr<RetroServerClient> findClientByPeer(const ENetPeer* peer) const;
 };

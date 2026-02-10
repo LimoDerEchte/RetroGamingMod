@@ -11,17 +11,17 @@ My previous attempt at this used coffee gb, a Java Game Boy emulator, which was 
 
 ## Emulators
 ### Handheld
-| Console          | Core                                                                      | Features     |
-|------------------|---------------------------------------------------------------------------|--------------|
-| Game Boy         | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
-| Game Boy Color   | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video, Audio |
-| Game Boy Advance | [Beetle GBA](https://github.com/libretro/beetle-gba-libretro/tree/master) | Video, Audio |
-| SEGA Game Gear   | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX)              | Video, Audio |
+| Console          | Core                                                                      | Features |
+|------------------|---------------------------------------------------------------------------|----------|
+| Game Boy         | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video    |
+| Game Boy Color   | [Gearboy](https://github.com/drhelius/Gearboy)                            | Video    |
+| Game Boy Advance | [Beetle GBA](https://github.com/libretro/beetle-gba-libretro/tree/master) | Video    |
+| SEGA Game Gear   | [Genesis-Plus-GX](https://github.com/ekeeke/Genesis-Plus-GX)              | Video    |
 
 ### Stationary
-| Console | Core                                                  | Ports (Players) | Features     |
-|---------|-------------------------------------------------------|-----------------|--------------|
-| NES     | [FCEUmm](https://github.com/libretro/libretro-fceumm) | 2               | Video, Audio |
+| Console | Core                                                  | Ports (Players) | Features |
+|---------|-------------------------------------------------------|-----------------|----------|
+| NES     | [FCEUmm](https://github.com/libretro/libretro-fceumm) | 2               | Video    |
 
 ## Building / Contributing
 ### First of all

@@ -34,10 +34,10 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAut
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    registerScreen
- * Signature: (JJIII)J
+ * Signature: (JJIIJII)V
  */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen
-  (JNIEnv *, jclass, jlong, jlong, jint, jint, jint);
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen
+  (JNIEnv *, jclass, jlong, jlong, jint, jint, jlong, jint, jint);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
@@ -49,19 +49,19 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
+ * Method:    screenChanged
+ * Signature: (JJ)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_screenChanged
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    sendControlUpdate
  * Signature: (JJIS)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate
   (JNIEnv *, jclass, jlong, jlong, jint, jshort);
-
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    updateAudioDistance
- * Signature: (JJD)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_updateAudioDistance
-  (JNIEnv *, jclass, jlong, jlong, jdouble);
 
 #ifdef __cplusplus
 }
