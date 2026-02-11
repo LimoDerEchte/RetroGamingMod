@@ -30,4 +30,7 @@ find_package(WebP CONFIG REQUIRED)
 # Actual Projects
 add_subdirectory(bridge)
 add_subdirectory(retro-core)
-add_subdirectory(test)
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_subdirectory(test)
+endif()

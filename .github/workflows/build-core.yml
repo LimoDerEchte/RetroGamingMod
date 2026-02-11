@@ -1,0 +1,68 @@
+name: Build Native Core
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    env:
+      VCPKG_FEATURE_FLAGS: -binarycaching
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Installing Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang build-essential nasm
+
+      - name: Install latest CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: 'latest'
+
+      - name: Verify installations
+        run: |
+          make --version
+          cmake --version
+          ninja --version
+          clang --version
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: src/core/vcpkg
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: src/core/vcpkg
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}
+
+      - name: Build project
+        run: |
+          cd src/core
+          chmod +x build_linux.sh
+          ./build_linux.sh
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: src/core/build-linux/
+          retention-days: 7
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: src/core/vcpkg
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}

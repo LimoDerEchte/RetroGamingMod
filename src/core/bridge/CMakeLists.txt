@@ -28,6 +28,7 @@ target_include_directories(bridge PRIVATE
         ../shared
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
+        ${VCPKG_INCLUDE_DIRS}
 )
 
 target_link_libraries(bridge PRIVATE
@@ -36,8 +37,8 @@ target_link_libraries(bridge PRIVATE
         unofficial::enet::enet
         fmt::fmt
         WebP::sharpyuv WebP::webp WebP::webpdecoder WebP::libwebpmux
-        openh264
         yuv
+        ${H264_LIB}
         ${OPUS_LIBRARIES}
 )
 
@@ -51,12 +52,14 @@ endif()
 #target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
 
 # Post Build
-if(UNIX)
-    add_custom_command(TARGET bridge POST_BUILD
-            COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/libbridge.* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
-    )
-elseif(WIN32)
-    add_custom_command(TARGET bridge POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/bridge.dll" "${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/"
-    )
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(UNIX)
+        add_custom_command(TARGET bridge POST_BUILD
+                COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/libbridge.* ${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/
+        )
+    elseif(WIN32)
+        add_custom_command(TARGET bridge POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../cmake-build-debug/bridge/bridge.dll" "${CMAKE_CURRENT_SOURCE_DIR}/../../../run/retroGamingRequired/"
+        )
+    endif()
 endif()

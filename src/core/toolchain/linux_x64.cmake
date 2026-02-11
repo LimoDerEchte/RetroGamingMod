@@ -11,4 +11,7 @@ set(JNI_INCLUDE_DIRS
     "${CMAKE_CURRENT_LIST_DIR}/../lib/jni/unix"
 )
 
+set(H264_LIB "${CMAKE_CURRENT_LIST_DIR}/../build-linux-x64/vcpkg_installed/x64-linux/lib/libopenh264.a")
+set(VCPKG_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../build-linux-x64/vcpkg_installed/x64-linux/include")
+
 include(${CMAKE_CURRENT_LIST_DIR}/../vcpkg/scripts/buildsystems/vcpkg.cmake)
