@@ -1,11 +1,13 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "com.limo.emumod.client.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "client": [
-  ],
-  "injectors": {
-    "defaultRequire": 1
+   "required": true,
+   "minVersion": "0.8",
+   "package": "com.limo.emumod.client.mixin",
+   "compatibilityLevel": "JAVA_21",
+   "client": [
+      "SoundManagerAccessor",
+      "SoundSystemAccessor"
+   ],
+   "injectors": {
+      "defaultRequire": 1
   }
 }

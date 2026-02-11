@@ -5,10 +5,12 @@
 #include "NativeImage.hpp"
 
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <mutex>
 
-NativeImage::NativeImage(const int width, const int height, uint32_t* data, const int codec) : data_(data), width_(width), height_(height), codec_(codec) {
+NativeImage::NativeImage(const int width, const int height, uint32_t* data, const int codec, const int sampleRate)
+                            : data_(data), width(width), height(height), codec(codec), sampleRate(sampleRate) {
     changed_ = true;
 }
 
@@ -21,21 +23,28 @@ uint32_t* NativeImage::nativePointer() const {
 }
 
 void NativeImage::receive(const std::vector<uint8_t>& data) {
-    // TODO: Auto Decoder Selection
-    std::lock_guard lock(mutex_);
-    if (decoder_ == nullptr) {
-        switch (codec_) {
+    std::lock_guard lock(mutex);
+    if (decoder == nullptr) {
+        switch (codec) {
             case 0:
-                decoder_ = std::make_unique<VideoDecoderWebP>(width_, height_);
+                decoder = std::make_unique<VideoDecoderWebP>(width, height);
                 break;
             case 1:
-                decoder_ = std::make_unique<VideoDecoderH264>(width_, height_);
+                decoder = std::make_unique<VideoDecoderH264>(width, height);
                 break;
             default:
                 return;
         }
     }
-    const auto decoded = decoder_->decodeFrame(data);\
-    memcpy(data_, decoded.data(), sizeof(uint32_t) * width_ * height_);
+    const auto decoded = decoder->decodeFrame(data);\
+    memcpy(data_, decoded.data(), sizeof(uint32_t) * width * height);
     changed_ = true;
+}
+
+void NativeImage::receiveAudio(const std::vector<uint8_t> &data) {
+    std::lock_guard lock(mutex);
+    if (audioDecoder == nullptr) {
+        audioDecoder = std::make_unique<AudioDecoderOpus>(48000, 2);
+    }
+    lastAudioBuffer_ = audioDecoder->decodeFrame(data);
 }

@@ -34,6 +34,10 @@ public class NativeClient {
         return screenChanged(handle, NativeUtil.nativeUUID(uuid));
     }
 
+    public float[] lastAudioData(UUID uuid) {
+        return lastAudioData(handle, NativeUtil.nativeUUID(uuid));
+    }
+
     public void updateControls(UUID uuid, int port, short controls) {
         sendControlUpdate(handle, NativeUtil.nativeUUID(uuid), port, controls);
     }
@@ -44,5 +48,6 @@ public class NativeClient {
     private static native void registerScreen(long ptr, long uuid, int width, int height, long data, int sampleRate, int codec);
     private static native void unregisterScreen(long ptr, long uuid);
     private static native boolean screenChanged(long ptr, long uuid);
+    private static native float[] lastAudioData(long ptr, long uuid);
     private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
 }

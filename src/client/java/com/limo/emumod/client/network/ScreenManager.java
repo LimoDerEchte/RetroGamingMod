@@ -1,5 +1,6 @@
 package com.limo.emumod.client.network;
 
+import com.limo.emumod.client.sound.EmuSpeaker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.texture.NativeImageBackedTexture;

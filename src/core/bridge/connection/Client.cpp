@@ -43,6 +43,18 @@ JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     client->unregisterDisplay(uuid);
 }
 
+JNIEXPORT jfloatArray JNICALL Java_com_limo_emumod_client_bridge_NativeClient_lastAudioData(JNIEnv *env, jclass, const jlong ptr, const jlong jUuid) {
+    const auto client = reinterpret_cast<RetroClient*>(ptr);
+    const auto uuid = reinterpret_cast<jUUID*>(jUuid);
+    const auto data = client->getDisplay(uuid)->lastAudioBuffer_;
+
+    std::cout << "Get Buffer: " << data.size() << std::endl;
+    jfloatArray arr = env->NewFloatArray(static_cast<jsize>(data.size()));
+    memcpy(&arr, data.data(), sizeof(float) * data.size());
+    std::cout << "Get Buffer: " << data.size() << std::endl;
+    return arr;
+}
+
 JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_screenChanged(JNIEnv *, jclass, const jlong ptr, const jlong jUuid) {
     const auto client = reinterpret_cast<RetroClient*>(ptr);
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
@@ -112,7 +124,7 @@ void RetroClient::dispose() {
 
 uint32_t* RetroClient::registerDisplay(const jUUID *uuid, int width, int height, uint32_t *data, int sampleRate, int codec) {
     std::unique_lock lock(mapMutex);
-    const auto display = std::make_shared<NativeImage>(width, height, data, codec);
+    const auto display = std::make_shared<NativeImage>(width, height, data, codec, sampleRate);
     const long uuidCombine = uuid->combine();
     displays.insert_or_assign(uuidCombine, display);
     return display->nativePointer();
@@ -294,11 +306,19 @@ void RetroClient::onMessage(const ENetPacket *packet) {
             break;
         }
         case PACKET_UPDATE_AUDIO: {
-            if (const auto parsed = Int8ArrayPacket::unpack(packet); parsed == nullptr) {
+            const auto parsed = Int8ArrayPacket::unpack(packet);
+            if (parsed == nullptr) {
                 std::cerr << "[RetroClient] Received invalid audio packet" << std::endl;
                 return;
             }
-            // TODO: Add to playback queue and transfer to java
+            mapMutex.lock_shared();
+            const auto it = displays.find(parsed->ref->combine());
+            if (it == displays.end()) {
+                std::cerr << "[RetroClient] Received display packet for unknown display " << std::hex << parsed->ref->combine() << std::endl;
+                return;
+            }
+            it->second->receiveAudio(parsed->data);
+            mapMutex.unlock_shared();
             break;
         }
         case PACKET_AUTH:

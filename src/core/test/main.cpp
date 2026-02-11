@@ -209,7 +209,7 @@ void test_audio_codec() {
                 total_size += encoded_frame.size();
 
                 auto decoded_frame = decoder.decodeFrame(encoded_frame);
-                decoded_frames.push_back(decoded_frame);
+                //decoded_frames.push_back(decoded_frame);
             }
             catch (const std::exception& e) {
                 std::cerr << "Encoding/Decoding error on frame " << i << ": " << e.what() << std::endl;

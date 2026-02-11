@@ -21,7 +21,6 @@ class AudioDecoderOpus {
     int sample_rate;
     int channels;
     OpusDecoder* decoder;
-    std::vector<int16_t> output_buffer;
 
     void initializeDecoder();
 
@@ -38,7 +37,7 @@ public:
     AudioDecoderOpus(AudioDecoderOpus&& other) noexcept;
     AudioDecoderOpus& operator=(AudioDecoderOpus&& other) noexcept;
 
-    std::vector<int16_t> decodeFrame(const std::vector<uint8_t>& encoded_data);
+    [[nodiscard]] std::vector<float> decodeFrame(const std::vector<uint8_t>& encoded_data) const;
     void reset();
 
     [[nodiscard]] int getSampleRate() const {

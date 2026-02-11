@@ -57,6 +57,14 @@ JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_scree
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
+ * Method:    lastAudioData
+ * Signature: (JJ)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_com_limo_emumod_client_bridge_NativeClient_lastAudioData
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    sendControlUpdate
  * Signature: (JJIS)V
  */

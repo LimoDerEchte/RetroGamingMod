@@ -69,7 +69,7 @@ public class MonitorBlock extends BlockWithEntity {
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
         ctx.getWorld().markDirty(ctx.getBlockPos());
-        return this.getDefaultState().with(Properties.ROTATION, (-Math.round(ctx.getPlayerYaw() / 22.5f) + 16) % 16);
+        return this.getDefaultState().with(Properties.ROTATION, (-Math.round(ctx.getPlayerYaw() / 22.5f) + 32) % 16);
     }
 
     @Override
