@@ -5,6 +5,7 @@
 #pragma once
 #include <mutex>
 #include <vector>
+#include <array>
 #include <enet/enet.h>
 
 #include "NetworkDefinitions.hpp"

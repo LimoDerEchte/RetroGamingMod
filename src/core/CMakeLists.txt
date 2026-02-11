@@ -1,9 +1,13 @@
 
-# Stuff
-set(CFLAGS -fsanitize=address -fno-omit-frame-pointer)
-set(CXXFLAGS -fsanitize=address -fno-omit-frame-pointer)
-set(LDFLAGS -fsanitize=address)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# Compiling
+set(CMAKE_GENERATOR ninja)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_C_COMPILER clang)
+
+# Clang Optimizations
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native -flto -funroll-loops -fvectorize -fmerge-all-constants -ffast-math -fstrict-aliasing")
+endif()
 
 # VCPKG Config
 if(UNIX AND NOT APPLE)
@@ -23,7 +27,6 @@ project(RetroGamingCore)
 set(CMAKE_CXX_STANDARD 23)
 
 # Lib
-find_package(JNI REQUIRED)
 find_package(boost_interprocess CONFIG REQUIRED)
 find_package(boost_process CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
