@@ -8,7 +8,7 @@
 #include <map>
 #include <mutex>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <minwindef.h>
 #endif
 
@@ -39,7 +39,7 @@ private:
 
     std::string systemPath;
     std::string corePath;
-#ifdef WIN32
+#ifdef _WIN32
     HMODULE coreHandle;
 #else
     void* coreHandle;

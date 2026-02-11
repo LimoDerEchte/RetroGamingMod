@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <string>
 #endif
 

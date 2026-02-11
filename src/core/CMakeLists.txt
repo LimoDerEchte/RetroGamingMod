@@ -1,7 +1,11 @@
 
 # Set Toolchain for Dev
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/linux_x64.cmake)
+    if(UNIX)
+        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/linux_x64.cmake)
+    else()
+        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/windows_x64.cmake)
+    endif()
 endif()
 
 # Compiling

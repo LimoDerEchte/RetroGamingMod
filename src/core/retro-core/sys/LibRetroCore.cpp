@@ -5,7 +5,7 @@
 
 #include "LibRetroCore.hpp"
 
-#if WIN32 // Redefine dlfcn functions on windows
+#if _WIN32 // Redefine dlfcn functions on windows
 #include <libloaderapi.h>
 #define dlopen(libname, ignored) LoadLibraryA(libname)
 #define dlsym(lib, handle) GetProcAddress(lib, handle)
