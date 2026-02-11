@@ -9,7 +9,6 @@
 
 #include "codec/AudioDecoder.hpp"
 #include "codec/AudioEncoder.hpp"
-#include "connection/NetworkDefinitions.hpp"
 
 #include <cmath>
 #include <cstring>

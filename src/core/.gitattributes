@@ -1,0 +1,2 @@
+lib/jni/** linguist-vendored
+lib/jni/** linguist-detectable=false
