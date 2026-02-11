@@ -33,19 +33,12 @@ jobs:
           ninja --version
           clang --version
 
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
-
-      - name: Restore cache
+      - name: Restore vcpkg cache
         uses: actions/cache/restore@v3
         with:
           path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-
 
       - name: Build project
         run: |
@@ -61,9 +54,9 @@ jobs:
           path: src/core/build-linux/
           retention-days: 7
 
-      - name: Save cache
+      - name: Save vcpkg cache
         if: always()
         uses: actions/cache/save@v3
         with:
           path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('scr/core/vcpkg.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
