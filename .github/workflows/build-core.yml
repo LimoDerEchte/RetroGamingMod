@@ -60,3 +60,55 @@ jobs:
         with:
           path: src/core/vcpkg
           key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
+
+  build-windows:
+    runs-on: windows-latest
+
+    env:
+      VCPKG_FEATURE_FLAGS: -binarycaching
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install LLVM and dependencies
+        run: |
+          choco install -y llvm ninja cmake nasm
+        shell: powershell
+
+      - name: Verify installations
+        run: |
+          clang --version
+          cmake --version
+          ninja --version
+        shell: powershell
+
+      - name: Restore vcpkg cache
+        uses: actions/cache/restore@v3
+        with:
+          path: src/core/vcpkg
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+
+      - name: Build project
+        run: |
+          cd src/core
+          .\build_windows.ps1
+        shell: powershell
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-windows
+          path: src/core/build-windows/
+          retention-days: 7
+
+      - name: Save vcpkg cache
+        if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: src/core/vcpkg
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
