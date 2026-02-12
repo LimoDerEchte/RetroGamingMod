@@ -31,6 +31,11 @@ find_package(fmt CONFIG REQUIRED)
 find_package(libyuv CONFIG REQUIRED)
 find_package(WebP CONFIG REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
+
+add_subdirectory(lib/SVT-AV1)
+
 # Actual Projects
 add_subdirectory(bridge)
 add_subdirectory(retro-core)

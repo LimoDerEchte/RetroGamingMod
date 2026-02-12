@@ -32,10 +32,10 @@ target_include_directories(bridge PRIVATE
 )
 
 target_link_libraries(bridge PRIVATE
-        Boost::interprocess
-        Boost::process
+        Boost::interprocess Boost::process
         unofficial::enet::enet
         fmt::fmt
+        PkgConfig::dav1d SVT-AV1::SVT-AV1
         WebP::sharpyuv WebP::webp WebP::webpdecoder WebP::libwebpmux
         yuv
         ${H264_LIB}

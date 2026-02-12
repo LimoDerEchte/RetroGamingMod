@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <vector>
 #include <wels/codec_api.h>
+#include <dav1d/dav1d.h>
 
 class VideoDecoder {
 protected:
@@ -28,6 +28,16 @@ class VideoDecoderH264 final : public VideoDecoder {
 public:
     VideoDecoderH264(int width, int height);
     ~VideoDecoderH264() override;
+
+    [[nodiscard]] std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const override;
+};
+
+class VideoDecoderAV1 final : public VideoDecoder {
+    Dav1dContext* decoder;
+
+public:
+    VideoDecoderAV1(int width, int height);
+    ~VideoDecoderAV1() override;
 
     [[nodiscard]] std::vector<int32_t> decodeFrame(const std::vector<uint8_t>& encoded_data) const override;
 };

@@ -32,6 +32,9 @@ void NativeImage::receive(const std::vector<uint8_t>& data) {
             case 1:
                 decoder = std::make_unique<VideoDecoderH264>(width, height);
                 break;
+            case 2:
+                decoder = std::make_unique<VideoDecoderAV1>(width, height);
+                break;
             default:
                 return;
         }

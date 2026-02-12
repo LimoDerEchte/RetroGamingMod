@@ -10,3 +10,6 @@
 [submodule "src/core/lib/libretro-common"]
 	path = src/core/lib/libretro-common
 	url = https://github.com/libretro/libretro-common.git
+[submodule "src/core/lib/SVT-AV1"]
+	path = src/core/lib/SVT-AV1
+	url = https://gitlab.com/AOMediaCodec/SVT-AV1.git
