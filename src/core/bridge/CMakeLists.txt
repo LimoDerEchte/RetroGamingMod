@@ -1,26 +1,15 @@
 
 add_library(bridge SHARED
-        ../shared/SharedStructs.hpp
         platform/GenericConsole.cpp
-        platform/GenericConsole.hpp
         connection/Server.cpp
-        connection/Server.hpp
         connection/Client.cpp
-        connection/Client.hpp
-        connection/NetworkDefinitions.hpp
         connection/NetworkDefinitions.cpp
         util/NativeUtil.cpp
-        util/NativeUtil.hpp
         codec/VideoEncoder.cpp
-        codec/VideoEncoder.hpp
         codec/VideoDecoder.cpp
-        codec/VideoDecoder.hpp
         codec/AudioEncoder.cpp
-        codec/AudioEncoder.hpp
         codec/AudioDecoder.cpp
-        codec/AudioDecoder.hpp
         util/NativeImage.cpp
-        util/NativeImage.hpp
 )
 
 target_include_directories(bridge PRIVATE
@@ -32,24 +21,19 @@ target_include_directories(bridge PRIVATE
 )
 
 target_link_libraries(bridge PRIVATE
-        Boost::interprocess Boost::process
+        Boost::interprocess
+        Boost::process
         unofficial::enet::enet
         fmt::fmt
-        PkgConfig::dav1d SVT-AV1::SVT-AV1
-        WebP::sharpyuv WebP::webp WebP::webpdecoder WebP::libwebpmux
+        PkgConfig::dav1d
+        SVT-AV1::SVT-AV1
         yuv
-        ${H264_LIB}
         ${OPUS_LIBRARIES}
 )
 
 if(WIN32)
     target_link_libraries(bridge PRIVATE winmm avrt)
 endif()
-
-# FFmpeg
-#target_include_directories(bridge PRIVATE ${FFMPEG_INCLUDE_DIRS})
-#target_link_directories(bridge PRIVATE ${FFMPEG_LIBRARY_DIRS})
-#target_link_libraries(bridge PRIVATE ${FFMPEG_LIBRARIES})
 
 # Post Build
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")

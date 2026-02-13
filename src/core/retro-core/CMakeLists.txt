@@ -1,11 +1,7 @@
 
 add_executable(retro-core main.cpp
-        ../shared/SharedStructs.hpp
-        ../lib/libretro-common/include/libretro.h
         sys/LibRetroCore.cpp
-        sys/LibRetroCore.hpp
         platform/GenericConsole.cpp
-        platform/GenericConsole.hpp
 )
 
 target_include_directories(retro-core PRIVATE

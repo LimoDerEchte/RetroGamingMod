@@ -15,11 +15,6 @@ set(JNI_INCLUDE_DIRS
     "${CMAKE_CURRENT_LIST_DIR}/../lib/jni/unix"
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(H264_LIB "${CMAKE_CURRENT_LIST_DIR}/../build-linux-x64/vcpkg_installed/x64-linux/lib/libopenh264.a")
-else()
-    set(H264_LIB "${CMAKE_CURRENT_LIST_DIR}/../cmake-build-debug/vcpkg_installed/x64-linux/lib/libopenh264.a")
-endif()
 set(VCPKG_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../build-linux-x64/vcpkg_installed/x64-linux/include")
 
 include(${CMAKE_CURRENT_LIST_DIR}/../vcpkg/scripts/buildsystems/vcpkg.cmake)

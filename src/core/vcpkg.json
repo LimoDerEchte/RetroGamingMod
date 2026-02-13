@@ -6,16 +6,8 @@
     "boost-process",
     "enet",
     "opus",
-    "openal-soft",
     "fmt",
     "dav1d",
-    "openh264",
-    "libyuv",
-    {
-      "name": "libwebp",
-      "features": [
-        "nearlossless"
-      ]
-    }
+    "libyuv"
   ]
 }

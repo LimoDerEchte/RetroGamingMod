@@ -94,12 +94,6 @@ std::vector<uint8_t> GenericConsole::createFrame() {
     if (videoEncoder == nullptr) {
         switch (codec) {
             case 0:
-                videoEncoder = std::make_unique<VideoEncoderWebP>(width, height);
-                break;
-            case 1:
-                videoEncoder = std::make_unique<VideoEncoderH264>(width, height);
-                break;
-            case 2:
                 videoEncoder = std::make_unique<VideoEncoderAV1>(width, height);
                 break;
             default:

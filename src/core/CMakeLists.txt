@@ -29,7 +29,6 @@ find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(libyuv CONFIG REQUIRED)
-find_package(WebP CONFIG REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
