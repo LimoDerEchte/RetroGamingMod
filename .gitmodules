@@ -13,12 +13,3 @@
 [submodule "src/core/lib/SVT-AV1"]
 	path = src/core/lib/SVT-AV1
 	url = https://gitlab.com/AOMediaCodec/SVT-AV1.git
-[submodule "src/core/lib/interprocess"]
-	path = src/core/lib/interprocess
-	url = https://github.com/boostorg/interprocess.git
-[submodule "src/core/lib/container"]
-	path = src/core/lib/container
-	url = https://github.com/boostorg/container.git
-[submodule "src/core/lib/config"]
-	path = src/core/lib/config
-	url = https://github.com/boostorg/config.git

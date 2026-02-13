@@ -7,6 +7,7 @@
     "opus",
     "fmt",
     "dav1d",
-    "libyuv"
+    "libyuv",
+    "boost-interprocess"
   ]
 }

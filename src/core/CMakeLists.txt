@@ -23,6 +23,7 @@ project(RetroGamingCore)
 set(CMAKE_CXX_STANDARD 23)
 
 # Lib
+find_package(boost_interprocess CONFIG REQUIRED)
 find_package(reproc++ CONFIG REQUIRED)
 find_package(unofficial-enet CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)

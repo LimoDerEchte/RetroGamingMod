@@ -7,12 +7,9 @@ add_executable(retro-core main.cpp
 target_include_directories(retro-core PRIVATE
         .
         ../shared
-        ../lib/interprocess/include
-        ../lib/container/include
-        ../lib/config/include
 )
 
-target_link_libraries(retro-core PRIVATE bridge)
+target_link_libraries(retro-core PRIVATE bridge Boost::interprocess)
 
 # Post Build
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")

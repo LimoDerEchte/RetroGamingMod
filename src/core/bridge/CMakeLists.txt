@@ -15,9 +15,6 @@ add_library(bridge SHARED
 target_include_directories(bridge PRIVATE
         .
         ../shared
-        ../lib/interprocess/include
-        ../lib/container/include
-        ../lib/config/include
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
         ${VCPKG_INCLUDE_DIRS}
@@ -30,6 +27,7 @@ target_link_libraries(bridge PRIVATE
         PkgConfig::dav1d
         SVT-AV1::SVT-AV1
         yuv
+        Boost::interprocess
         ${OPUS_LIBRARIES}
 )
 
