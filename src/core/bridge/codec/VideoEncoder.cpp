@@ -87,22 +87,38 @@ std::vector<uint8_t> VideoEncoderH264::encodeFrameRGB565(const std::vector<int16
 
 VideoEncoderAV1::VideoEncoderAV1(const int width, const int height) : VideoEncoder(width, height), encoder(nullptr) {
     EbSvtAv1EncConfiguration config{};
+    EbErrorType err = svt_av1_enc_init_handle(&encoder, &config);
+    if (err != EB_ErrorNone) {
+        fprintf(stderr, "init_handle failed: %d\n", err);
+        return;
+    }
+
     config.source_width = width;
     config.source_height = height;
+    config.forced_max_frame_width = width;
+    config.forced_max_frame_height = height;
     config.target_bit_rate = 1000000;
-    config.rate_control_mode = SVT_AV1_RC_MODE_CQP_OR_CRF;
+    config.rate_control_mode = SVT_AV1_RC_MODE_CBR;
     config.frame_rate_numerator = 60;
     config.frame_rate_denominator = 1;
     config.intra_period_length = 60;
     config.encoder_bit_depth = 8;
     config.encoder_color_format = EB_YUV420;
-    config.tune = 0;
+    config.tune = 1;
     config.pred_structure = SVT_AV1_PRED_LOW_DELAY_B;
     config.qp = 35;
 
-    svt_av1_enc_init_handle(&encoder, &config);
-    svt_av1_enc_set_parameter(encoder, &config);
-    svt_av1_enc_init(encoder);
+    err = svt_av1_enc_set_parameter(encoder, &config);
+    if (err != EB_ErrorNone) {
+        fprintf(stderr, "set_parameter failed: %d\n", err);
+        return;
+    }
+
+    err = svt_av1_enc_init(encoder);
+    if (err != EB_ErrorNone) {
+        fprintf(stderr, "enc_init failed: %d\n", err);
+        return;
+    }
 }
 
 VideoEncoderAV1::~VideoEncoderAV1() {
@@ -118,30 +134,34 @@ std::vector<uint8_t> VideoEncoderAV1::encodeFrameRGB565(const std::vector<int16_
                        v.data(), width/2,
                        width, height);
 
+    EbSvtIOFormat io{};
+    io.luma = y.data();
+    io.cb = u.data();
+    io.cr = v.data();
+
+    io.y_stride = width;
+    io.cb_stride = width / 2;
+    io.cr_stride = width / 2;
+
     EbBufferHeaderType input_buffer{};
-    input_buffer.p_buffer = reinterpret_cast<uint8_t*>(&input_buffer);
-    input_buffer.size = sizeof(input_buffer);
-    input_buffer.n_filled_len = 0;
-    input_buffer.p_app_private = nullptr;
+    input_buffer.p_buffer = reinterpret_cast<uint8_t*>(&io);
+    input_buffer.n_alloc_len = sizeof(EbSvtIOFormat);
+    input_buffer.n_filled_len = width * height * 3 / 2;
+    input_buffer.flags = 0;
     input_buffer.pic_type = EB_AV1_INVALID_PICTURE;
 
-    auto *input_pic = reinterpret_cast<EbSvtIOFormat*>(input_buffer.p_buffer);
-    input_pic->y_stride = width;
-    input_pic->cb_stride = width/2;
-    input_pic->cr_stride = width/2;
-    input_pic->luma = y.data();
-    input_pic->cb = u.data();
-    input_pic->cr = v.data();
-
-    svt_av1_enc_send_picture(encoder, &input_buffer);
-
-    EbBufferHeaderType *output_buffer = nullptr;
-    svt_av1_enc_get_packet(encoder, &output_buffer, 0);
+    if (svt_av1_enc_send_picture(encoder, &input_buffer) != EB_ErrorNone)
+        return {};
 
     std::vector<uint8_t> output;
-    if (output_buffer) {
-        output.assign(output_buffer->p_buffer, output_buffer->p_buffer + output_buffer->n_filled_len);
-        svt_av1_enc_release_out_buffer(&output_buffer);
+    while (true) {
+        EbBufferHeaderType *output_buffer = nullptr;
+        if (const EbErrorType err = svt_av1_enc_get_packet(encoder, &output_buffer, 0);
+                err == EB_ErrorNone && output_buffer) {
+            output.assign(output_buffer->p_buffer, output_buffer->p_buffer + output_buffer->n_filled_len);
+            svt_av1_enc_release_out_buffer(&output_buffer);
+            break;
+        }
     }
     return output;
 }

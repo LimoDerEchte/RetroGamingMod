@@ -111,8 +111,8 @@ void test_new_codec() {
         constexpr int width = 240;
         constexpr int height = 160;
         constexpr int count = 1000;
-        VideoEncoderH264 encoder(width, height);
-        VideoDecoderH264 decoder(width, height);
+        VideoEncoderAV1 encoder(width, height);
+        VideoDecoderAV1 decoder(width, height);
 
         std::vector<std::vector<int16_t>> original_frames;
         std::vector<std::vector<uint8_t>> encoded_frames;
@@ -280,18 +280,20 @@ void test_audio_codec() {
 
 void manual_codec_test() {
     std::vector<int16_t> testFrame(240 * 160, 0xF800);
+    std::vector<int16_t> testFrame2(240 * 160, 0xF000);
+    std::vector<int16_t> testFrame3(240 * 160, 0xFF00);
 
-    VideoEncoderH264 encoder(240, 160);
-    VideoDecoderH264 decoder(240, 160);
+    VideoEncoderAV1 encoder(240, 160);
+    VideoDecoderAV1 decoder(240, 160);
 
     auto data = encoder.encodeFrameRGB565(testFrame);
     auto decoded = decoder.decodeFrame(data);
 
-    auto data2 = encoder.encodeFrameRGB565(testFrame);
-    auto decoded2 = decoder.decodeFrame(data);
+    auto data2 = encoder.encodeFrameRGB565(testFrame2);
+    auto decoded2 = decoder.decodeFrame(data2);
 
-    auto data3 = encoder.encodeFrameRGB565(testFrame);
-    auto decoded3 = decoder.decodeFrame(data);
+    auto data3 = encoder.encodeFrameRGB565(testFrame3);
+    auto decoded3 = decoder.decodeFrame(data3);
 
     bool dataMatchesData2 = memcmp(data.data(), data2.data(), data.size());
     bool data2MatchesData3 = memcmp(data2.data(), data3.data(), data2.size());

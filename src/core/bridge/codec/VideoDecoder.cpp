@@ -74,7 +74,9 @@ VideoDecoderAV1::VideoDecoderAV1(const int width, const int height) : VideoDecod
     settings.n_threads = 4;
     settings.max_frame_delay = 1;
 
-    dav1d_open(&decoder, &settings);
+    if (DAV1D_ERR(dav1d_open(&decoder, &settings))) {
+        return;
+    }
 }
 
 VideoDecoderAV1::~VideoDecoderAV1() {
@@ -85,15 +87,17 @@ std::vector<int32_t> VideoDecoderAV1::decodeFrame(const std::vector<uint8_t> &en
     if (!decoder) return {};
 
     Dav1dData data;
-    dav1d_data_wrap(&data, encoded_data.data(), encoded_data.size(), nullptr, nullptr);
+    if (DAV1D_ERR(dav1d_data_wrap(&data, encoded_data.data(), encoded_data.size(), [](const uint8_t *buf, void *cookie){}, nullptr))) {
+        return {};
+    }
 
-    Dav1dPicture pic;
-    if (dav1d_send_data(decoder, &data) < 0) {
+    if (DAV1D_ERR(dav1d_send_data(decoder, &data))) {
         dav1d_data_unref(&data);
         return {};
     }
 
-    if (dav1d_get_picture(decoder, &pic) < 0) {
+    Dav1dPicture pic;
+    if (DAV1D_ERR(dav1d_get_picture(decoder, &pic) < 0)) {
         return {};
     }
 

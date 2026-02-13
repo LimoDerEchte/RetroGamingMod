@@ -1,6 +1,6 @@
 package com.limo.emumod.client.network;
 
-import com.limo.emumod.client.sound.EmuSpeaker;
+import com.limo.emumod.util.VideoCodec;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -19,7 +19,7 @@ public class ScreenManager {
         WorldRenderEvents.START_MAIN.register((_) -> updatedThisFrame.clear());
     }
 
-    public static void registerDisplay(UUID id, int width, int height, int sampleRate, int codec) {
+    public static void registerDisplay(UUID id, int width, int height, int sampleRate, VideoCodec codec) {
         unregisterDisplay(id);
         NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "emu-dp-" + id.toString(),
                 CLIENT.registerScreen(id, width, height, sampleRate, codec));

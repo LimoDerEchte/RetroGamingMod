@@ -2,6 +2,7 @@ package com.limo.emumod.bridge;
 
 import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
+import com.limo.emumod.util.VideoCodec;
 
 import java.io.File;
 import java.util.UUID;
@@ -10,13 +11,13 @@ public class NativeGenericConsole {
     private final long pointer;
     private final UUID file;
     private final String fileType;
-    private final int codec;
+    private final VideoCodec codec;
 
-    public NativeGenericConsole(int width, int height, int sampleRate, int codec, UUID file, UUID consoleId, String fileType) {
+    public NativeGenericConsole(int width, int height, int sampleRate, VideoCodec codec, UUID file, UUID consoleId, String fileType) {
         this.file = file;
         this.fileType = fileType;
         this.codec = codec;
-        pointer = init(NativeUtil.nativeUUID(file), NativeUtil.nativeUUID(consoleId), width, height, sampleRate, codec);
+        pointer = init(NativeUtil.nativeUUID(file), NativeUtil.nativeUUID(consoleId), width, height, sampleRate, codec.ordinal());
     }
 
     public void load(File core) {
@@ -41,7 +42,7 @@ public class NativeGenericConsole {
         return getSampleRate(pointer);
     }
 
-    public int getCodec() {
+    public VideoCodec getCodec() {
         return codec;
     }
 

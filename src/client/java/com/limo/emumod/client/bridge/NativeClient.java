@@ -1,6 +1,7 @@
 package com.limo.emumod.client.bridge;
 
 import com.limo.emumod.bridge.NativeUtil;
+import com.limo.emumod.util.VideoCodec;
 import net.minecraft.client.texture.NativeImage;
 
 import java.util.UUID;
@@ -20,9 +21,9 @@ public class NativeClient {
         return isAuthenticated(handle);
     }
 
-    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate, int codec) {
+    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate, VideoCodec codec) {
         NativeImage img = new NativeImage(NativeImage.Format.RGBA, width, height, true);
-        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, img.imageId(), sampleRate, codec);
+        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, img.imageId(), sampleRate, codec.ordinal());
         return img;
     }
 

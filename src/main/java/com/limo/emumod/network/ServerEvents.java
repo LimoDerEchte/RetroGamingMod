@@ -39,7 +39,7 @@ public class ServerEvents {
             for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
                 sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
                         console.getValue().getWidth(), console.getValue().getHeight(),
-                        console.getValue().getSampleRate(), console.getValue().getCodec()));
+                        console.getValue().getSampleRate(), console.getValue().getCodec().ordinal()));
             }
         });
     }

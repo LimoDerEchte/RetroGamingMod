@@ -4,6 +4,7 @@ import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.screen.*;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.VideoCodec;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
@@ -61,7 +62,7 @@ public class ClientHandler {
             if(width == 0 || height == 0 || sampleRate == 0) {
                 ScreenManager.unregisterDisplay(payload.uuid());
             } else {
-                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate, codec);
+                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate, VideoCodec.values()[codec]);
             }
         }));
     }
