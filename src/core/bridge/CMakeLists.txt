@@ -15,6 +15,8 @@ add_library(bridge SHARED
 target_include_directories(bridge PRIVATE
         .
         ../shared
+        ../lib/interprocess/include
+        ../lib/container/include
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
         ${VCPKG_INCLUDE_DIRS}

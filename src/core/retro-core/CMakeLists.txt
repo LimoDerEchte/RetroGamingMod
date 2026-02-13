@@ -7,6 +7,8 @@ add_executable(retro-core main.cpp
 target_include_directories(retro-core PRIVATE
         .
         ../shared
+        ../lib/interprocess/include
+        ../lib/container/include
 )
 
 target_link_libraries(retro-core PRIVATE bridge)
