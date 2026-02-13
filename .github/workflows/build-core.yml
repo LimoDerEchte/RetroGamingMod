@@ -33,13 +33,6 @@ jobs:
           ninja --version
           clang --version
 
-      - name: Restore vcpkg cache
-        uses: actions/cache/restore@v3
-        with:
-          path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-
-
       - name: Build project
         run: |
           cd src/core
@@ -50,16 +43,9 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: linux-x86-64-artifacts
           path: src/core/build-linux/
-          retention-days: 7
-
-      - name: Save vcpkg cache
-        if: always()
-        uses: actions/cache/save@v3
-        with:
-          path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
+          retention-days: 30
 
   build-windows:
     runs-on: windows-latest
@@ -85,13 +71,6 @@ jobs:
           ninja --version
         shell: powershell
 
-      - name: Restore vcpkg cache
-        uses: actions/cache/restore@v3
-        with:
-          path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-
-
       - name: Build project
         run: |
           cd src/core
@@ -102,13 +81,6 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-windows
+          name: windows-x86-64-artifacts
           path: src/core/build-windows/
-          retention-days: 7
-
-      - name: Save vcpkg cache
-        if: always()
-        uses: actions/cache/save@v3
-        with:
-          path: src/core/vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('src/core/vcpkg.json') }}
+          retention-days: 30
