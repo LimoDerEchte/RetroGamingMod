@@ -1,30 +1,26 @@
-//
-// Created by limo on 2/28/25.
-//
 
 #pragma once
-#include <shared_mutex>
-#include <boost/process.hpp>
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include "SharedStructs.hpp"
-#include "codec/VideoEncoder.hpp"
 
-#include "util/NativeUtil.hpp"
+#include <functional>
+#include <shared_mutex>
+#include <SharedStructs.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <codec/VideoEncoder.hpp>
+#include <util/NativeUtil.hpp>
+#include <reproc++/reproc.hpp>
 
 class AudioEncoderOpus;
-namespace bip = boost::interprocess;
-namespace bp  = boost::process;
 
 class GenericConsole {
     std::unique_ptr<VideoEncoder> videoEncoder = nullptr;
     AudioEncoderOpus* audioEncoder = nullptr;
 
-    bip::managed_shared_memory* sharedMemoryHandle = nullptr;
-    bp::process* retroCoreProcess = nullptr;
+    boost::interprocess::managed_shared_memory* sharedMemoryHandle = nullptr;
+    reproc::process retroCoreProcess;
 
 public:
     std::mutex mutex{};
-    char id[32] = {};
+    char id[33] = {};
     const int width, height, sampleRate, codec;
     GenericShared* retroCoreHandle = nullptr;
     const jUUID* uuid;

@@ -21,10 +21,9 @@ target_include_directories(bridge PRIVATE
 )
 
 target_link_libraries(bridge PRIVATE
-        Boost::interprocess
-        Boost::process
         unofficial::enet::enet
         fmt::fmt
+        reproc++
         PkgConfig::dav1d
         SVT-AV1::SVT-AV1
         yuv

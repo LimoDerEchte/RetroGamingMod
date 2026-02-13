@@ -36,4 +36,5 @@ void GenerateID(char* id, const int length) {
     for (int i = 0; i < length; ++i) {
         id[i] = charset[distrib(gen)];
     }
+    id[length] = '\0';
 }

@@ -9,7 +9,7 @@ target_include_directories(retro-core PRIVATE
         ../shared
 )
 
-target_link_libraries(retro-core PRIVATE Boost::interprocess bridge)
+target_link_libraries(retro-core PRIVATE bridge)
 
 # Post Build
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")

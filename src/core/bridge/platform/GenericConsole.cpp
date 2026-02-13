@@ -1,21 +1,21 @@
-//
-// Created by limo on 2/21/25.
-//
 
 #include "GenericConsole.hpp"
 
+#include <algorithm>
+#include <cstring>
 #include <iostream>
-#include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
 #include <jni.h>
+#include <mutex>
 #include <thread>
+#include <chrono>
+#include <reproc++/run.hpp>
 
-#include "codec/AudioEncoder.hpp"
-#include "util/NativeUtil.hpp"
+#include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
+#include <codec/AudioEncoder.hpp>
+#include <util/NativeUtil.hpp>
 
 std::vector<GenericConsole*> GenericConsoleRegistry::consoles;
 std::shared_mutex GenericConsoleRegistry::consoleMutex;
-
-boost::asio::io_context io_ctx;
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init(JNIEnv *, jclass, const jlong jUuid, const jlong jConsoleId, const jint width, const jint height, const jint sampleRate, const jint codec) {
     const auto uuid = reinterpret_cast<jUUID*>(jUuid);
@@ -59,35 +59,60 @@ GenericConsole::GenericConsole(const int width, const int height, const int samp
 
 void GenericConsole::load(const char *retroCore, const char *core, const char *rom, const char *save) {
     std::lock_guard lock(mutex);
-    std::string strId(id, 32);
-    bip::shared_memory_object::remove(strId.c_str());
-    sharedMemoryHandle = new bip::managed_shared_memory(bip::create_only, strId.c_str(), 1200000);
+    const std::string strId(id, 32);
+
+    boost::interprocess::shared_memory_object::remove(strId.c_str());
+    sharedMemoryHandle = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, strId.c_str(), 1200000);
     retroCoreHandle = sharedMemoryHandle->construct<GenericShared>("SharedData")();
+
     std::cout << "[RetroGamingCore] Created shared memory " << strId << std::endl;
-    retroCoreProcess = new bp::process(io_ctx, retroCore, {"gn", strId, core, rom, save});
-    retroCoreProcess->detach();
+
+    reproc::options options{};
+    //options.nonblocking = true;
+
+    const char* args[] = { retroCore, "gn", strId.c_str(), core, rom, save, nullptr };
+    if (const std::error_code err = retroCoreProcess.start(args, options)) {
+        std::cerr << "[RetroGamingCore] Failed to start process: " << err.message() << std::endl;
+    }
 }
 
 void GenericConsole::dispose() {
     std::cout << "[RetroGamingCore] Disposing bridge instance" << std::endl;
     GenericConsoleRegistry::unregisterConsole(this);
+
     std::lock_guard lock(mutex);
     const auto handleBackup = retroCoreHandle;
     retroCoreHandle = nullptr;
-    handleBackup->shutdownRequested = true;
-    while (!handleBackup->shutdownCompleted) {
-        std::this_thread::yield();
+
+    if (auto [status, ec] = retroCoreProcess.wait(reproc::milliseconds(0)); ec == std::errc::timed_out) {
+
+        if (handleBackup != nullptr) {
+            handleBackup->shutdownRequested = true;
+            const auto start = std::chrono::steady_clock::now();
+            while (!handleBackup->shutdownCompleted) {
+                if (std::chrono::steady_clock::now() - start > std::chrono::seconds(10)) {
+                    std::cerr << "[RetroGamingCore] Emulator shutdown timed out" << std::endl;
+                    break;
+                }
+                std::this_thread::yield();
+            }
+        }
+
+        constexpr reproc::stop_actions stop = {
+            { reproc::stop::noop, reproc::milliseconds(0) },
+            { reproc::stop::terminate, reproc::milliseconds(5000) },
+            { reproc::stop::kill, reproc::milliseconds(2000) }
+        };
+        retroCoreProcess.stop(stop);
+
+        std::cout << "[RetroGamingCore] Emulator shutdown completed" << std::endl;
     }
-    std::cout << "[RetroGamingCore] Emulator shutdown completed" << std::endl;
-    if (retroCoreProcess != nullptr) {
-        retroCoreProcess->terminate();
-        retroCoreProcess->wait();
-    }
+
     if (sharedMemoryHandle != nullptr) {
         sharedMemoryHandle->destroy<GenericShared>("SharedData");
         std::cout << "[RetroGamingCore] Destroyed shared memory" << std::endl;
     }
-    bip::shared_memory_object::remove(id);
+    boost::interprocess::shared_memory_object::remove(id);
 }
 
 std::vector<uint8_t> GenericConsole::createFrame() {
