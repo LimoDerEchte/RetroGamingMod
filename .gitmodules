@@ -19,3 +19,6 @@
 [submodule "src/core/lib/container"]
 	path = src/core/lib/container
 	url = https://github.com/boostorg/container.git
+[submodule "src/core/lib/config"]
+	path = src/core/lib/config
+	url = https://github.com/boostorg/config.git
