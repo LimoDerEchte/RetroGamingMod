@@ -3,7 +3,6 @@
 
 #include <libyuv.h>
 #include <stdexcept>
-#include <svt-av1/EbSvtAv1Enc.h>
 
 VideoEncoder::VideoEncoder(const int width, const int height) : width(width), height(height) {
 }
@@ -40,7 +39,7 @@ VideoEncoderAV1::VideoEncoderAV1(const int width, const int height) : VideoEncod
     config.encoder_bit_depth = 8;
     config.encoder_color_format = EB_YUV420;
     config.tune = 1;
-    config.pred_structure = SVT_AV1_PRED_LOW_DELAY_B;
+    config.pred_structure = 1;
     config.qp = 35;
 
     err = svt_av1_enc_set_parameter(encoder, &config);

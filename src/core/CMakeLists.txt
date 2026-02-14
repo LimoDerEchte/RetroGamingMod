@@ -2,15 +2,15 @@
 # Set Toolchain for Dev
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     if(UNIX)
-        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/linux_x64.cmake)
+        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/linux-x86_64.cmake)
     else()
-        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/windows_x64.cmake)
+        set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/windows-x86_64.cmake)
     endif()
 endif()
 
 # Compiling
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native -flto -funroll-loops -fvectorize -fmerge-all-constants -ffast-math -fstrict-aliasing")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=x86-64-v2 -flto -funroll-loops -fvectorize -fmerge-all-constants -ffast-math -fstrict-aliasing")
 endif()
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib;.a")
@@ -33,6 +33,7 @@ find_package(libyuv CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(dav1d REQUIRED IMPORTED_TARGET dav1d)
 
+set(BUILD_APPS OFF)
 add_subdirectory(lib/SVT-AV1)
 
 # Actual Projects

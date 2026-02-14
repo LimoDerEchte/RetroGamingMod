@@ -16,5 +16,4 @@ set(JNI_INCLUDE_DIRS
 )
 
 set(VCPKG_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../build-windows-x64/vcpkg_installed/x64-windows-static/include")
-
 include(${CMAKE_CURRENT_LIST_DIR}/../vcpkg/scripts/buildsystems/vcpkg.cmake)

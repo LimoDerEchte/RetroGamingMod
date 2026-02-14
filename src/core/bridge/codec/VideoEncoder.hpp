@@ -2,7 +2,7 @@
 #pragma once
 
 #include <vector>
-#include <svt-av1/EbSvtAv1Enc.h>
+#include <EbSvtAv1Enc.h>
 
 class VideoEncoder {
 protected:

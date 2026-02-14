@@ -16,5 +16,4 @@ set(JNI_INCLUDE_DIRS
 )
 
 set(VCPKG_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../build-linux-x64/vcpkg_installed/x64-linux/include")
-
 include(${CMAKE_CURRENT_LIST_DIR}/../vcpkg/scripts/buildsystems/vcpkg.cmake)

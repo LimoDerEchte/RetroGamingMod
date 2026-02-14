@@ -9,7 +9,11 @@ target_include_directories(retro-core PRIVATE
         ../shared
 )
 
-target_link_libraries(retro-core PRIVATE bridge Boost::interprocess)
+target_link_libraries(retro-core PRIVATE Boost::interprocess)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_CROSSCOMPILING)
+    target_link_libraries(retro-core PRIVATE pthread winpthread)
+endif()
 
 # Post Build
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")

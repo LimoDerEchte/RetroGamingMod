@@ -15,6 +15,7 @@ add_library(bridge SHARED
 target_include_directories(bridge PRIVATE
         .
         ../shared
+        ../lib/SVT-AV1/Source/API
         ${JNI_INCLUDE_DIRS}
         ${OPUS_INCLUDE_DIRS}
         ${VCPKG_INCLUDE_DIRS}
@@ -30,6 +31,10 @@ target_link_libraries(bridge PRIVATE
         Boost::interprocess
         ${OPUS_LIBRARIES}
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_CROSSCOMPILING)
+    target_link_libraries(bridge PRIVATE pthread winpthread)
+endif()
 
 if(WIN32)
     target_link_libraries(bridge PRIVATE winmm avrt)
