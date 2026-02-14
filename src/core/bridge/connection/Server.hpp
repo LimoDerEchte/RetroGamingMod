@@ -1,14 +1,11 @@
-//
-// Created by limo on 3/8/25.
-//
 
 #pragma once
+
 #include <mutex>
 #include <vector>
 #include <array>
 #include <enet/enet.h>
-
-#include "NetworkDefinitions.hpp"
+#include <connection/NetworkDefinitions.hpp>
 
 struct RetroServerClient {
     ENetPeer* peer;

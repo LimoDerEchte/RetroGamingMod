@@ -1,4 +1,5 @@
 
+#include "headers/com_limo_emumod_bridge_NativeGenericConsole.h"
 #include "GenericConsole.hpp"
 
 #include <algorithm>
@@ -9,8 +10,6 @@
 #include <thread>
 #include <chrono>
 #include <reproc++/run.hpp>
-
-#include <headers/com_limo_emumod_bridge_NativeGenericConsole.h>
 #include <codec/AudioEncoder.hpp>
 #include <util/NativeUtil.hpp>
 

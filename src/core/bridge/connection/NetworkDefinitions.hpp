@@ -1,14 +1,11 @@
-//
-// Created by limo on 3/8/25.
-//
 
 #pragma once
+
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <enet/enet.h>
-
-#include "util/NativeUtil.hpp"
+#include <util/NativeUtil.hpp>
 
 #define SERVER_MAX_CLIENTS 100
 

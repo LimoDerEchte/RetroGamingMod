@@ -1,12 +1,9 @@
-//
-// Created by limo on 3/8/25.
-//
 
 #pragma once
+
 #include <shared_mutex>
 #include <unordered_map>
 #include <enet/enet.h>
-
 #include <util/NativeImage.hpp>
 #include <util/NativeUtil.hpp>
 

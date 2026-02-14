@@ -1,6 +1,3 @@
-//
-// Created by limo on 3/9/25.
-//
 
 #pragma once
 

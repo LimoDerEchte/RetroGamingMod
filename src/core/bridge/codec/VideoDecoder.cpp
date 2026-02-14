@@ -1,6 +1,3 @@
-//
-// Created by limo on 3/13/25.
-//
 
 #include "VideoDecoder.hpp"
 

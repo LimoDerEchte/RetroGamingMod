@@ -1,6 +1,3 @@
-//
-// Created by limo on 3/28/25.
-//
 
 #pragma once
 #include <cstdint>

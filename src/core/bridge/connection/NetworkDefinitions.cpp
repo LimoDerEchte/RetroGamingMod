@@ -1,6 +1,3 @@
-//
-// Created by limo on 3/8/25.
-//
 
 #include "NetworkDefinitions.hpp"
 

@@ -1,18 +1,14 @@
-//
-// Created by limo on 3/8/25.
-//
 
+#include "headers/com_limo_emumod_bridge_NativeServer.h"
 #include "Server.hpp"
 
 #include <cstring>
 #include <iostream>
 #include <thread>
-#include <headers/com_limo_emumod_bridge_NativeServer.h>
 #include <algorithm>
-
-#include "NetworkDefinitions.hpp"
-#include "platform/GenericConsole.hpp"
-#include "util/NativeUtil.hpp"
+#include <connection/NetworkDefinitions.hpp>
+#include <platform/GenericConsole.hpp>
+#include <util/NativeUtil.hpp>
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer(JNIEnv *, jclass, const jint port, const jint maxUsers) {
     // ReSharper disable once CppDFAMemoryLeak

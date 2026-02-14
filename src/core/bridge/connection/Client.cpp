@@ -1,6 +1,3 @@
-//
-// Created by limo on 3/8/25.
-//
 
 #include "Client.hpp"
 
@@ -11,8 +8,7 @@
 #include <chrono>
 #include <shared_mutex>
 #include <headers/com_limo_emumod_client_bridge_NativeClient.h>
-
-#include "NetworkDefinitions.hpp"
+#include <connection/NetworkDefinitions.hpp>
 
 JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_connect(JNIEnv *env, jclass, const jstring ip, const jint port, const jstring token) {
     return reinterpret_cast<jlong>(new RetroClient(
