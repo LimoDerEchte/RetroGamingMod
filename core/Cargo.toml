@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "retro-bridge",
+    "retro-core",
+    "test"
+]
+resolver = "3"
