@@ -1,5 +1,5 @@
 
-struct NativeImage {
+pub struct NativeImage {
     data: Vec<i32>,
 
     changed: bool,
@@ -9,7 +9,7 @@ struct NativeImage {
 }
 
 impl NativeImage {
-    fn new(width: i32, height: i32, codec: i32) -> Self {
+    pub fn new(width: i32, height: i32, codec: i32) -> Self {
         NativeImage {
             data: vec![0; (width * height) as usize],
             changed: false,
@@ -19,11 +19,11 @@ impl NativeImage {
         }
     }
 
-    fn changed(&self) -> bool {
+    pub fn changed(&self) -> bool {
         self.changed
     }
 
-    fn native_data_pointer(&self) -> i32 {
+    pub fn native_data_pointer(&self) -> i32 {
         self.data.as_ptr() as i32
     }
 }

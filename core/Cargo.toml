@@ -2,6 +2,7 @@
 members = [
     "retro-bridge",
     "retro-core",
+    "shared",
     "test"
 ]
 resolver = "3"

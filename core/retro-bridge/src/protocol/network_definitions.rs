@@ -1,5 +1,5 @@
 
-enum PacketType {
+pub enum PacketType {
     // Main Connection
     KeepAlive = 0x00,
     Auth      = 0x01,

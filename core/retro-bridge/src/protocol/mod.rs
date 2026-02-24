@@ -1,1 +1,1 @@
-mod network_definitions;
+pub mod network_definitions;
