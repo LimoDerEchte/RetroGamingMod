@@ -7,6 +7,7 @@ use std::ptr::{null, null_mut};
 use std::sync::OnceLock;
 use libloading::Library;
 use rust_libretro_sys::*;
+use rust_libretro_sys::retro_pixel_format::{RETRO_PIXEL_FORMAT_RGB565, RETRO_PIXEL_FORMAT_XRGB8888};
 use tracing::{info, warn};
 
 static mut INSTANCE: *mut LibRetroCore = null_mut();
@@ -14,36 +15,44 @@ static CONTENT_DIR: OnceLock<CString> = OnceLock::new();
 
 #[allow(dead_code, unused_assignments)]
 unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> bool {
-    if INSTANCE == null_mut() {
-        return false;
-    }
-    match cmd {
-        RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
-            let mut callback = data as *mut retro_log_callback;
-            // TODO: implement the actual callback using a c trampoline
-            true
+    unsafe{
+        if INSTANCE == null_mut() {
+            return false;
         }
-        RETRO_ENVIRONMENT_GET_CAN_DUPE => {
-            unsafe {
-                *(data as *mut u8) = 1
+        match cmd {
+            RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
+                let mut callback = data as *mut retro_log_callback;
+                // TODO: implement the actual callback using a c trampoline
+                true
             }
-            true
-        }
-        RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY | RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY | RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY => {
-            let out = data as *mut *const c_char;
-            match CONTENT_DIR.get() {
-                Some(path) => {
-                    unsafe{ *out = path.as_ptr(); }
+            RETRO_ENVIRONMENT_GET_CAN_DUPE => {
+                *(data as *mut u8) = 1;
+                true
+            }
+            RETRO_ENVIRONMENT_SET_PIXEL_FORMAT => {
+                let format = *(data as *const retro_pixel_format);
+                if format as i32 > RETRO_PIXEL_FORMAT_RGB565 as i32 {
+                    warn!("Core tried to use unsupported pixel format: {:?}", format);
+                    false
+                } else {
+                    (*INSTANCE).pixel_format = format;
                     true
                 }
-                None => false,
             }
-        }
-        RETRO_ENVIRONMENT_SET_VARIABLE => {
-            data != null()
-        }
-        RETRO_ENVIRONMENT_GET_VARIABLE => {
-            unsafe {
+            RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY | RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY | RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY => {
+                let out = data as *mut *const c_char;
+                match CONTENT_DIR.get() {
+                    Some(path) => {
+                        *out = path.as_ptr();
+                        true
+                    }
+                    None => false,
+                }
+            }
+            RETRO_ENVIRONMENT_SET_VARIABLE => {
+                data != null()
+            }
+            RETRO_ENVIRONMENT_GET_VARIABLE => {
                 let mut var = *(data as *mut retro_variable);
                 let key = CStr::from_ptr(var.key).to_str().unwrap();
 
@@ -59,49 +68,66 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
                     }
                 }
             }
-        }
-        RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
-            if data != null() {
-                unsafe {
+            RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
+                if data != null() {
                     *(data as *mut u8) = (*INSTANCE).environment_vars_updated;
                     if (*INSTANCE).environment_vars_updated == 1 {
                         (*INSTANCE).environment_vars_updated = 0;
                     }
+                    true
+                } else {
+                    false
                 }
-                true
-            } else {
-                false
             }
+            _ => false
         }
-        _ => false
     }
 }
 
 #[allow(dead_code)]
-unsafe extern "C" fn input_state_callback(port: u32, device: u32, index: u32, id: u32) -> i32 {
-    // TODO
-    0
+unsafe extern "C" fn input_state_callback(port: u32, _: u32, _: u32, id: u32) -> i16 {
+    unsafe {
+        match (*INSTANCE).callback_input {
+            Some(input) => {
+                input(port, id)
+            }
+            None => { 0 }
+        }
+    }
 }
 
 #[allow(dead_code)]
 unsafe extern "C" fn input_poll_callback() {
-    // Nothing to do currently
+    // Nothing to do - controls get updated by shared memory
 }
 
 #[allow(dead_code)]
 unsafe extern "C" fn video_refresh_callback(data: *const c_void, width: u32, height: u32, pitch: usize) {
-    // TODO
+    unsafe {
+        match (*INSTANCE).callback_video {
+            Some(video) => {
+                video((*INSTANCE).pixel_format, data as *const u8, width, height, pitch as u32);
+            }
+            None => {}
+        }
+    }
 }
 
 #[allow(dead_code)]
-unsafe extern "C" fn audio_sample_callback(left: i16, right: i16) {
-    // TODO
+unsafe extern "C" fn audio_sample_callback(_: i16, _: i16) {
+    // This is usually unused by cores
 }
 
 #[allow(dead_code)]
 unsafe extern "C" fn audio_sample_batch_callback(data: *const i16, frames: usize) -> usize {
-    // TODO
-    0
+    unsafe {
+        match (*INSTANCE).callback_audio {
+            Some(audio) => {
+                audio(data, frames)
+            }
+            None => { 0 }
+        }
+    }
 }
 
 pub struct LibRetroCore {
@@ -119,12 +145,13 @@ pub struct LibRetroCore {
     retro_get_system_av_info: Option<unsafe extern "C" fn(av_info: *mut retro_system_av_info)>,
 
     retro_set_input_poll: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn()>)>,
-    retro_set_input_state: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(port: u32, device: u32, index: u32, id: u32) -> i32>)>,
+    retro_set_input_state: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(port: u32, device: u32, index: u32, id: u32) -> i16>)>,
     retro_set_audio_sample: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(left: i16, right: i16)>)>,
     retro_set_audio_sample_batch: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const i16, frames: usize) -> usize>)>,
     retro_set_video_refresh: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const c_void, width: u32, height: u32, pitch: usize)>)>,
     retro_set_environment: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(cmd: u32, data: *const c_void) -> bool>)>,
 
+    pixel_format: retro_pixel_format,
     system_info: MaybeUninit<retro_system_info>,
     system_av_info: MaybeUninit<retro_system_av_info>,
 
@@ -133,7 +160,11 @@ pub struct LibRetroCore {
     rom_path: String,
 
     environment_variables: HashMap<String, *const c_char>,
-    environment_vars_updated: u8
+    environment_vars_updated: u8,
+
+    callback_video: Option<fn(fmt: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32)>,
+    callback_audio: Option<fn(data: *const i16, frames: usize) -> usize>,
+    callback_input: Option<fn(port: u32, id: u32) -> i16>,
 }
 
 impl LibRetroCore {
@@ -157,6 +188,7 @@ impl LibRetroCore {
             retro_get_system_av_info: None,
             retro_set_environment: None,
 
+            pixel_format: RETRO_PIXEL_FORMAT_XRGB8888,
             system_info: MaybeUninit::uninit(),
             system_av_info: MaybeUninit::uninit(),
 
@@ -166,6 +198,10 @@ impl LibRetroCore {
 
             environment_variables: Default::default(),
             environment_vars_updated: 0,
+
+            callback_video: None,
+            callback_audio: None,
+            callback_input: None,
         })
     }
 
@@ -235,5 +271,32 @@ impl LibRetroCore {
             info!("Display info: {:?}x{:?} @ {:?} fps", info.geometry.base_width, info.geometry.base_height, info.timing.fps);
         }
         Ok(())
+    }
+
+    pub fn set_video_callback(&mut self, callback: fn(fmt: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32)) {
+        self.callback_video = Some(callback);
+    }
+
+    pub fn set_audio_callback(&mut self, callback: fn(data: *const i16, frames: usize) -> usize) {
+        self.callback_audio = Some(callback)
+    }
+
+    pub fn set_input_callback(&mut self, callback: fn(port: u32, id: u32) -> i16) {
+        self.callback_input = Some(callback)
+    }
+}
+
+impl Drop for LibRetroCore {
+    fn drop(&mut self) {
+        unsafe{
+            match self.retro_unload_game {
+                Some(unload_game) => { unload_game(); }
+                None => {}
+            }
+            match self.retro_deinit {
+                Some(deinit) => { deinit(); }
+                None => {}
+            }
+        }
     }
 }

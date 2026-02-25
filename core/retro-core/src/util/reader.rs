@@ -1,4 +1,3 @@
-use std::ffi::c_void;
 use std::ptr;
 use rust_libretro_sys::retro_pixel_format;
 use tracing::warn;
@@ -27,8 +26,7 @@ fn rgb1555_to_rgb8888(pixel: u16) -> u32 {
     0xFF000000 | r8 | g8 | b8
 }
 
-pub fn convert_data(format: retro_pixel_format, data: *const c_void, width: u32, height: u32, pitch: u32, dst: &mut [u32]) {
-    let data = data as *const u8;
+pub fn convert_data(format: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32, dst: &mut [u32]) {
     match format {
         retro_pixel_format::RETRO_PIXEL_FORMAT_XRGB8888 => {
             if pitch == width * 4 {
