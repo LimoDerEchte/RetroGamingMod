@@ -1,34 +1,104 @@
-use std::ffi::{c_void, CString};
+use std::collections::HashMap;
+use std::ffi::{c_char, c_void, CStr, CString};
 use std::fs::File;
 use std::io::Read;
 use std::mem::MaybeUninit;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
+use std::sync::OnceLock;
 use libloading::Library;
-use rust_libretro_sys::{retro_game_info, retro_system_av_info, retro_system_info};
-use tracing::info;
+use rust_libretro_sys::*;
+use tracing::{info, warn};
 
-unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const std::ffi::c_void) -> bool {
-    // TODO
-    true
+static mut INSTANCE: *mut LibRetroCore = null_mut();
+static CONTENT_DIR: OnceLock<CString> = OnceLock::new();
+
+#[allow(dead_code, unused_assignments)]
+unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> bool {
+    if INSTANCE == null_mut() {
+        return false;
+    }
+    match cmd {
+        RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
+            let mut callback = data as *mut retro_log_callback;
+            // TODO: implement the actual callback using a c trampoline
+            true
+        }
+        RETRO_ENVIRONMENT_GET_CAN_DUPE => {
+            unsafe {
+                *(data as *mut u8) = 1
+            }
+            true
+        }
+        RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY | RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY | RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY => {
+            let out = data as *mut *const c_char;
+            match CONTENT_DIR.get() {
+                Some(path) => {
+                    unsafe{ *out = path.as_ptr(); }
+                    true
+                }
+                None => false,
+            }
+        }
+        RETRO_ENVIRONMENT_SET_VARIABLE => {
+            data != null()
+        }
+        RETRO_ENVIRONMENT_GET_VARIABLE => {
+            unsafe {
+                let mut var = *(data as *mut retro_variable);
+                let key = CStr::from_ptr(var.key).to_str().unwrap();
+
+                match (*INSTANCE).environment_variables.get(key) {
+                    Some(value) => {
+                        var.value = *value;
+                        true
+                    }
+                    None => {
+                        warn!("Environment variable not found: {:?}", key);
+                        var.value = null();
+                        false
+                    }
+                }
+            }
+        }
+        RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
+            if data != null() {
+                unsafe {
+                    *(data as *mut u8) = (*INSTANCE).environment_vars_updated;
+                    if (*INSTANCE).environment_vars_updated == 1 {
+                        (*INSTANCE).environment_vars_updated = 0;
+                    }
+                }
+                true
+            } else {
+                false
+            }
+        }
+        _ => false
+    }
 }
 
+#[allow(dead_code)]
 unsafe extern "C" fn input_state_callback(port: u32, device: u32, index: u32, id: u32) -> i32 {
     // TODO
     0
 }
 
+#[allow(dead_code)]
 unsafe extern "C" fn input_poll_callback() {
+    // Nothing to do currently
+}
+
+#[allow(dead_code)]
+unsafe extern "C" fn video_refresh_callback(data: *const c_void, width: u32, height: u32, pitch: usize) {
     // TODO
 }
 
-unsafe extern "C" fn video_refresh_callback(data: *const std::ffi::c_void, width: u32, height: u32, pitch: usize) {
-    // TODO
-}
-
+#[allow(dead_code)]
 unsafe extern "C" fn audio_sample_callback(left: i16, right: i16) {
     // TODO
 }
 
+#[allow(dead_code)]
 unsafe extern "C" fn audio_sample_batch_callback(data: *const i16, frames: usize) -> usize {
     // TODO
     0
@@ -43,7 +113,7 @@ pub struct LibRetroCore {
 
     retro_load_game: Option<unsafe extern "C" fn(game: *const retro_game_info) -> bool>,
     retro_unload_game: Option<unsafe extern "C" fn()>,
-    retro_get_memory_data: Option<unsafe extern "C" fn(id: u32) -> *const std::ffi::c_void>,
+    retro_get_memory_data: Option<unsafe extern "C" fn(id: u32) -> *const c_void>,
     retro_get_memory_size: Option<unsafe extern "C" fn(id: u32) -> usize>,
     retro_get_system_info: Option<unsafe extern "C" fn(info: *mut retro_system_info)>,
     retro_get_system_av_info: Option<unsafe extern "C" fn(av_info: *mut retro_system_av_info)>,
@@ -52,8 +122,8 @@ pub struct LibRetroCore {
     retro_set_input_state: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(port: u32, device: u32, index: u32, id: u32) -> i32>)>,
     retro_set_audio_sample: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(left: i16, right: i16)>)>,
     retro_set_audio_sample_batch: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const i16, frames: usize) -> usize>)>,
-    retro_set_video_refresh: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const std::ffi::c_void, width: u32, height: u32, pitch: usize)>)>,
-    retro_set_environment: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(cmd: u32, data: *const std::ffi::c_void) -> bool>)>,
+    retro_set_video_refresh: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const c_void, width: u32, height: u32, pitch: usize)>)>,
+    retro_set_environment: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(cmd: u32, data: *const c_void) -> bool>)>,
 
     system_info: MaybeUninit<retro_system_info>,
     system_av_info: MaybeUninit<retro_system_av_info>,
@@ -61,6 +131,9 @@ pub struct LibRetroCore {
     core_path: String,
     system_path: String,
     rom_path: String,
+
+    environment_variables: HashMap<String, *const c_char>,
+    environment_vars_updated: u8
 }
 
 impl LibRetroCore {
@@ -90,6 +163,9 @@ impl LibRetroCore {
             core_path: core_path.to_string(),
             system_path: system_path.to_string(),
             rom_path: rom_path.to_string(),
+
+            environment_variables: Default::default(),
+            environment_vars_updated: 0,
         })
     }
 
@@ -116,6 +192,9 @@ impl LibRetroCore {
             self.retro_set_environment = Some(*self.core.get(b"retro_set_environment\0")?);
 
             // Initialize Core
+            INSTANCE = self;
+            CONTENT_DIR.set(CString::new((*INSTANCE).system_path.clone())?).unwrap();
+
             self.retro_set_environment.unwrap()(Some(set_environment_callback));
 
             self.retro_get_system_info.unwrap()(self.system_info.as_mut_ptr());
