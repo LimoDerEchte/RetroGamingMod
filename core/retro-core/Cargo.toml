@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+retro-shared = { path = "../shared" }
 libloading = "0.9.0"
 rust-libretro-sys = "0.3.2"
 shared_memory = "0.12.4"

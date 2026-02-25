@@ -1,4 +1,6 @@
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct SharedMemory {
     // Core to Bridge
     pub display_changed: bool,
