@@ -1,4 +1,8 @@
+use std::ffi::{c_void, CString};
+use std::fs::File;
+use std::io::Read;
 use std::mem::MaybeUninit;
+use std::ptr::null;
 use libloading::Library;
 use rust_libretro_sys::{retro_game_info, retro_system_av_info, retro_system_info};
 use tracing::info;
@@ -125,6 +129,31 @@ impl LibRetroCore {
             self.retro_set_audio_sample_batch.unwrap()(Some(audio_sample_batch_callback));
 
             self.retro_init.unwrap()();
+
+            // Load ROM
+            let mut file = File::open(self.rom_path.clone())?;
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)?;
+
+            let c_path = CString::new(self.rom_path.clone())?;
+            let data_ptr: *const c_void = buffer.as_ptr() as *const c_void;
+            let data_size: usize = buffer.len();
+
+            let game_info = retro_game_info {
+                path: c_path.as_ptr(),
+                data: data_ptr,
+                size: data_size,
+                meta: null(),
+            };
+
+            if !self.retro_load_game.unwrap()(&game_info) {
+                return Err("Failed to load game info")?;
+            }
+
+            self.retro_get_system_av_info.unwrap()(self.system_av_info.as_mut_ptr());
+            let info = self.system_av_info.assume_init();
+            info!("Game successfully loaded.");
+            info!("Display info: {:?}x{:?} @ {:?} fps", info.geometry.base_width, info.geometry.base_height, info.timing.fps);
         }
         Ok(())
     }
