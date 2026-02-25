@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 5 {
         warn!("This should NEVER be called by a user (to few arguments)");
         warn!("Usage: retro-core <platform> <id> <core> <rom> <save>");
-        return Err(Box::from("Test"))
+        return Err(Box::from("Invalid Arguments"))
     }
 
     let shared_memory = ShmemConf::new().os_id(args[1].clone()).open()?;

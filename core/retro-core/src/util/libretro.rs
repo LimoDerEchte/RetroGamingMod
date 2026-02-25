@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use std::mem::MaybeUninit;
 use std::{ptr, slice};
 use std::sync::{OnceLock, RwLock};
+use std::time::{Duration, Instant};
 use libloading::Library;
 use rust_libretro_sys::*;
 use rust_libretro_sys::retro_pixel_format::{RETRO_PIXEL_FORMAT_RGB565, RETRO_PIXEL_FORMAT_XRGB8888};
@@ -20,7 +21,7 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
         Some(instance) => {
             match cmd {
                 RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
-                    let mut callback = data as *mut retro_log_callback;
+                    //let mut callback = data as *mut retro_log_callback;
                     // TODO: implement the actual callback using a c trampoline
                     true
                 }
@@ -165,6 +166,7 @@ pub struct LibRetroCore {
     rom_path: String,
     save_path: String,
 
+    fps: f64,
     saving_supported: bool,
     pixel_format: retro_pixel_format,
     environment_variables: HashMap<String, CString>,
@@ -200,6 +202,7 @@ impl LibRetroCore {
             rom_path: rom_path.to_string(),
             save_path: save_path.to_string(),
 
+            fps: 60.0,
             saving_supported: false,
             pixel_format: RETRO_PIXEL_FORMAT_XRGB8888,
             environment_variables: Default::default(),
@@ -210,6 +213,28 @@ impl LibRetroCore {
             callback_input: None,
         });
         Ok(())
+    }
+
+    pub fn run_core() {
+        let fps = { INSTANCE.read().unwrap().as_ref().unwrap().fps };
+        let frame_time = Duration::from_micros((1000000.0 / fps) as u64);
+        info!("Starting main loop at {:?} fps", fps);
+
+        let retro_run = { INSTANCE.read().unwrap().as_ref().unwrap().retro_run.unwrap() };
+
+        let mut next = Instant::now();
+        loop {
+            unsafe { retro_run() };
+
+            next += frame_time;
+            let now = Instant::now();
+            if now > next {
+                std::thread::sleep(next - now);
+            } else {
+                next = now;
+                warn!("Main loop lagging behind!")
+            }
+        }
     }
 
     pub fn set_video_callback(callback: fn(fmt: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32)) {
@@ -306,7 +331,13 @@ impl LibRetroCore {
 
                     let info = system_av_info.assume_init();
                     info!("Game successfully loaded.");
-                    info!("Display info: {:?}x{:?} @ {:?} fps", info.geometry.base_width, info.geometry.base_height, info.timing.fps);
+
+                    if info.timing.fps > 0.0 {
+                        info!("Display info: {:?}x{:?} @ {:?} fps", info.geometry.base_width, info.geometry.base_height, info.timing.fps);
+                        instance.fps = info.timing.fps;
+                    } else {
+                        info!("Display info: {:?}x{:?} @ 60 fps", info.geometry.base_width, info.geometry.base_height);
+                    }
 
                     // Loading Save
                     let save_data = instance.retro_get_memory_data.unwrap()(RETRO_MEMORY_SAVE_RAM);
@@ -334,6 +365,24 @@ impl LibRetroCore {
                 }
             },
             None => Err("Instance missing".into())
+        }
+    }
+
+    pub fn deinit() {
+        match INSTANCE.write().unwrap().as_mut() {
+            Some(instance) => {
+                unsafe {
+                    match instance.retro_unload_game {
+                        Some(unload_game) => { unload_game(); }
+                        None => {}
+                    }
+                    match instance.retro_deinit {
+                        Some(deinit) => { deinit(); }
+                        None => {}
+                    }
+                }
+            },
+            None => ()
         }
     }
 
@@ -366,21 +415,6 @@ impl LibRetroCore {
                 }
             }
             None => ()
-        }
-    }
-}
-
-impl Drop for LibRetroCore {
-    fn drop(&mut self) {
-        unsafe{
-            match self.retro_unload_game {
-                Some(unload_game) => { unload_game(); }
-                None => {}
-            }
-            match self.retro_deinit {
-                Some(deinit) => { deinit(); }
-                None => {}
-            }
         }
     }
 }

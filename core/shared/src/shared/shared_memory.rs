@@ -9,8 +9,6 @@ pub struct SharedMemory {
     pub audio_changed: bool,
     pub audio_data: [u16; SharedMemory::AUDIO_FRAME_SIZE],
 
-    pub shutdown_completed: bool,
-
     // Bridge to Core
     pub controls: [u16; 4], // Reserve 16 bit gamepad for 4 users
 

@@ -3,8 +3,10 @@ use crate::util::reader::convert_data;
 use retro_shared::shared::shared_memory::SharedMemory;
 use std::collections::VecDeque;
 use std::path::Path;
+use std::process::exit;
 use std::ptr;
 use std::sync::RwLock;
+use std::time::{Duration, Instant};
 
 static INSTANCE: RwLock<Option<GenericConsole>> = RwLock::new(None);
 
@@ -19,6 +21,8 @@ pub struct GenericConsole {
 }
 
 impl GenericConsole {
+    const SAVE_DELAY_SECONDS: u64 = 30;
+
     pub fn init(data: SharedMemory, core: &str, rom: &str, save: &str) -> Result<(), Box<dyn std::error::Error>> {
         LibRetroCore::construct_instance(core, get_directory(core).unwrap().as_str(), rom, save)?;
 
@@ -73,6 +77,35 @@ impl GenericConsole {
     }
 
     pub fn run() {
+        std::thread::spawn(LibRetroCore::run_core);
+        Self::core_loop()
+    }
 
+    fn core_loop() {
+        let save_delay = Duration::from_secs(Self::SAVE_DELAY_SECONDS);
+        let wait_delay = Duration::from_millis(500);
+        let mut next = Instant::now() + save_delay;
+
+        loop {
+            let now = Instant::now();
+            if now >= next {
+                LibRetroCore::save_game();
+                next += save_delay;
+            }
+
+            {
+                let guard = INSTANCE.read().unwrap();
+                let instance = guard.as_ref().unwrap();
+                if instance.shared.shutdown_requested {
+                    break;
+                }
+            }
+
+            std::thread::sleep(wait_delay);
+        }
+
+        LibRetroCore::save_game();
+        LibRetroCore::deinit();
+        exit(0);
     }
 }
