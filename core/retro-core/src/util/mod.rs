@@ -1,2 +1,2 @@
 pub mod libretro;
-mod reader;
+pub mod reader;

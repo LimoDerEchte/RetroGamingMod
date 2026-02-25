@@ -7,7 +7,7 @@ pub struct SharedMemory {
     pub display_data: [u32; 4 * 720 * 480], // Reserve 480p ARGB data
 
     pub audio_changed: bool,
-    pub audio_data: [u32; 8192], // Reserve 8 Kb audio chunks
+    pub audio_data: [u16; SharedMemory::AUDIO_FRAME_SIZE],
 
     pub shutdown_completed: bool,
 
@@ -15,4 +15,8 @@ pub struct SharedMemory {
     pub controls: [u16; 4], // Reserve 16 bit gamepad for 4 users
 
     pub shutdown_requested: bool,
+}
+
+impl SharedMemory {
+    pub const AUDIO_FRAME_SIZE: usize = 1920; // 40 ms at 48 kHz
 }

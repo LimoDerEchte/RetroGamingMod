@@ -5,7 +5,7 @@ use std::env;
 use shared_memory::ShmemConf;
 use tracing::{warn};
 use retro_shared::shared::shared_memory::SharedMemory;
-use crate::platform::generic_console::generic_console_load;
+use crate::platform::generic_console::GenericConsole;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
@@ -22,6 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ptr = shared_memory.as_ptr() as *mut SharedMemory;
     let data = unsafe { &mut *ptr };
 
-    generic_console_load(data, &args[2], &args[3], &args[4]);
+    GenericConsole::init(*data, &args[2], &args[3], &args[4])?;
+    GenericConsole::run();
+
     Ok(())
 }
