@@ -15,18 +15,16 @@ fn get_directory(file_path: &str) -> Option<String> {
 
 pub struct GenericConsole {
     shared: SharedMemory,
-    save_path: String,
     audio_buffer: VecDeque<u16>
 }
 
 impl GenericConsole {
     pub fn init(data: SharedMemory, core: &str, rom: &str, save: &str) -> Result<(), Box<dyn std::error::Error>> {
-        LibRetroCore::construct_instance(core, get_directory(core).unwrap().as_str(), rom)?;
+        LibRetroCore::construct_instance(core, get_directory(core).unwrap().as_str(), rom, save)?;
 
         let mut guard = INSTANCE.write()?;
         *guard = Some(Self {
             shared: data,
-            save_path: String::from(save),
             audio_buffer: Default::default(),
         });
 

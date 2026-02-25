@@ -1,9 +1,10 @@
+use std::cmp::min;
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::mem::MaybeUninit;
-use std::ptr::{null};
+use std::{ptr, slice};
 use std::sync::{OnceLock, RwLock};
 use libloading::Library;
 use rust_libretro_sys::*;
@@ -48,7 +49,7 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
                     }
                 }
                 RETRO_ENVIRONMENT_SET_VARIABLE => {
-                    data != null()
+                    data != ptr::null()
                 }
                 RETRO_ENVIRONMENT_GET_VARIABLE => {
                     let mut var = *(data as *mut retro_variable);
@@ -61,13 +62,13 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
                         }
                         None => {
                             warn!("Environment variable not found: {:?}", key);
-                            var.value = null();
+                            var.value = ptr::null();
                             false
                         }
                     }
                 }
                 RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
-                    if data != null() {
+                    if data != ptr::null() {
                         *(data as *mut u8) = instance.environment_vars_updated;
                         if instance.environment_vars_updated == 1 {
                             instance.environment_vars_updated = 0;
@@ -160,10 +161,11 @@ pub struct LibRetroCore {
     retro_set_video_refresh: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(data: *const c_void, width: u32, height: u32, pitch: usize)>)>,
     retro_set_environment: Option<unsafe extern "C" fn(callback: Option<unsafe extern "C" fn(cmd: u32, data: *const c_void) -> bool>)>,
 
-    core_path: String,
     system_path: String,
     rom_path: String,
+    save_path: String,
 
+    saving_supported: bool,
     pixel_format: retro_pixel_format,
     environment_variables: HashMap<String, CString>,
     environment_vars_updated: u8,
@@ -174,7 +176,7 @@ pub struct LibRetroCore {
 }
 
 impl LibRetroCore {
-    pub fn construct_instance(core_path: &str, system_path: &str, rom_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn construct_instance(core_path: &str, system_path: &str, rom_path: &str, save_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         INSTANCE.write()?.replace(Self {
             core: unsafe{ Library::new(core_path)? },
 
@@ -194,10 +196,11 @@ impl LibRetroCore {
             retro_get_system_av_info: None,
             retro_set_environment: None,
 
-            core_path: core_path.to_string(),
             system_path: system_path.to_string(),
             rom_path: rom_path.to_string(),
+            save_path: save_path.to_string(),
 
+            saving_supported: false,
             pixel_format: RETRO_PIXEL_FORMAT_XRGB8888,
             environment_variables: Default::default(),
             environment_vars_updated: 0,
@@ -237,7 +240,7 @@ impl LibRetroCore {
     }
 
     pub fn init() -> Result<(), Box<dyn std::error::Error>> {
-        match INSTANCE.write().unwrap().as_mut() {
+        match INSTANCE.write()?.as_mut() {
             Some(instance) => {
                 unsafe {
                     // Load Symbols
@@ -291,7 +294,7 @@ impl LibRetroCore {
                         path: c_path.as_ptr(),
                         data: data_ptr,
                         size: data_size,
-                        meta: null(),
+                        meta: ptr::null(),
                     };
 
                     if !instance.retro_load_game.unwrap()(&game_info) {
@@ -305,10 +308,64 @@ impl LibRetroCore {
                     info!("Game successfully loaded.");
                     info!("Display info: {:?}x{:?} @ {:?} fps", info.geometry.base_width, info.geometry.base_height, info.timing.fps);
 
+                    // Loading Save
+                    let save_data = instance.retro_get_memory_data.unwrap()(RETRO_MEMORY_SAVE_RAM);
+                    let save_size = instance.retro_get_memory_size.unwrap()(RETRO_MEMORY_SAVE_RAM);
+
+                    if save_data.is_null() || save_size == 0 {
+                        warn!("Core does not support save RAM!");
+                        return Ok(())
+                    }
+
+                    match File::open(&instance.save_path) {
+                        Ok(mut file) => {
+                            let mut buffer = Vec::new();
+                            file.read_to_end(&mut buffer)?;
+
+                            let len = min(save_size, buffer.len());
+                            ptr::copy_nonoverlapping(buffer.as_ptr(), save_data as *mut u8, len);
+                        }
+                        Err(_) => {
+                            info!("No valid save file found.")
+                        }
+                    }
+
                     Ok(())
                 }
             },
             None => Err("Instance missing".into())
+        }
+    }
+
+    pub fn save_game() {
+        match INSTANCE.read().unwrap().as_ref() {
+            Some(instance) => {
+                if !instance.saving_supported {
+                    return;
+                }
+
+                unsafe {
+                    let save_data = instance.retro_get_memory_data.unwrap()(RETRO_MEMORY_SAVE_RAM);
+                    let save_size = instance.retro_get_memory_size.unwrap()(RETRO_MEMORY_SAVE_RAM);
+
+                    if save_data.is_null() || save_size == 0 {
+                        return;
+                    }
+                    let slice = slice::from_raw_parts(save_data as *const u8, save_size);
+
+                    match File::create(&instance.save_path) {
+                        Ok(mut file) => {
+                            if let Err(_) = file.write_all(slice) {
+                                info!("Failed to save game.")
+                            }
+                        }
+                        Err(_) => {
+                            info!("Failed to create save file.")
+                        }
+                    }
+                }
+            }
+            None => ()
         }
     }
 }
