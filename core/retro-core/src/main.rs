@@ -3,7 +3,7 @@ mod util;
 
 use std::env;
 use shared_memory::ShmemConf;
-use tracing::{info, warn};
+use tracing::{warn};
 use retro_shared::shared::shared_memory::SharedMemory;
 use crate::platform::generic_console::generic_console_load;
 
