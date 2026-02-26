@@ -1,4 +1,4 @@
 mod codec;
-mod protocol;
+mod network;
 mod platform;
 mod util;

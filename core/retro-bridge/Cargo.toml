@@ -12,6 +12,7 @@ crate-type = [
 [dependencies]
 audiopus = "0.2.0"
 dav1d = "0.11.1"
+jni = "0.22.1"
 rav1e = "0.8.1"
 renet = "2.0.0"
 shared_memory = "0.12.4"
