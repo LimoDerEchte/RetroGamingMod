@@ -1,4 +1,6 @@
 
+pub static RETRO_PROTOCOL: u64 = 0x0;
+
 pub enum PacketType {
     Kick      = 0x00,
     VideoData = 0x01,
