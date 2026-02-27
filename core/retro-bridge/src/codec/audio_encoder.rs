@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::io::Write;
 use audiopus::coder::Encoder;
 use audiopus::{Application, Channels, SampleRate};
 
