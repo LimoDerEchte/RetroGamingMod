@@ -7,7 +7,7 @@ pub struct SharedMemory {
     pub display_data: [u32; 4 * 720 * 480], // Reserve 480p ARGB data
 
     pub audio_changed: bool,
-    pub audio_data: [u16; SharedMemory::AUDIO_FRAME_SIZE],
+    pub audio_data: [i16; SharedMemory::AUDIO_FRAME_SIZE],
 
     // Bridge to Core
     pub controls: [u16; 4], // Reserve 16 bit gamepad for 4 users

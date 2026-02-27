@@ -1,8 +1,7 @@
-use rav1e::{Config, Context, EncoderConfig, Frame};
+use rav1e::{Config, Context, EncoderConfig};
 use rav1e::data::Rational;
-use rav1e::prelude::Plane;
 use tracing::warn;
-use yuv::{rgba_to_sharp_yuv420, BufferStoreMut, SharpYuvGammaTransfer, YuvPlanarImage, YuvPlanarImageMut, YuvRange, YuvStandardMatrix};
+use yuv::{rgba_to_sharp_yuv420, BufferStoreMut, SharpYuvGammaTransfer, YuvPlanarImageMut, YuvRange, YuvStandardMatrix};
 
 pub trait VideoEncoder {
     fn new(width: u32, height: u32) -> Self where Self: Sized;

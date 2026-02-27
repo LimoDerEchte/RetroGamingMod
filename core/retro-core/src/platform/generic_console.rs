@@ -55,7 +55,7 @@ impl GenericConsole {
 
             while instance.audio_buffer.len() > SharedMemory::AUDIO_FRAME_SIZE {
                 for i in 0..SharedMemory::AUDIO_FRAME_SIZE {
-                    instance.shared.audio_data[i] = instance.audio_buffer.pop_front().unwrap()
+                    instance.shared.audio_data[i] = instance.audio_buffer.pop_front().unwrap() as i16
                 }
                 instance.shared.audio_changed = true;
             }
