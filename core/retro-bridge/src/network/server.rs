@@ -1,10 +1,10 @@
 use crate::network::network_definitions::RETRO_PROTOCOL;
 use rand::TryRng;
 use renet::{ConnectionConfig, RenetServer};
-use renet_netcode::{NetcodeServerTransport, ServerAuthentication, ServerConfig};
+use renet_netcode::{ConnectToken, NetcodeServerTransport, ServerAuthentication, ServerConfig};
 use std::error::Error;
 use std::net::{SocketAddr, UdpSocket};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -15,6 +15,10 @@ pub struct RetroServer {
     transport: Mutex<NetcodeServerTransport>,
 
     shutdown_requested: AtomicBool,
+    client_id_incrementor: AtomicU64,
+
+    public_addresses: Vec<SocketAddr>,
+    private_key: [u8; 32],
 }
 
 impl RetroServer {
@@ -26,7 +30,7 @@ impl RetroServer {
         Err("Instance not found!".into())
     }
 
-    pub fn init(max_users: i16, bind: &str, addresses: Vec<String>) -> Result<(), Box<dyn Error>> {
+    pub fn init(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<(), Box<dyn Error>> {
         let mut guard = INSTANCE.write()?;
         *guard = Some(Arc::new(RwLock::new(RetroServer::new(max_users, bind, addresses)?)));
         Ok(())
@@ -39,7 +43,7 @@ impl RetroServer {
         })
     }
 
-    fn new(max_users: i16, bind: &str, addresses: Vec<String>) -> Result<Self, Box<dyn Error>> {
+    fn new(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<Self, Box<dyn Error>> {
         let mut public_addresses: Vec<SocketAddr> = Vec::with_capacity(addresses.len());
         for address in addresses {
             public_addresses.push(address.parse()?)
@@ -53,7 +57,7 @@ impl RetroServer {
             current_time: SystemTime::now().duration_since(UNIX_EPOCH)?,
             max_clients: max_users as usize,
             protocol_id: RETRO_PROTOCOL,
-            public_addresses,
+            public_addresses: public_addresses.clone(),
             authentication: ServerAuthentication::Secure { private_key },
         };
 
@@ -62,11 +66,32 @@ impl RetroServer {
             transport: Mutex::new(NetcodeServerTransport::new(config, socket)?),
 
             shutdown_requested: AtomicBool::new(false),
+            client_id_incrementor: AtomicU64::new(0),
+
+            public_addresses,
+            private_key,
         })
+    }
+
+    pub fn gen_token(&mut self) -> Result<Vec<u8>, Box<dyn Error>> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        let client_id = self.client_id_incrementor.fetch_add(1, Ordering::Relaxed);
+
+        let token = ConnectToken::generate(
+            now, RETRO_PROTOCOL, 30, client_id, 15,
+            self.public_addresses.clone(), None, &self.private_key
+        )?;
+
+        let mut buf: Vec<u8> = Vec::with_capacity(2048);
+        token.write(&mut buf)?;
+        Ok(buf.to_vec())
+    }
+
+    pub fn main_loop() {
+        todo!()
     }
 }
 
-// TODO: char* RetroServer::genToken() {
 // TODO: void RetroServer::mainReceiverLoop() {
 // TODO: void RetroServer::bandwidthMonitorLoop() {
 // TODO: void RetroServer::mainKeepAliveLoop() {
