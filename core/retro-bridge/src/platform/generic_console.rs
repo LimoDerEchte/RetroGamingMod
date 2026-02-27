@@ -3,8 +3,10 @@ use std::mem;
 use rand::distr::{Alphanumeric, SampleString};
 use retro_shared::shared::shared_memory::SharedMemory;
 use std::process::{Child, Command};
+use std::time::{Duration, Instant};
 use shared_memory::ShmemConf;
-use tracing::warn;
+use tracing::{info, warn};
+use wait_timeout::ChildExt;
 use crate::codec::audio_encoder::{AudioEncoder, AudioEncoderOpus};
 use crate::codec::video_encoder::{VideoEncoder, VideoEncoderAV1};
 
@@ -60,12 +62,40 @@ impl GenericConsole {
         );
         Ok(())
     }
+
+    pub fn retrieve_video_packet(&mut self) -> Option<Vec<u8>> {
+        (*self.video_encoder).retrieve_packet()
+    }
+
+    pub fn encode_audio_packet(&mut self) -> Option<Vec<u8>> {
+        (*self.audio_encoder).encode_frame(self.shared_data.audio_data.to_vec()).ok()
+    }
+
+    pub fn submit_input(&mut self, port: i32, data: i16) {
+        self.shared_data.controls[port as usize] = data as u16
+    }
 }
 
-// TODO: void GenericConsole::dispose() {
-// TODO: std::vector<uint8_t> GenericConsole::createFrame() {
-// TODO: std::vector<uint8_t> GenericConsole::createClip() {
-// TODO: void GenericConsole::input(const int port, const int16_t input) const {
+impl Drop for GenericConsole {
+    fn drop(&mut self) {
+        self.shared_data.shutdown_requested = true;
+        if let Some(mut core_process) = self.core_process.take() {
+            match core_process.wait_timeout(Duration::from_secs(10)) {
+                Ok(Some(status)) => {
+                    info!("Core process exited with status {:?}", status);
+                }
+                _ => {
+                    core_process.kill().expect("Failed to kill child");
+                    core_process.wait().expect("Failed to wait after kill");
+                    warn!("Core process had to be killed after 10 seconds!")
+                }
+            }
+        }
+    }
+}
+
+// TODO: Audio / Video submission loop
+
 // TODO: void GenericConsoleRegistry::registerConsole(GenericConsole *console) {
 // TODO: void GenericConsoleRegistry::unregisterConsole(GenericConsole *console) {
 // TODO: void GenericConsoleRegistry::withConsoles(const bool writing, const std::function<void(GenericConsole*)>& func) {
