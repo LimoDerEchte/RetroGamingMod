@@ -1,17 +1,17 @@
-use std::collections::HashMap;
+use std::collections::{HashMap};
 use std::error::Error;
 use std::net::UdpSocket;
 use std::sync::{Arc, Mutex, RwLock};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use renet::{ConnectionConfig, RenetClient};
+use renet::{ConnectionConfig, DefaultChannel, RenetClient};
 use renet::DefaultChannel::ReliableOrdered;
 use renet_netcode::{ClientAuthentication, ConnectToken, NetcodeClientTransport};
 use tracing::warn;
 use crate::network::network_definitions::PacketType;
 use crate::util::display::NativeDisplay;
 
-static INSTANCE: Mutex<Option<Arc<RetroClient>>> = Mutex::new(None);
+static INSTANCE: RwLock<Option<Arc<RwLock<RetroClient>>>> = RwLock::new(None);
 
 pub struct RetroClient {
     client: Mutex<RenetClient>,
@@ -19,13 +19,15 @@ pub struct RetroClient {
 
     displays: RwLock<HashMap<i16, Mutex<NativeDisplay>>>,
     shutdown_requested: AtomicBool,
+
+    input_packet: Option<Vec<u8>>,
 }
 
 impl RetroClient {
-    pub fn with_instance<T>(func: impl FnOnce(&mut Arc<RetroClient>) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let mut guard = INSTANCE.lock()?;
+    pub fn with_instance<T>(func: impl FnOnce(&mut RetroClient) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
+        let mut guard = INSTANCE.write()?;
         if let Some(instance) = guard.as_mut() {
-            return func(instance);
+            return func(instance.write().as_mut().unwrap());
         }
         Err("Instance not found!".into())
     }
@@ -38,8 +40,8 @@ impl RetroClient {
     }
 
     pub fn init(token: Vec<u8>) -> Result<(), Box<dyn Error>> {
-        let mut guard = INSTANCE.lock()?;
-        *guard = Some(Arc::new(RetroClient::new(token)));
+        let mut guard = INSTANCE.write()?;
+        *guard = Some(Arc::new(RwLock::new(RetroClient::new(token))));
         Ok(())
     }
 
@@ -62,7 +64,28 @@ impl RetroClient {
 
             displays: RwLock::new(Default::default()),
             shutdown_requested: AtomicBool::new(false),
+
+            input_packet: None,
         }
+    }
+
+    pub fn register_id(&mut self, id: i16, width: i32, height: i32, codec: i32, display_data_ptr: i32) {
+        self.displays.write().unwrap().insert(id, Mutex::new(NativeDisplay::new(width, height, codec, display_data_ptr)));
+    }
+
+    pub fn unregister_id(&mut self, id: i16) {
+        self.displays.write().unwrap().remove(&id);
+    }
+
+    pub fn send_input_data(&mut self, id: i16, port: i16, data: i16) {
+        let mut pak = Vec::with_capacity(7);
+
+        pak.push(PacketType::Controls as u8);
+        pak.extend_from_slice(&id.to_le_bytes());
+        pak.extend_from_slice(&port.to_le_bytes());
+        pak.extend_from_slice(&data.to_le_bytes());
+
+        self.input_packet = Some(pak);
     }
 
     pub fn main_loop() {
@@ -92,6 +115,10 @@ impl RetroClient {
                     instance.handle_packet(msg.to_vec());
                 }
 
+                if let Some(packet) = instance.input_packet.take() {
+                    client.send_message(ReliableOrdered, packet);
+                }
+
                 transport.send_packets(&mut client)?;
                 Ok(true)
             }).expect("Failed clientside packet handling frame") {
@@ -113,7 +140,7 @@ impl RetroClient {
             Ok(())
         }).expect("Failed to shutdown clientside connection");
 
-        let mut guard = INSTANCE.lock().unwrap();
+        let mut guard = INSTANCE.write().unwrap();
         *guard = None;
     }
 
@@ -132,7 +159,7 @@ impl RetroClient {
                 });
             }
             PacketType::AudioData => {
-
+                todo!()
             }
             PacketType::Controls | PacketType::Invalid => {}
         }
@@ -142,7 +169,3 @@ impl RetroClient {
         self.client.lock().unwrap().is_connected()
     }
 }
-
-// TODO: uint32_t* RetroClient::registerDisplay(const jUUID *uuid, int width, int height, uint32_t *data, int sampleRate, int codec) {
-// TODO: void RetroClient::unregisterDisplay(const jUUID* uuid) {
-// TODO: void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) {

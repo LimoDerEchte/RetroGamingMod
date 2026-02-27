@@ -8,7 +8,7 @@ pub struct NativeDisplay {
     changed: bool,
     width: i32,
     height: i32,
-    codec: i32, // TODO: Parse to a codec enum
+    codec: i32,
 }
 
 impl NativeDisplay {

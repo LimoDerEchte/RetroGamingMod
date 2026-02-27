@@ -1,5 +1,5 @@
 use jni::objects::{JByteArray, JClass};
-use jni::sys::jboolean;
+use jni::sys::{jboolean, jint, jshort};
 use jni::Env;
 use crate::network::client::RetroClient;
 
@@ -46,4 +46,47 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnect
     RetroClient::with_instance(|instance| {
         Ok(instance.is_connected())
     }).unwrap()
+}
+
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerId<'caller>(
+    _: &mut Env<'caller>,
+    _: JClass<'caller>,
+    id: jshort,
+    width: jint,
+    height: jint,
+    codec: jint,
+    display_data_ptr: jint
+) {
+    RetroClient::with_instance(|instance| {
+        instance.register_id(id, width, height, codec, display_data_ptr);
+        Ok(())
+    }).unwrap();
+}
+
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregisterId<'caller>(
+    _: &mut Env<'caller>,
+    _: JClass<'caller>,
+    id: jshort,
+) {
+    RetroClient::with_instance(|instance| {
+        instance.unregister_id(id);
+        Ok(())
+    }).unwrap();
+}
+
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_submitControls<'caller>(
+    _: &mut Env<'caller>,
+    _: JClass<'caller>,
+    id: jshort,
+) {
+    RetroClient::with_instance(|instance| {
+        instance.unregister_id(id);
+        Ok(())
+    }).unwrap();
 }
