@@ -2,7 +2,7 @@ use std::error::Error;
 use audiopus::coder::Encoder;
 use audiopus::{Application, Channels, SampleRate};
 
-pub trait AudioEncoder {
+pub trait AudioEncoder: Send {
     fn new() -> Self where Self: Sized;
     fn encode_frame(&mut self, data: Vec<i16>) -> Result<Vec<u8>, Box<dyn Error>>;
 }

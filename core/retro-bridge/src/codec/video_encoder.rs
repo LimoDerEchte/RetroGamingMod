@@ -3,7 +3,7 @@ use rav1e::data::Rational;
 use tracing::warn;
 use yuv::{rgba_to_sharp_yuv420, BufferStoreMut, SharpYuvGammaTransfer, YuvPlanarImageMut, YuvRange, YuvStandardMatrix};
 
-pub trait VideoEncoder {
+pub trait VideoEncoder: Send {
     fn new(width: u32, height: u32) -> Self where Self: Sized;
     fn submit_frame(&mut self, data: Vec<u8>);
     fn retrieve_packet(&mut self) -> Option<Vec<u8>>;
