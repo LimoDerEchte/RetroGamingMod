@@ -1,9 +1,10 @@
+use std::collections::HashMap;
 use std::error::Error;
-use std::mem;
 use rand::distr::{Alphanumeric, SampleString};
 use retro_shared::shared::shared_memory::SharedMemory;
 use std::process::{Child, Command};
-use std::time::{Duration, Instant};
+use std::sync::RwLock;
+use std::time::{Duration};
 use shared_memory::ShmemConf;
 use tracing::{info, warn};
 use wait_timeout::ChildExt;
@@ -91,6 +92,49 @@ impl Drop for GenericConsole {
                 }
             }
         }
+    }
+}
+
+pub struct ConsoleRegistry {
+    incrementor: i32,
+    registry: HashMap<i32, RwLock<GenericConsole>>
+}
+
+impl ConsoleRegistry {
+    const INSTANCE: RwLock<Option<ConsoleRegistry>> = RwLock::new(None);
+
+    // Checks for instance and sets if missing
+    fn option_check() {
+        let guard = Self::INSTANCE;
+        {
+            if let Ok(x) = guard.write() && x != None {
+                return;
+            }
+        }
+        {
+            if let Ok(mut g) = guard.write() {
+                *g = Some(ConsoleRegistry {
+                    incrementor: 0,
+                    registry: HashMap::new()
+                })
+            }
+        }
+    }
+
+    pub fn register_new(width: i32, height: i32, id: i32, video_codec: i32, audio_codec: i32) -> i32 {
+        Self::option_check();
+        let guard = Self::INSTANCE;
+        if let Ok(mut g) = guard.write()
+                && let Some(instance) = &mut *g {
+            let mut instance: ConsoleRegistry = instance as ConsoleRegistry;
+
+            let id = instance.incrementor;
+            instance.incrementor += 1;
+
+            instance.registry.insert(id, RwLock::new(GenericConsole::new(width, height, id, video_codec, audio_codec)))
+            return id;
+        }
+        -1
     }
 }
 
