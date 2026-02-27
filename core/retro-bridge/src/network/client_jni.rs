@@ -15,15 +15,35 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
         Ok(token) => token,
         Err(_) => return false,
     };
-    RetroClient::init(token).is_ok()
+
+    if RetroClient::init(token).is_err() {
+        return false
+    }
+
+    std::thread::spawn(|| {
+        RetroClient::main_loop();
+    });
+    true
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_deinit<'caller>(
-    env: &mut Env<'caller>,
+    _: &mut Env<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
 
     RetroClient::deinit().is_ok()
+}
+
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnected<'caller>(
+    _: &mut Env<'caller>,
+    _: JClass<'caller>,
+) -> jboolean {
+
+    RetroClient::with_instance(|instance| {
+        Ok(instance.is_connected())
+    }).unwrap()
 }

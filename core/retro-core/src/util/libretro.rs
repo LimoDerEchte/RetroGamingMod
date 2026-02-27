@@ -50,7 +50,7 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
                     }
                 }
                 RETRO_ENVIRONMENT_SET_VARIABLE => {
-                    data != ptr::null()
+                    !data.is_null()
                 }
                 RETRO_ENVIRONMENT_GET_VARIABLE => {
                     let mut var = *(data as *mut retro_variable);
@@ -69,7 +69,7 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
                     }
                 }
                 RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
-                    if data != ptr::null() {
+                    if !data.is_null() {
                         *(data as *mut u8) = instance.environment_vars_updated;
                         if instance.environment_vars_updated == 1 {
                             instance.environment_vars_updated = 0;
@@ -108,16 +108,9 @@ unsafe extern "C" fn input_poll_callback() {
 
 #[allow(dead_code)]
 unsafe extern "C" fn video_refresh_callback(data: *const c_void, width: u32, height: u32, pitch: usize) {
-    match INSTANCE.read().unwrap().as_ref() {
-        Some(instance) => {
-            match instance.callback_video {
-                Some(video) => {
-                    video(instance.pixel_format, data as *const u8, width, height, pitch as u32);
-                }
-                None => {}
-            }
-        }
-        None => {}
+    if let Some(instance) = INSTANCE.read().unwrap().as_ref()
+            && let Some(video) = instance.callback_video {
+        video(instance.pixel_format, data as *const u8, width, height, pitch as u32);
     }
 }
 
@@ -238,29 +231,20 @@ impl LibRetroCore {
     }
 
     pub fn set_video_callback(callback: fn(fmt: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32)) {
-        match INSTANCE.write().unwrap().as_mut() {
-            Some(instance) => {
-                instance.callback_video = Some(callback);
-            }
-            None => {}
+        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+            instance.callback_video = Some(callback);
         }
     }
 
     pub fn set_audio_callback(callback: fn(data: *const u16, frames: usize) -> usize) {
-        match INSTANCE.write().unwrap().as_mut() {
-            Some(instance) => {
-                instance.callback_audio = Some(callback);
-            }
-            None => {}
+        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+            instance.callback_audio = Some(callback);
         }
     }
 
     pub fn set_input_callback(callback: fn(port: u32, id: u32) -> u16) {
-        match INSTANCE.write().unwrap().as_mut() {
-            Some(instance) => {
-                instance.callback_input = Some(callback);
-            }
-            None => {}
+        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+            instance.callback_input = Some(callback);
         }
     }
 
@@ -369,52 +353,40 @@ impl LibRetroCore {
     }
 
     pub fn deinit() {
-        match INSTANCE.write().unwrap().as_mut() {
-            Some(instance) => {
-                unsafe {
-                    match instance.retro_unload_game {
-                        Some(unload_game) => { unload_game(); }
-                        None => {}
-                    }
-                    match instance.retro_deinit {
-                        Some(deinit) => { deinit(); }
-                        None => {}
-                    }
-                }
-            },
-            None => ()
+        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+            unsafe {
+                if let Some(unload_game) = instance.retro_unload_game { unload_game(); }
+                if let Some(deinit) = instance.retro_deinit { deinit(); }
+            }
         }
     }
 
     pub fn save_game() {
-        match INSTANCE.read().unwrap().as_ref() {
-            Some(instance) => {
-                if !instance.saving_supported {
+        if let Some(instance) = INSTANCE.read().unwrap().as_ref() {
+            if !instance.saving_supported {
+                return;
+            }
+
+            unsafe {
+                let save_data = instance.retro_get_memory_data.unwrap()(RETRO_MEMORY_SAVE_RAM);
+                let save_size = instance.retro_get_memory_size.unwrap()(RETRO_MEMORY_SAVE_RAM);
+
+                if save_data.is_null() || save_size == 0 {
                     return;
                 }
+                let slice = slice::from_raw_parts(save_data as *const u8, save_size);
 
-                unsafe {
-                    let save_data = instance.retro_get_memory_data.unwrap()(RETRO_MEMORY_SAVE_RAM);
-                    let save_size = instance.retro_get_memory_size.unwrap()(RETRO_MEMORY_SAVE_RAM);
-
-                    if save_data.is_null() || save_size == 0 {
-                        return;
+                match File::create(&instance.save_path) {
+                    Ok(mut file) => {
+                        if file.write_all(slice).is_err() {
+                            info!("Failed to save game.")
+                        }
                     }
-                    let slice = slice::from_raw_parts(save_data as *const u8, save_size);
-
-                    match File::create(&instance.save_path) {
-                        Ok(mut file) => {
-                            if let Err(_) = file.write_all(slice) {
-                                info!("Failed to save game.")
-                            }
-                        }
-                        Err(_) => {
-                            info!("Failed to create save file.")
-                        }
+                    Err(_) => {
+                        info!("Failed to create save file.")
                     }
                 }
             }
-            None => ()
         }
     }
 }
