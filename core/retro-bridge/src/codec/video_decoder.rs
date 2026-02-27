@@ -2,7 +2,7 @@ use dav1d::PlanarImageComponent;
 use tracing::warn;
 use yuv::{yuv420_to_bgr, YuvPlanarImage, YuvRange, YuvStandardMatrix};
 
-pub trait VideoDecoder {
+pub trait VideoDecoder: Send {
     fn new(width: u32, height: u32) -> Self where Self: Sized;
     fn submit_packet(&mut self, data: Vec<u8>);
     fn retrieve_frame(&mut self) -> Option<Vec<u8>>;

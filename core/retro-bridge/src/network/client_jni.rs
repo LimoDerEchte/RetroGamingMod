@@ -1,26 +1,29 @@
-use jni::objects::{JByteArray, JClass, JString};
-use jni::sys::{jint, jlong};
+use jni::objects::{JByteArray, JClass};
+use jni::sys::jboolean;
 use jni::Env;
+use crate::network::client::RetroClient;
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_connect<'caller>(
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'caller>(
     env: &mut Env<'caller>,
     _: JClass<'caller>,
-    j_ip: JString<'caller>,
-    port: jint,
     j_token: JByteArray<'caller>
-) -> jlong {
-
-    let ip: String = match j_ip.try_to_string(env) {
-        Ok(ip) => ip,
-        Err(_) => return -1
-    };
+) -> jboolean {
 
     let token: Vec<u8> = match env.convert_byte_array(j_token) {
         Ok(token) => token,
-        Err(_) => return -1,
+        Err(_) => return false,
     };
+    RetroClient::init(token).is_ok()
+}
 
-    todo!("Return pointer to a RetroClient")
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_deinit<'caller>(
+    env: &mut Env<'caller>,
+    _: JClass<'caller>,
+) -> jboolean {
+
+    RetroClient::deinit().is_ok()
 }

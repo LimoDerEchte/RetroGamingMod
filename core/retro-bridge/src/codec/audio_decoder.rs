@@ -3,7 +3,7 @@ use audiopus::coder::Decoder;
 use audiopus::{Channels, SampleRate};
 use retro_shared::shared::shared_memory::SharedMemory;
 
-pub trait AudioDecoder {
+pub trait AudioDecoder: Send {
     fn new() -> Self where Self: Sized;
     fn decode_frame(&mut self, data: Vec<u8>) -> Result<Vec<i16>, Box<dyn Error>>;
 }
