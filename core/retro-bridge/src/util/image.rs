@@ -21,7 +21,7 @@ impl NativeImage {
             decoder: Box::new(match codec {
                 0 => VideoDecoderAV1::new(width as u32, height as u32),
                 _ => {
-                    warn!("Invalid audio codec supplied (ID {:?}). Falling back to opus", codec);
+                    warn!("Invalid video codec supplied (ID {:?}). Falling back to AV1", codec);
                     VideoDecoderAV1::new(width as u32, height as u32)
                 }
             }),
