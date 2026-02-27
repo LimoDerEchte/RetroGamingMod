@@ -1,15 +1,20 @@
 
 pub enum PacketType {
-    // Main Connection
-    KeepAlive = 0x00,
-    Auth      = 0x01,
-    AuthAck   = 0x02,
-    Kick      = 0x03,
+    Kick      = 0x00,
+    VideoData = 0x01,
+    AudioData = 0x02,
+    Controls  = 0x03,
+    Invalid = 0xFF,
+}
 
-    // Server to Client
-    VideoData = 0x10,
-    AudioData = 0x11,
-
-    // Client to Server
-    Controls  = 0x12,
+impl From<u8> for PacketType {
+    fn from(v: u8) -> Self {
+        match v {
+            0x00 => PacketType::Kick,
+            0x01 => PacketType::VideoData,
+            0x02 => PacketType::AudioData,
+            0x03 => PacketType::Controls,
+            _ => PacketType::Invalid,
+        }
+    }
 }

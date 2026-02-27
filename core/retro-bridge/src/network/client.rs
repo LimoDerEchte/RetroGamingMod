@@ -8,7 +8,8 @@ use renet::{ConnectionConfig, RenetClient};
 use renet::DefaultChannel::ReliableOrdered;
 use renet_netcode::{ClientAuthentication, ConnectToken, NetcodeClientTransport};
 use tracing::warn;
-use crate::util::image::NativeImage;
+use crate::network::network_definitions::PacketType;
+use crate::util::display::NativeDisplay;
 
 static INSTANCE: Mutex<Option<Arc<RetroClient>>> = Mutex::new(None);
 
@@ -16,7 +17,7 @@ pub struct RetroClient {
     client: Mutex<RenetClient>,
     transport: Mutex<NetcodeClientTransport>,
 
-    displays: RwLock<HashMap<i32, Mutex<NativeImage>>>,
+    displays: RwLock<HashMap<i16, Mutex<NativeDisplay>>>,
     shutdown_requested: AtomicBool,
 }
 
@@ -27,6 +28,13 @@ impl RetroClient {
             return func(instance);
         }
         Err("Instance not found!".into())
+    }
+
+    fn with_display(&self, id: i16, func: impl FnOnce(&mut NativeDisplay)) {
+        let guard = self.displays.read().unwrap();
+        if let Some(display) = guard.get(&id) {
+            func(display.lock().as_mut().unwrap());
+        }
     }
 
     pub fn init(token: Vec<u8>) -> Result<(), Box<dyn Error>> {
@@ -59,7 +67,8 @@ impl RetroClient {
 
     pub fn main_loop() {
         let mut next = Instant::now();
-        let delta = Duration::from_micros(1000000 / 60);
+        let delta = Duration::from_millis(10);
+        //let delta = Duration::from_micros(1000000 / 60);
 
         loop {
             next += delta;
@@ -108,8 +117,25 @@ impl RetroClient {
         *guard = None;
     }
 
-    fn handle_packet(&self, data: Vec<u8>) {
-        todo!()
+    fn handle_packet(&self, mut data: Vec<u8>) {
+        let packet_type: PacketType = From::from(data[0]);
+        data.remove(0);
+
+        match packet_type {
+            PacketType::Kick => {
+                warn!("Received kick packet: {:?}", String::from_utf8_lossy(data.as_slice()));
+            }
+            PacketType::VideoData => {
+                let stream = i16::from_be_bytes([data.remove(0), data.remove(0)]);
+                self.with_display(stream, |display| {
+                    display.receive(data);
+                });
+            }
+            PacketType::AudioData => {
+
+            }
+            PacketType::Controls | PacketType::Invalid => {}
+        }
     }
 
     pub fn is_connected(&self) -> bool {
@@ -119,8 +145,4 @@ impl RetroClient {
 
 // TODO: uint32_t* RetroClient::registerDisplay(const jUUID *uuid, int width, int height, uint32_t *data, int sampleRate, int codec) {
 // TODO: void RetroClient::unregisterDisplay(const jUUID* uuid) {
-// TODO: std::shared_ptr<NativeImage> RetroClient::getDisplay(const jUUID *uuid) {
 // TODO: void RetroClient::sendControlsUpdate(const jUUID *link, const int port, const int16_t controls) {
-// TODO: void RetroClient::onConnect() {
-// TODO: void RetroClient::onDisconnect() {
-// TODO: void RetroClient::onMessage(const ENetPacket *packet) {

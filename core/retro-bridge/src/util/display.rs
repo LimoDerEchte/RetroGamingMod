@@ -1,7 +1,7 @@
 use tracing::warn;
 use crate::codec::video_decoder::{VideoDecoder, VideoDecoderAV1};
 
-pub struct NativeImage {
+pub struct NativeDisplay {
     data: Vec<u8>,
     decoder: Box<dyn VideoDecoder>,
 
@@ -11,10 +11,10 @@ pub struct NativeImage {
     codec: i32, // TODO: Parse to a codec enum
 }
 
-impl NativeImage {
+impl NativeDisplay {
     pub fn new(width: i32, height: i32, codec: i32, data_ptr: i32) -> Self {
         let size = (width * height * 3) as usize;
-        NativeImage {
+        NativeDisplay {
             data: unsafe {
                 Vec::from_raw_parts(data_ptr as *mut u8, size, size)
             },
