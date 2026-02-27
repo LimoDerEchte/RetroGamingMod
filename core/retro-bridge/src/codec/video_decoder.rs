@@ -1,9 +1,9 @@
 use dav1d::PlanarImageComponent;
 use tracing::warn;
-use yuv::{yuv420_to_bgr, yuv420_to_bgra, yuv420_to_bgra_bilinear, YuvPlanarImage, YuvRange, YuvStandardMatrix};
+use yuv::{yuv420_to_bgr, YuvPlanarImage, YuvRange, YuvStandardMatrix};
 
 pub trait VideoDecoder {
-    fn new(width: u32, height: u32) -> Self;
+    fn new(width: u32, height: u32) -> Self where Self: Sized;
     fn submit_packet(&mut self, data: Vec<u8>);
     fn retrieve_frame(&mut self) -> Option<Vec<u8>>;
 }
@@ -29,8 +29,8 @@ impl VideoDecoder for VideoDecoderAV1 {
     }
 
     fn submit_packet(&mut self, data: Vec<u8>) {
-        if let Err(_) = self.decoder.send_data(data, None, None, None) {
-            warn!("Failed to submit video packet");
+        if self.decoder.send_data(data, None, None, None).is_err() {
+            warn!("Failed to submit video packet to dav1d");
         }
     }
 
@@ -52,12 +52,11 @@ impl VideoDecoder for VideoDecoderAV1 {
         };
 
         let mut bgr = vec![0u8; (self.width * self.height * 3) as usize];
-        if let Err(_) = yuv420_to_bgr(
+
+        if yuv420_to_bgr(
             &planar_image, bgr.as_mut_slice(), 3,
             YuvRange::Limited, YuvStandardMatrix::Bt709
-        ) {
-            return None;
-        }
+        ).is_err() { return None; }
 
         Some(bgr)
     }
