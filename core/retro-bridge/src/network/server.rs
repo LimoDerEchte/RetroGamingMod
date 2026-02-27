@@ -1,12 +1,15 @@
 use crate::network::network_definitions::RETRO_PROTOCOL;
 use rand::TryRng;
-use renet::{ConnectionConfig, RenetServer};
+use renet::{ClientId, ConnectionConfig, RenetServer};
 use renet_netcode::{ConnectToken, NetcodeServerTransport, ServerAuthentication, ServerConfig};
 use std::error::Error;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use renet::DefaultChannel::ReliableOrdered;
+use tracing::warn;
+use crate::platform::generic_console::ConsoleRegistry;
 
 static INSTANCE: RwLock<Option<Arc<RwLock<RetroServer>>>> = RwLock::new(None);
 
@@ -88,17 +91,76 @@ impl RetroServer {
     }
 
     pub fn main_loop() {
+        let mut next = Instant::now();
+        let delta = Duration::from_millis(10);
+        //let delta = Duration::from_micros(1000000 / 60);
+
+        loop {
+            next += delta;
+
+            if !Self::with_instance(|instance| {
+                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                    return Ok(false);
+                }
+
+                let mut server = instance.server.lock().unwrap();
+                let mut transport = instance.transport.lock().unwrap();
+
+                transport.update(delta, &mut server)?;
+                server.update(delta);
+
+                for client in server.clients_id() {
+                    while let Some(msg) = server.receive_message(client, ReliableOrdered) {
+                        instance.handle_packet(client, msg.to_vec());
+                    }
+                }
+
+                let packets: Mutex<Vec<Vec<u8>>> = Mutex::new(Vec::new());
+                ConsoleRegistry::foreach_mut(|console| {
+                    while let Some(pak) = console.retrieve_video_packet() {
+                        packets.lock().unwrap().push(pak);
+                    }
+                });
+
+                for packet in packets.lock().unwrap().iter() {
+                    for client in server.clients_id() {
+                        server.send_message(client, ReliableOrdered, packet.clone());
+                    }
+                }
+
+                // TODO: Handle audio packets
+
+                transport.send_packets(&mut server);
+                Ok(true)
+            }).expect("Failed clientside packet handling frame") {
+                break;
+            }
+
+            let now = Instant::now();
+            if now > next {
+                warn!("RetroClient main loop lagging behind!");
+                next = now;
+            } else {
+                std::thread::sleep(next - now);
+            }
+        }
+
+        Self::with_instance(|instance| {
+            instance.shutdown_requested.store(true, Ordering::Relaxed);
+            instance.server.lock().unwrap().disconnect_all();
+            drop(instance.server.lock().unwrap());
+            Ok(())
+        }).expect("Failed to shutdown clientside connection");
+
+        let mut guard = INSTANCE.write().unwrap();
+        *guard = None;
+    }
+
+    fn handle_packet(&self, client: ClientId, data: Vec<u8>) {
+        todo!()
+    }
+
+    pub fn video_packing_loop() {
         todo!()
     }
 }
-
-// TODO: void RetroServer::mainReceiverLoop() {
-// TODO: void RetroServer::bandwidthMonitorLoop() {
-// TODO: void RetroServer::mainKeepAliveLoop() {
-// TODO: void RetroServer::videoSenderLoop(const int fps) {
-// TODO: void RetroServer::audioSenderLoop(const int cps) {
-// TODO: void RetroServer::onConnect(ENetPeer *peer) {
-// TODO: void RetroServer::onDisconnect(ENetPeer *peer) {
-// TODO: void RetroServer::onMessage(ENetPeer *peer, const ENetPacket *packet) {
-// TODO: void RetroServer::kick(ENetPeer *peer, const char *message) {
-// TODO: std::shared_ptr<RetroServerClient> RetroServer::findClientByPeer(const ENetPeer* peer) const {

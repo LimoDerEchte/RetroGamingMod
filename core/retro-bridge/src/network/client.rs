@@ -149,9 +149,6 @@ impl RetroClient {
         data.remove(0);
 
         match packet_type {
-            PacketType::Kick => {
-                warn!("Received kick packet: {:?}", String::from_utf8_lossy(data.as_slice()));
-            }
             PacketType::VideoData => {
                 let stream = i16::from_be_bytes([data.remove(0), data.remove(0)]);
                 self.with_display(stream, |display| {
