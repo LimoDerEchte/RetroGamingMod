@@ -80,13 +80,15 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_submitControls<'caller>(
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendControls<'caller>(
     _: &mut Env<'caller>,
     _: JClass<'caller>,
     id: jshort,
+    port: jshort,
+    data: jshort,
 ) {
     RetroClient::with_instance(|instance| {
-        instance.unregister_id(id);
+        instance.send_input_data(id, port, data);
         Ok(())
     }).unwrap();
 }

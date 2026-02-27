@@ -4,7 +4,7 @@ use std::net::UdpSocket;
 use std::sync::{Arc, Mutex, RwLock};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use renet::{ConnectionConfig, DefaultChannel, RenetClient};
+use renet::{ConnectionConfig, RenetClient};
 use renet::DefaultChannel::ReliableOrdered;
 use renet_netcode::{ClientAuthentication, ConnectToken, NetcodeClientTransport};
 use tracing::warn;
