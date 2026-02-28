@@ -77,7 +77,7 @@ impl GenericConsole {
         (*self.audio_encoder.get_mut().unwrap()).encode_frame(self.shared_data.audio_data.to_vec()).ok()
     }
 
-    pub fn submit_input(&mut self, port: i32, data: i16) {
+    pub fn submit_input(&mut self, port: i16, data: i16) {
         self.shared_data.controls[port as usize] = data as u16
     }
 }

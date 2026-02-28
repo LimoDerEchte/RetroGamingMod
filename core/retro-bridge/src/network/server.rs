@@ -1,4 +1,4 @@
-use crate::network::network_definitions::RETRO_PROTOCOL;
+use crate::network::network_definitions::{PacketType, RETRO_PROTOCOL};
 use rand::TryRng;
 use renet::{ClientId, ConnectionConfig, RenetServer};
 use renet_netcode::{ConnectToken, NetcodeServerTransport, ServerAuthentication, ServerConfig};
@@ -128,7 +128,7 @@ impl RetroServer {
                     }
                 }
 
-                // TODO: Handle audio packets
+                // TODO: Send encoded audio packets
 
                 transport.send_packets(&mut server);
                 Ok(true)
@@ -156,8 +156,30 @@ impl RetroServer {
         *guard = None;
     }
 
-    fn handle_packet(&self, client: ClientId, data: Vec<u8>) {
-        todo!()
+    fn handle_packet(&self, client: ClientId, mut data: Vec<u8>) {
+        let packet_type: PacketType = From::from(data[0]);
+        data.remove(0);
+
+        match packet_type {
+            PacketType::Controls => {
+                if data.len() != 8 {
+                    warn!("Received invalid control packet from {:?}", client);
+                    return;
+                }
+
+                let id = i32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+                let port = i16::from_le_bytes([data[4], data[5]]);
+                let data = i16::from_le_bytes([data[6], data[7]]);
+
+                ConsoleRegistry::with_console_mut(id, |console| {
+                    console.submit_input(port, data);
+                    Ok(())
+                }).expect("Failed to submit input");
+            }
+            _ => {
+                warn!("Received invalid packet type (client)")
+            }
+        }
     }
 
     pub fn video_packing_loop() {

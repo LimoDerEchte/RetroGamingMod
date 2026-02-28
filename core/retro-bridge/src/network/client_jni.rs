@@ -53,7 +53,7 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnect
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerId<'caller>(
     _: &mut Env<'caller>,
     _: JClass<'caller>,
-    id: jshort,
+    id: jint,
     width: jint,
     height: jint,
     codec: jint,
@@ -70,7 +70,7 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerI
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregisterId<'caller>(
     _: &mut Env<'caller>,
     _: JClass<'caller>,
-    id: jshort,
+    id: jint,
 ) {
     RetroClient::with_instance(|instance| {
         instance.unregister_id(id);
@@ -83,7 +83,7 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregiste
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendControls<'caller>(
     _: &mut Env<'caller>,
     _: JClass<'caller>,
-    id: jshort,
+    id: jint,
     port: jshort,
     data: jshort,
 ) {

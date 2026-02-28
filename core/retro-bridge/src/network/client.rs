@@ -17,7 +17,7 @@ pub struct RetroClient {
     client: Mutex<RenetClient>,
     transport: Mutex<NetcodeClientTransport>,
 
-    displays: RwLock<HashMap<i16, Mutex<NativeDisplay>>>,
+    displays: RwLock<HashMap<i32, Mutex<NativeDisplay>>>,
     shutdown_requested: AtomicBool,
 
     input_packet: Option<Vec<u8>>,
@@ -32,7 +32,7 @@ impl RetroClient {
         Err("Instance not found!".into())
     }
 
-    fn with_display(&self, id: i16, func: impl FnOnce(&mut NativeDisplay)) {
+    fn with_display(&self, id: i32, func: impl FnOnce(&mut NativeDisplay)) {
         let guard = self.displays.read().unwrap();
         if let Some(display) = guard.get(&id) {
             func(display.lock().as_mut().unwrap());
@@ -69,15 +69,15 @@ impl RetroClient {
         }
     }
 
-    pub fn register_id(&mut self, id: i16, width: i32, height: i32, codec: i32, display_data_ptr: i32) {
+    pub fn register_id(&mut self, id: i32, width: i32, height: i32, codec: i32, display_data_ptr: i32) {
         self.displays.write().unwrap().insert(id, Mutex::new(NativeDisplay::new(width, height, codec, display_data_ptr)));
     }
 
-    pub fn unregister_id(&mut self, id: i16) {
+    pub fn unregister_id(&mut self, id: i32) {
         self.displays.write().unwrap().remove(&id);
     }
 
-    pub fn send_input_data(&mut self, id: i16, port: i16, data: i16) {
+    pub fn send_input_data(&mut self, id: i32, port: i16, data: i16) {
         let mut pak = Vec::with_capacity(7);
 
         pak.push(PacketType::Controls as u8);
@@ -150,7 +150,7 @@ impl RetroClient {
 
         match packet_type {
             PacketType::VideoData => {
-                let stream = i16::from_be_bytes([data.remove(0), data.remove(0)]);
+                let stream = i32::from_be_bytes([data.remove(0), data.remove(0), data.remove(0), data.remove(0)]);
                 self.with_display(stream, |display| {
                     display.receive(data);
                 });
@@ -158,7 +158,9 @@ impl RetroClient {
             PacketType::AudioData => {
                 todo!()
             }
-            PacketType::Controls | PacketType::Invalid => {}
+            _ => {
+                warn!("Received invalid packet type (client)")
+            }
         }
     }
 
