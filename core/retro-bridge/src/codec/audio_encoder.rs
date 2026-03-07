@@ -1,6 +1,4 @@
 use std::error::Error;
-use audiopus::coder::Encoder;
-use audiopus::{Application, Channels, SampleRate};
 
 pub trait AudioEncoder: Send {
     fn new() -> Self where Self: Sized;
@@ -8,13 +6,13 @@ pub trait AudioEncoder: Send {
 }
 
 pub struct AudioEncoderOpus {
-    encoder: Encoder,
+    encoder: opus::Encoder,
 }
 
 impl AudioEncoder for AudioEncoderOpus {
     fn new() -> Self {
         Self {
-            encoder: Encoder::new(SampleRate::Hz48000, Channels::Stereo, Application::LowDelay)
+            encoder: opus::Encoder::new(48000, opus::Channels::Stereo, opus::Application::LowDelay)
                 .expect("Failed to initialize audio encoder"),
         }
     }

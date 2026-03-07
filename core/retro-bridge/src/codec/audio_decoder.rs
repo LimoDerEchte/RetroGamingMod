@@ -1,6 +1,4 @@
 use std::error::Error;
-use audiopus::coder::Decoder;
-use audiopus::{Channels, SampleRate};
 use retro_shared::shared::shared_memory::SharedMemory;
 
 pub trait AudioDecoder: Send {
@@ -9,14 +7,14 @@ pub trait AudioDecoder: Send {
 }
 
 pub struct AudioDecoderOpus {
-    decoder: Decoder,
+    decoder: opus::Decoder,
 }
 
 impl AudioDecoder for AudioDecoderOpus {
     fn new() -> Self {
         Self {
-            decoder: Decoder::new(SampleRate::Hz48000, Channels::Stereo)
-                .expect("Failed to initialize audio decoder"),
+            decoder: opus::Decoder::new(48000, opus::Channels::Stereo)
+                .expect("Failed to initialize Opus decoder!")
         }
     }
 

@@ -1,6 +1,6 @@
 use jni::Env;
-use jni::objects::{JByteArray, JClass, JString};
-use jni::sys::{jint, jlong};
+use jni::objects::{JClass, JString};
+use jni::sys::{jint};
 use tracing::warn;
 use crate::platform::generic_console::ConsoleRegistry;
 
