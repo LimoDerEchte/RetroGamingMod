@@ -20,7 +20,7 @@ impl AudioDecoder for AudioDecoderOpus {
 
     fn decode_frame(&mut self, data: Vec<u8>) -> Result<Vec<i16>, Box<dyn Error>> {
         let mut output_buffer = vec![0i16; SharedMemory::AUDIO_FRAME_SIZE];
-        let size = self.decoder.decode(Some(data.as_slice()), output_buffer.as_mut_slice(), false)?;
+        let size = self.decoder.decode(data.as_slice(), output_buffer.as_mut_slice(), false)?;
 
         output_buffer.truncate(size);
         Ok(output_buffer)

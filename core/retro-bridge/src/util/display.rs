@@ -40,5 +40,9 @@ impl NativeDisplay {
         (*self.decoder).submit_packet(pak);
     }
 
-    // TODO: Implement transfer loop
+    pub fn try_transmit(&mut self) {
+        if let Some(data) = self.decoder.retrieve_frame() {
+            self.data.copy_from_slice(data.as_slice());
+        }
+    }
 }
