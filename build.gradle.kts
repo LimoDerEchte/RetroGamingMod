@@ -95,6 +95,7 @@ java {
 }
 
 tasks.jar {
+    // TODO: Rework this to download or use artifacts from core compile
     from("LICENSE") {
         rename { "${it}_${project.property("archives_base_name")}" }
     }
