@@ -20,9 +20,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
         return false
     }
 
-    std::thread::spawn(|| {
-        RetroClient::main_loop();
-    });
+    std::thread::spawn(|| { RetroClient::main_loop(); });
+    std::thread::spawn(|| { RetroClient::video_receiving_loop(); });
     true
 }
 

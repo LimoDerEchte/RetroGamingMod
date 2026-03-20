@@ -166,6 +166,38 @@ impl RetroClient {
         }
     }
 
+    pub fn video_receiving_loop() {
+        let mut next = Instant::now();
+        let delta = Duration::from_micros(1000000 / 60);
+
+        loop {
+            next += delta;
+
+            if !Self::with_instance(|instance| {
+                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                    return Ok(false);
+                }
+
+                let displays = instance.displays.read().unwrap();
+                for display in displays.values() {
+                    display.lock().unwrap().try_transmit();
+                }
+
+                Ok(true)
+            }).expect("Failed serverside video packing frame") {
+                break;
+            }
+
+            let now = Instant::now();
+            if now > next {
+                warn!("RetroServer main loop lagging behind!");
+                next = now;
+            } else {
+                std::thread::sleep(next - now);
+            }
+        }
+    }
+
     pub fn is_connected(&self) -> bool {
         self.client.lock().unwrap().is_connected()
     }
