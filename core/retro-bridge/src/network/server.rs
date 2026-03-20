@@ -25,9 +25,9 @@ pub struct RetroServer {
 }
 
 impl RetroServer {
-    pub fn with_instance<T>(func: impl FnOnce(&mut RetroServer) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let mut guard = INSTANCE.write()?;
-        if let Some(instance) = guard.as_mut() {
+    pub fn with_instance<T>(func: impl FnOnce(&RetroServer) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
+        let guard = INSTANCE.read()?;
+        if let Some(instance) = guard.as_ref() {
             return func(instance.write().as_mut().unwrap());
         }
         Err("Instance not found!".into())
@@ -76,7 +76,7 @@ impl RetroServer {
         })
     }
 
-    pub fn gen_token(&mut self) -> Result<Vec<u8>, Box<dyn Error>> {
+    pub fn gen_token(&self) -> Result<Vec<u8>, Box<dyn Error>> {
         let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
         let client_id = self.client_id_incrementor.fetch_add(1, Ordering::Relaxed);
 
@@ -116,7 +116,7 @@ impl RetroServer {
                 }
 
                 let packets: Mutex<Vec<Vec<u8>>> = Mutex::new(Vec::new());
-                ConsoleRegistry::foreach_mut(|console| {
+                ConsoleRegistry::foreach(|console| {
                     while let Some(pak) = console.retrieve_video_packet() {
                         packets.lock().unwrap().push(pak);
                     }
@@ -183,6 +183,33 @@ impl RetroServer {
     }
 
     pub fn video_packing_loop() {
-        todo!()
+        let mut next = Instant::now();
+        let delta = Duration::from_micros(1000000 / 60);
+
+        loop {
+            next += delta;
+
+            if !Self::with_instance(|instance| {
+                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                    return Ok(false);
+                }
+
+                ConsoleRegistry::foreach(|console| {
+                    console.encode_video_frame();
+                });
+
+                Ok(true)
+            }).expect("Failed serverside video packing frame") {
+                break;
+            }
+
+            let now = Instant::now();
+            if now > next {
+                warn!("RetroServer main loop lagging behind!");
+                next = now;
+            } else {
+                std::thread::sleep(next - now);
+            }
+        }
     }
 }

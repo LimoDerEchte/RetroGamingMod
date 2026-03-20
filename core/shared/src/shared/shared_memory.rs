@@ -4,7 +4,7 @@
 pub struct SharedMemory {
     // Core to Bridge
     pub display_changed: bool,
-    pub display_data: [u32; 4 * 720 * 480], // Reserve 480p ARGB data
+    pub display_data: [u8; 4 * 720 * 480], // Reserve 480p ARGB data
 
     pub audio_changed: bool,
     pub audio_data: [i16; SharedMemory::AUDIO_FRAME_SIZE],

@@ -39,9 +39,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
         return false
     }
 
-    std::thread::spawn(|| {
-        RetroServer::main_loop();
-    });
+    std::thread::spawn(|| { RetroServer::main_loop(); });
+    std::thread::spawn(|| { RetroServer::video_packing_loop(); });
     true
 }
 

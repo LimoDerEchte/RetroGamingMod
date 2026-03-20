@@ -69,12 +69,21 @@ impl GenericConsole {
         Ok(())
     }
 
-    pub fn retrieve_video_packet(&mut self) -> Option<Vec<u8>> {
-        (*self.video_encoder.get_mut().unwrap()).retrieve_packet()
+    pub fn retrieve_video_packet(&self) -> Option<Vec<u8>> {
+        self.video_encoder.lock().unwrap().retrieve_packet()
     }
 
-    pub fn encode_audio_packet(&mut self) -> Option<Vec<u8>> {
-        (*self.audio_encoder.get_mut().unwrap()).encode_frame(self.shared_data.audio_data.to_vec()).ok()
+    pub fn encode_video_frame(&self) {
+        if self.shared_data.display_changed {
+            self.video_encoder.lock().unwrap().submit_frame(self.shared_data.display_data.to_vec())
+        }
+    }
+
+    pub fn encode_audio_packet(&self) -> Option<Vec<u8>> {
+        if !self.shared_data.audio_changed {
+            return None;
+        }
+        self.audio_encoder.lock().unwrap().encode_frame(self.shared_data.audio_data.to_vec()).ok()
     }
 
     pub fn submit_input(&mut self, port: i16, data: i16) {
@@ -177,5 +186,3 @@ impl ConsoleRegistry {
         }).unwrap();
     }
 }
-
-// TODO: Audio / Video submission loop

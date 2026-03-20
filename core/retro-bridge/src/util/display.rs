@@ -1,6 +1,7 @@
 use tracing::warn;
 use crate::codec::video_decoder::{VideoDecoder, VideoDecoderAV1};
 
+#[allow(unused)]
 pub struct NativeDisplay {
     data: Vec<u8>,
     decoder: Box<dyn VideoDecoder>,

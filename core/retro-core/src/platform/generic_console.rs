@@ -36,7 +36,7 @@ impl GenericConsole {
             let mut guard = INSTANCE.write().unwrap();
             let instance = guard.as_mut().unwrap();
 
-            let slice: &mut [u32] = &mut instance.shared.display_data;
+            let slice: &mut [u8] = &mut instance.shared.display_data;
             convert_data(fmt, data, width, height, pitch, slice);
 
             instance.shared.display_changed = true;
