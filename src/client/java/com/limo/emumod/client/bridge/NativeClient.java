@@ -1,54 +1,33 @@
 package com.limo.emumod.client.bridge;
 
-import com.limo.emumod.bridge.NativeUtil;
 import com.limo.emumod.util.VideoCodec;
 import net.minecraft.client.texture.NativeImage;
 
-import java.util.UUID;
-
 public class NativeClient {
-    private final long handle;
+    public static boolean isInitialized = false;
 
-    public NativeClient(String ip, int port, String token) {
-        handle = connect(ip, port, token);
-    }
-
-    public void disconnect() {
-        disconnect(handle);
-    }
-
-    public boolean isAuthenticated() {
-        return isAuthenticated(handle);
-    }
-
-    public NativeImage registerScreen(UUID uuid, int width, int height, int sampleRate, VideoCodec codec) {
+    public static NativeImage registerScreen(int id, int width, int height, int sampleRate, VideoCodec codec) {
         NativeImage img = new NativeImage(NativeImage.Format.RGBA, width, height, true);
-        registerScreen(handle, NativeUtil.nativeUUID(uuid), width, height, img.imageId(), sampleRate, codec.ordinal());
+        registerId(id, width, height, codec.ordinal(), img.imageId());
         return img;
     }
 
-    public void unregisterScreen(UUID uuid) {
-        unregisterScreen(handle, NativeUtil.nativeUUID(uuid));
+    public static void unregisterScreen(int id) {
+        unregisterId(id);
     }
 
-    public boolean screenChanged(UUID uuid) {
-        return screenChanged(handle, NativeUtil.nativeUUID(uuid));
+    public static void updateControls(int id, short port, short controls) {
+        sendControls(id, port, controls);
     }
 
-    public float[] lastAudioData(UUID uuid) {
-        return lastAudioData(handle, NativeUtil.nativeUUID(uuid));
-    }
+    public static native boolean init(String ip, short port, byte[] token);
+    public static native boolean deinit();
 
-    public void updateControls(UUID uuid, int port, short controls) {
-        sendControlUpdate(handle, NativeUtil.nativeUUID(uuid), port, controls);
-    }
+    public static native boolean isConnected();
+    public static native boolean screenChanged(int id);
+    // TODO: public static native float[] lastAudioData(int id); --- ONLY IMPLEMENT IF JAVA NATIVE AUDIO PLAYBACK
 
-    private static native long connect(String ip, int port, String token);
-    private static native void disconnect(long ptr);
-    private static native boolean isAuthenticated(long ptr);
-    private static native void registerScreen(long ptr, long uuid, int width, int height, long data, int sampleRate, int codec);
-    private static native void unregisterScreen(long ptr, long uuid);
-    private static native boolean screenChanged(long ptr, long uuid);
-    private static native float[] lastAudioData(long ptr, long uuid);
-    private static native void sendControlUpdate(long ptr, long uuid, int port, short controls);
+    private static native void registerId(int id, int width, int height, int codec, long data);
+    private static native void unregisterId(int id);
+    private static native void sendControls(int id, short port, short controls);
 }

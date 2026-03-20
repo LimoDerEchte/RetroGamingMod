@@ -32,11 +32,12 @@ impl RetroClient {
         Err("Instance not found!".into())
     }
 
-    fn with_display(&self, id: i32, func: impl FnOnce(&mut NativeDisplay)) {
-        let guard = self.displays.read().unwrap();
+    pub fn with_display<T>(&self, id: i32, func: impl FnOnce(&mut NativeDisplay) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error + '_>> {
+        let guard = self.displays.read()?;
         if let Some(display) = guard.get(&id) {
-            func(display.lock().as_mut().unwrap());
+            return func(display.lock().as_mut().unwrap());
         }
+        Err(format!("Display not found: {}", id).into())
     }
 
     pub fn init(token: Vec<u8>) -> Result<(), Box<dyn Error>> {
@@ -151,8 +152,9 @@ impl RetroClient {
         match packet_type {
             PacketType::VideoData => {
                 let stream = i32::from_be_bytes([data.remove(0), data.remove(0), data.remove(0), data.remove(0)]);
-                self.with_display(stream, |display| {
+                let _ = self.with_display(stream, |display| {
                     display.receive(data);
+                    Ok(())
                 });
             }
             PacketType::AudioData => {

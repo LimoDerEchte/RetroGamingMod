@@ -1,4 +1,4 @@
-use jni::objects::{JByteArray, JClass};
+use jni::objects::{JByteArray, JClass, JString};
 use jni::sys::{jboolean, jint, jshort};
 use jni::Env;
 use crate::network::client::RetroClient;
@@ -8,6 +8,8 @@ use crate::network::client::RetroClient;
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'caller>(
     env: &mut Env<'caller>,
     _: JClass<'caller>,
+    j_ip: JString<'caller>,
+    j_port: jshort,
     j_token: JByteArray<'caller>
 ) -> jboolean {
 
@@ -91,4 +93,18 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendContr
         instance.send_input_data(id, port, data);
         Ok(())
     }).unwrap();
+}
+
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_screenChanged<'caller>(
+    _: &mut Env<'caller>,
+    _: JClass<'caller>,
+    id: jint,
+) -> jboolean {
+    RetroClient::with_instance(|instance| {
+        Ok(instance.with_display(id, |display| {
+            Ok(display.changed())
+        }).unwrap_or(false))
+    }).unwrap_or(false)
 }
