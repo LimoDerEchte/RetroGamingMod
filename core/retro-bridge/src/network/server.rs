@@ -132,13 +132,13 @@ impl RetroServer {
 
                 transport.send_packets(&mut server);
                 Ok(true)
-            }).expect("Failed clientside packet handling frame") {
+            }).expect("Failed serverside packet handling frame") {
                 break;
             }
 
             let now = Instant::now();
             if now > next {
-                warn!("RetroClient main loop lagging behind!");
+                warn!("RetroServer main loop lagging behind!");
                 next = now;
             } else {
                 std::thread::sleep(next - now);

@@ -70,8 +70,8 @@ impl RetroClient {
         }
     }
 
-    pub fn register_id(&mut self, id: i32, width: i32, height: i32, codec: i32, display_data_ptr: i32) {
-        self.displays.write().unwrap().insert(id, Mutex::new(NativeDisplay::new(width, height, codec, display_data_ptr)));
+    pub fn register_id(&mut self, id: i32, width: i32, height: i32, video_codec: i32, display_data_ptr: i64, audio_codec: i32) {
+        self.displays.write().unwrap().insert(id, Mutex::new(NativeDisplay::new(width, height, video_codec, display_data_ptr)));
     }
 
     pub fn unregister_id(&mut self, id: i32) {

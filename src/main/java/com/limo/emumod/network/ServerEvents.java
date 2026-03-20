@@ -12,7 +12,7 @@ import net.minecraft.util.NetworkUtils;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.limo.emumod.EmuMod.SERVER;
+import static com.limo.emumod.EmuMod.LOGGER;
 
 public class ServerEvents {
     public static MinecraftServer mcs;
@@ -21,25 +21,27 @@ public class ServerEvents {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             mcs = server;
             FileUtil.init();
+
             int serverPort = server.getServerPort();
             if(serverPort == -1)
                 serverPort = NetworkUtils.findLocalPort();
-            SERVER = new NativeServer(serverPort, server.getMaxPlayerCount());
+
+            NativeServer.init(server.getMaxPlayerCount(), "0.0.0.0:" + serverPort, new String[] {
+                    server.getServerIp() + serverPort  // TODO: Find good way to search for all exposed addresses
+            });
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+        ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
             EmuMod.running.values().forEach(NativeGenericConsole::stop);
             EmuMod.running.clear();
-            if(SERVER != null) {
-                SERVER.stop();
-                SERVER = null;
-            }
+            if (!NativeServer.deinit())
+                LOGGER.warn("Something went wrong while deinitializing the native server!");
         });
-        ServerPlayConnectionEvents.JOIN.register((a, sender, server) -> {
-            sender.sendPacket(new S2C.ENetTokenPayload(SERVER.getPort(), SERVER.createToken()));
-            for(Map.Entry<UUID, NativeGenericConsole> console : EmuMod.running.entrySet()) {
-                sender.sendPacket(new S2C.UpdateEmulatorPayload(console.getKey(),
-                        console.getValue().getWidth(), console.getValue().getHeight(),
-                        console.getValue().getSampleRate(), console.getValue().getCodec().ordinal()));
+        ServerPlayConnectionEvents.JOIN.register((_, sender, _) -> {
+            sender.sendPacket(new S2C.EmuModTokenPayload(NativeServer.generateToken()));
+            for(Map.Entry<UUID, NativeGenericConsole> pair : EmuMod.running.entrySet()) {
+                NativeGenericConsole console = pair.getValue();
+                sender.sendPacket(new S2C.UpdateEmulatorPayload(pair.getKey(), console.getId(), console.getWidth(),
+                        console.getHeight(), console.getVideoCodec().ordinal(), console.getAudioCodec().ordinal()));
             }
         });
     }

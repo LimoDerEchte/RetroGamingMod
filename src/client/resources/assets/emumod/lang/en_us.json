@@ -35,6 +35,7 @@
    "item.emumod.handheld.start_link": "Cartridge insertion started",
    "item.emumod.handheld.cancel_link": "Cartridge insertion was cancelled",
    "item.emumod.handheld.no_game": "You have to insert a game first",
+   "item.emumod.handheld.not_running": "Please reinsert your cartridge",
    "item.emumod.handheld.eject": "Cartridge was ejected",
    "item.emumod.handheld.insert": "Cartridge was inserted successfully",
    "item.emumod.handheld.file_deleted": "The file linked with the cartridge was deleted!",

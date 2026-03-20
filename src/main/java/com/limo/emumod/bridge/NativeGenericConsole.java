@@ -10,14 +10,20 @@ import java.util.UUID;
 
 public class NativeGenericConsole {
     private final int id;
+
+    private final int width, height;
     private final VideoCodec videoCodec;
     private final AudioCodec audioCodec;
+
     private final UUID file;
     private final String fileType;
 
     public NativeGenericConsole(int width, int height, VideoCodec videoCodec, AudioCodec audioCodec, UUID file, String fileType) {
         this.videoCodec = videoCodec;
         this.audioCodec = audioCodec;
+        this.width = width;
+        this.height = height;
+
         this.file = file;
         this.fileType = fileType;
         this.id = register(width, height, videoCodec.ordinal(), audioCodec.ordinal());
@@ -35,6 +41,14 @@ public class NativeGenericConsole {
 
     public int getId() {
         return id;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public VideoCodec getVideoCodec() {

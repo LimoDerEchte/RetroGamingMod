@@ -4,37 +4,23 @@ import com.limo.emumod.client.bridge.NativeClient;
 import com.limo.emumod.client.screen.*;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.AudioCodec;
 import com.limo.emumod.util.VideoCodec;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
 
-import java.util.Objects;
-
-import static com.limo.emumod.client.EmuModClient.CLIENT;
 import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
 
-    private static String ip() {
-        String address = Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).getConnection().getAddressAsString(true);
-        if(address.startsWith("local") || address.isEmpty())
-            return "127.0.0.1";
-        return address;
-    }
-
     public static void init() {
-        // ENet Stuff
-        ClientPlayNetworking.registerGlobalReceiver(S2C.ENetTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            CLIENT = new NativeClient(ip(), payload.port(), payload.token());
+        // Protocol Stuff
+        ClientPlayNetworking.registerGlobalReceiver(S2C.EmuModTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
+            NativeClient.init(payload.token());
         }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            if(CLIENT != null) {
-                CLIENT.disconnect();
-                CLIENT = null;
-            }
-        });
+        ClientPlayConnectionEvents.DISCONNECT.register((_, _) -> NativeClient.deinit());
         // Screen Stuff
+        //noinspection SwitchStatementWithTooFewBranches
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
                 ctx.client().setScreen(switch (payload.type()) {
                     case NetworkId.ScreenType.CARTRIDGE -> new CartridgeScreen();
@@ -42,11 +28,11 @@ public class ClientHandler {
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenGameScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
                 ctx.client().setScreen(switch (payload.type()) {
-                    case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.uuid());
-                    case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.uuid());
-                    case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.uuid());
-                    case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.uuid());
-                    case NetworkId.ScreenType.CONTROLLER -> new RawControllerScreen(payload.uuid(), payload.port().orElse(0));
+                    case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.streamId());
+                    case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.streamId());
+                    case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.streamId());
+                    case NetworkId.ScreenType.GAME_GEAR -> new GameGearScreen(payload.streamId());
+                    case NetworkId.ScreenType.CONTROLLER -> new RawControllerScreen(payload.streamId(), (short) payload.port().orElse(0));
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
@@ -57,12 +43,13 @@ public class ClientHandler {
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateEmulatorPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
             int width = payload.width();
             int height = payload.height();
-            int sampleRate = payload.sampleRate();
-            int codec = payload.codec();
-            if(width == 0 || height == 0 || sampleRate == 0) {
-                ScreenManager.unregisterDisplay(payload.uuid());
+            VideoCodec videoCodec = VideoCodec.values()[payload.videoCodec()];
+            AudioCodec audioCodec = AudioCodec.values()[payload.audioCodec()];
+
+            if(width == 0 || height == 0) {
+                ScreenManager.unregisterDisplay(payload.id());
             } else {
-                ScreenManager.registerDisplay(payload.uuid(), width, height, sampleRate, VideoCodec.values()[codec]);
+                ScreenManager.registerDisplay(payload.console(), payload.id(), width, height, videoCodec, audioCodec);
             }
         }));
     }

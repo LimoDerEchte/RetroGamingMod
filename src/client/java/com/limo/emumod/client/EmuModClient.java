@@ -14,7 +14,6 @@ import static com.limo.emumod.EmuMod.REQUIREMENTS_MET;
 
 public class EmuModClient implements ClientModInitializer {
     public static MinecraftClient mc;
-    public static NativeClient CLIENT;
 
     @Override
     public void onInitializeClient() {

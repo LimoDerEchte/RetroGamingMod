@@ -1,7 +1,6 @@
 package com.limo.emumod;
 
 import com.limo.emumod.bridge.NativeGenericConsole;
-import com.limo.emumod.bridge.NativeServer;
 import com.limo.emumod.network.C2S;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.network.ServerHandler;
@@ -23,10 +22,8 @@ import java.util.UUID;
 public class EmuMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(EmuMod.class);
     public static final Random RANDOM = Random.create();
-    public static final UUID UUID_ZERO = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
-    public static NativeServer SERVER;
 
     public static boolean REQUIREMENTS_MET;
 

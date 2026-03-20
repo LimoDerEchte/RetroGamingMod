@@ -25,11 +25,11 @@ public class S2C {
         }
     }
 
-    public record OpenGameScreenPayload(byte type, UUID uuid, OptionalInt port) implements CustomPayload {
+    public record OpenGameScreenPayload(byte type, int streamId, OptionalInt port) implements CustomPayload {
         public static final Id<OpenGameScreenPayload> ID = new Id<>(NetworkId.OPEN_GAME_SCREEN);
         public static final PacketCodec<RegistryByteBuf, OpenGameScreenPayload> CODEC = PacketCodec.tuple(
                 PacketCodecs.BYTE, OpenGameScreenPayload::type,
-                Uuids.PACKET_CODEC, OpenGameScreenPayload::uuid,
+                PacketCodecs.VAR_INT, OpenGameScreenPayload::streamId,
                 PacketCodecs.OPTIONAL_INT, OpenGameScreenPayload::port,
                 OpenGameScreenPayload::new
         );
@@ -53,12 +53,11 @@ public class S2C {
         }
     }
 
-    public record ENetTokenPayload(int port, String token) implements CustomPayload {
-        public static final Id<ENetTokenPayload> ID = new Id<>(NetworkId.ENET_TOKEN);
-        public static final PacketCodec<RegistryByteBuf, ENetTokenPayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, ENetTokenPayload::port,
-                PacketCodecs.STRING, ENetTokenPayload::token,
-                ENetTokenPayload::new
+    public record EmuModTokenPayload(byte[] token) implements CustomPayload {
+        public static final Id<EmuModTokenPayload> ID = new Id<>(NetworkId.ENET_TOKEN);
+        public static final PacketCodec<RegistryByteBuf, EmuModTokenPayload> CODEC = PacketCodec.tuple(
+                PacketCodecs.BYTE_ARRAY, EmuModTokenPayload::token,
+                EmuModTokenPayload::new
         );
 
         @Override
@@ -67,14 +66,15 @@ public class S2C {
         }
     }
 
-    public record UpdateEmulatorPayload(UUID uuid, int width, int height, int sampleRate, int codec) implements CustomPayload {
+    public record UpdateEmulatorPayload(UUID console, int id, int width, int height, int audioCodec, int videoCodec) implements CustomPayload {
         public static final Id<UpdateEmulatorPayload> ID = new Id<>(NetworkId.UPDATE_EMULATOR);
         public static final PacketCodec<RegistryByteBuf, UpdateEmulatorPayload> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateEmulatorPayload::uuid,
+                Uuids.PACKET_CODEC, UpdateEmulatorPayload::console,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::id,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::width,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::height,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::codec,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::audioCodec,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::videoCodec,
                 UpdateEmulatorPayload::new
         );
 
@@ -88,7 +88,7 @@ public class S2C {
         PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenGameScreenPayload.ID, OpenGameScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CloseScreenPayload.ID, CloseScreenPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ENetTokenPayload.ID, ENetTokenPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(EmuModTokenPayload.ID, EmuModTokenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateEmulatorPayload.ID, UpdateEmulatorPayload.CODEC);
     }
 }

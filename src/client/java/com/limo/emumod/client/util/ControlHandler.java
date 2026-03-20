@@ -1,17 +1,17 @@
 package com.limo.emumod.client.util;
 
-import java.util.Map;
-import java.util.UUID;
+import com.limo.emumod.client.bridge.NativeClient;
 
-import static com.limo.emumod.client.EmuModClient.CLIENT;
+import java.util.Map;
+
 
 public class ControlHandler {
     private final Map<Integer, Short> keyMap;
-    private final UUID link;
-    private final int port;
+    private final int link;
+    private final short port;
     private short input;
 
-    public ControlHandler(Map<Integer, Short> keyMap, UUID link, int port) {
+    public ControlHandler(Map<Integer, Short> keyMap, int link, short port) {
         this.keyMap = keyMap;
         this.link = link;
         this.port = port;
@@ -21,7 +21,8 @@ public class ControlHandler {
         if(!keyMap.containsKey(key))
             return false;
         input |= keyMap.get(key);
-        CLIENT.updateControls(link, port, input);
+        if(NativeClient.isConnected())
+            NativeClient.updateControls(link, port, input);
         return true;
     }
 
@@ -29,7 +30,8 @@ public class ControlHandler {
         if(!keyMap.containsKey(key))
             return false;
         input &= (short) ~keyMap.get(key);
-        CLIENT.updateControls(link, port, input);
+        if(NativeClient.isConnected())
+            NativeClient.updateControls(link, port, input);
         return true;
     }
 }

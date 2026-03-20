@@ -33,13 +33,13 @@ public class GameboyScreen extends Screen {
     private final ControlHandler controlHandler;
 
     public boolean isGbc;
-    public UUID fileId;
+    public int streamId;
 
-    public GameboyScreen(boolean isGbc, UUID fileId) {
+    public GameboyScreen(boolean isGbc, int streamId) {
         super(Text.of("Gameboy"));
-        this.controlHandler = new ControlHandler(inputMap, fileId, 0);
+        this.controlHandler = new ControlHandler(inputMap, streamId, (short) 0);
         this.isGbc = isGbc;
-        this.fileId = fileId;
+        this.streamId = streamId;
     }
 
     @Override
@@ -57,8 +57,8 @@ public class GameboyScreen extends Screen {
                 (width / 2 - 512 / 2) / scale, (height / 2 - 144 - 64) / scale, 0, 0, 512, 512,
                 32, 32, 32, 32);
         // Frame
-        ScreenManager.retrieveDisplay(fileId);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromUUID(fileId), (width / 2 - 80) / scale,
+        ScreenManager.retrieveDisplay(streamId);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromId(streamId), (width / 2 - 80) / scale,
                 (height / 2 - 144) / scale, 0, 0, 160, 144, 160, 144);
         context.getMatrices().popMatrix();
     }

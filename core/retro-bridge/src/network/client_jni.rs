@@ -1,5 +1,5 @@
-use jni::objects::{JByteArray, JClass, JString};
-use jni::sys::{jboolean, jint, jshort};
+use jni::objects::{JByteArray, JClass};
+use jni::sys::{jboolean, jint, jlong, jshort};
 use jni::Env;
 use crate::network::client::RetroClient;
 
@@ -8,8 +8,6 @@ use crate::network::client::RetroClient;
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'caller>(
     env: &mut Env<'caller>,
     _: JClass<'caller>,
-    j_ip: JString<'caller>,
-    j_port: jshort,
     j_token: JByteArray<'caller>
 ) -> jboolean {
 
@@ -58,11 +56,12 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerI
     id: jint,
     width: jint,
     height: jint,
-    codec: jint,
-    display_data_ptr: jint
+    video_codec: jint,
+    display_data_ptr: jlong,
+    audio_codec: jint,
 ) {
     RetroClient::with_instance(|instance| {
-        instance.register_id(id, width, height, codec, display_data_ptr);
+        instance.register_id(id, width, height, video_codec, display_data_ptr, audio_codec);
         Ok(())
     }).unwrap();
 }

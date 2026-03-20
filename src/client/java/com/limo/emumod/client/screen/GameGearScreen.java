@@ -29,12 +29,12 @@ public class GameGearScreen extends Screen {
 
     private final ControlHandler controlHandler;
 
-    public UUID fileId;
+    public int streamId;
 
-    public GameGearScreen(UUID fileId) {
+    public GameGearScreen(int streamId) {
         super(Text.of("Gameboy"));
-        this.controlHandler = new ControlHandler(inputMap, fileId, 0);
-        this.fileId = fileId;
+        this.controlHandler = new ControlHandler(inputMap, streamId, (short) 0);
+        this.streamId = streamId;
     }
 
     @Override
@@ -52,8 +52,8 @@ public class GameGearScreen extends Screen {
                 (height / 2 - 144 - 96) / scale, 0, 0, 512, 512,
                 32, 32, 32, 32);
         // Frame
-        ScreenManager.retrieveDisplay(fileId);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromUUID(fileId), (width / 2 - 80) / scale,
+        ScreenManager.retrieveDisplay(streamId);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromId(streamId), (width / 2 - 80) / scale,
                 (height / 2 - 96) / scale, 0, 0, 160, 144, 160, 144);
         context.getMatrices().popMatrix();
     }

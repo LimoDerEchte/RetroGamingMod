@@ -12,7 +12,7 @@ pub struct NativeDisplay {
 }
 
 impl NativeDisplay {
-    pub fn new(width: i32, height: i32, codec: i32, data_ptr: i32) -> Self {
+    pub fn new(width: i32, height: i32, codec: i32, data_ptr: i64) -> Self {
         let size = (width * height * 3) as usize;
         NativeDisplay {
             data: unsafe {

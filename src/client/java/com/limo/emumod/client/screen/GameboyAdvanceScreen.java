@@ -32,12 +32,12 @@ public class GameboyAdvanceScreen extends Screen {
 
     private final ControlHandler controlHandler;
 
-    public UUID fileId;
+    public int streamId;
 
-    public GameboyAdvanceScreen(UUID fileId) {
+    public GameboyAdvanceScreen(int streamId) {
         super(Text.of("Gameboy"));
-        this.controlHandler = new ControlHandler(inputMap, fileId, 0);
-        this.fileId = fileId;
+        this.controlHandler = new ControlHandler(inputMap, streamId, (short) 0);
+        this.streamId = streamId;
     }
 
     @Override
@@ -55,8 +55,8 @@ public class GameboyAdvanceScreen extends Screen {
                 (height / 2 - 320) / scale, 0, 0, 640, 640,
                 32, 32, 32, 32);
         // Frame
-        ScreenManager.retrieveDisplay(fileId);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromUUID(fileId), (width / 2 - 120) / scale,
+        ScreenManager.retrieveDisplay(streamId);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, ScreenManager.texFromId(streamId), (width / 2 - 120) / scale,
                 (height / 2 - 100) / scale, 0, 0, 240, 160, 240, 160);
         context.getMatrices().popMatrix();
     }

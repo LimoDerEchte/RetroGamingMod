@@ -9,6 +9,7 @@ import com.limo.emumod.console.GenericHandheldItem;
 import com.limo.emumod.monitor.CableItem;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
+import com.limo.emumod.util.AudioCodec;
 import com.limo.emumod.util.VideoCodec;
 import com.limo.emumod.util.FileUtil;
 import com.limo.emumod.util.RequirementManager;
@@ -35,24 +36,24 @@ public class EmuItems {
     public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
 
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE,
-            "gb", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            "gb", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.gearBoy, file, console, "gb", 160, 144,
-                    44100, VideoCodec.AV1)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_CARTRIDGE);
 
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE,
-            "gbc", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            "gbc", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.gearBoy, file, console, "gbc", 160, 144,
-                    44100, VideoCodec.AV1)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
 
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
-            "gba", () -> GenericHandheldItem.link = null, (user, file, console) ->
+            "gba", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.beetleGBA, file, console, "gba", 240, 160,
-                    44100, VideoCodec.AV1)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
 
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file, console) ->
             runGenericConsoleWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, console, "gg", 160, 144,
-                    44100, VideoCodec.AV1)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -112,21 +113,22 @@ public class EmuItems {
         });
     }
 
-    public static boolean runGenericConsole(File core, UUID file, UUID consoleId, String fileType, int width, int height, int sampleRate, VideoCodec codec) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, sampleRate, codec, file, consoleId, fileType);
+    public static boolean runGenericConsole(File core, UUID file, UUID console, String fileType, int width, int height, VideoCodec videoCodec, AudioCodec audioCodec) {
+        NativeGenericConsole con = new NativeGenericConsole(width, height, videoCodec, audioCodec, file, fileType);
         con.load(core);
-        EmuMod.running.put(file, con);
-        PlayerLookup.all(mcs).forEach(player ->
-                ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(consoleId, width, height, sampleRate, codec.ordinal())));
+        EmuMod.running.put(console, con);
+        PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
+                new S2C.UpdateEmulatorPayload(console, con.getId(), width, height, videoCodec.ordinal(), audioCodec.ordinal())));
         return true;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean runGenericConsoleWithBios(PlayerEntity user, File core, String bios, UUID file, UUID consoleId,
-                                                     String fileType, int width, int height, int sampleRate, VideoCodec codec) {
+                                                     String fileType, int width, int height, VideoCodec videoCodec, AudioCodec audioCodec) {
         if(!FileUtil.getRequiredFile(bios).exists()) {
             user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
             return false;
         }
-        return runGenericConsole(core, file, consoleId, fileType, width, height, sampleRate, codec);
+        return runGenericConsole(core, file, consoleId, fileType, width, height, videoCodec, audioCodec);
     }
 }

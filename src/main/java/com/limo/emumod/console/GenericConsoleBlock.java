@@ -1,6 +1,7 @@
 package com.limo.emumod.console;
 
 import com.limo.emumod.EmuMod;
+import com.limo.emumod.bridge.NativeServer;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
@@ -60,29 +61,34 @@ public class GenericConsoleBlock extends BlockWithEntity {
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if(world.isClient() || !(world.getBlockEntity(pos) instanceof GenericConsoleBlockEntity con) || !hand.equals(Hand.MAIN_HAND))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
-        if(con.fileId != null && player.isSneaking()) {
-            if(EmuMod.running.containsKey(con.fileId))
-                EmuMod.running.get(con.fileId).stop();
-            EmuMod.running.remove(con.fileId);
+
+        UUID console = con.consoleId.consoleId();
+        if(console != null && player.isSneaking()) {
+            if(EmuMod.running.containsKey(console))
+                EmuMod.running.get(console).stop();
+            int id = EmuMod.running.remove(console).getId();
+
+            PlayerLookup.all(mcs).forEach(sp -> ServerPlayNetworking.send(sp,
+                    new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0)));
+
             player.getInventory().insertStack(con.cartridge.copyFirstStack());
-            PlayerLookup.all(mcs).forEach(sp ->
-                ServerPlayNetworking.send(sp, new S2C.UpdateEmulatorPayload
-                        (con.consoleId.consoleId(), 0, 0, 0, 0)));
             con.cartridge = ContainerComponent.DEFAULT;
             con.fileId = null;
             con.markDirty();
+
             player.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
         }
+
         ComponentMap components = stack.getComponents();
         if(stack.getItem() != cartridgeItem || !components.contains(GAME))
             return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
+
         UUID id = Objects.requireNonNull(components.get(GAME)).fileId();
         File file = FileUtil.idToFile(id, fileType);
         if(!file.exists()) {
             stack.setCount(0);
             player.getInventory().insertStack(new ItemStack(EmuItems.BROKEN_CARTRIDGE));
-            player.sendMessage(Text.translatable("item.emumod.handheld.file_deleted")
-                    .formatted(Formatting.RED), true);
+            player.sendMessage(Text.translatable("item.emumod.handheld.file_deleted").formatted(Formatting.RED), true);
         } else {
             if(start.apply(player, id, con.consoleId.consoleId())) {
                 con.fileId = id;

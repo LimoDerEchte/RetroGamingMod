@@ -1,5 +1,6 @@
 package com.limo.emumod.console;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -17,6 +18,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 import java.util.OptionalInt;
+import java.util.UUID;
 
 import static com.limo.emumod.registry.EmuComponents.*;
 
@@ -28,15 +30,19 @@ public class ControllerItem extends Item {
         this.maxPortNum = ports - 1;
     }
 
+    // TODO: Localization
+
     @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
         if(world.isClient())
             return ActionResult.PASS;
+
         ItemStack stack = user.getStackInHand(hand);
         if(!stack.getComponents().contains(PORT_NUM) || !stack.getComponents().contains(CONSOLE_LINK_ID)) {
             user.sendMessage(Text.literal("Controller not linked"), true);
             return ActionResult.PASS;
         }
+
         int port = stack.getComponents().getOrDefault(PORT_NUM, 0);
         if(user.isSneaking() && maxPortNum > 0) {
             port++;
@@ -46,8 +52,15 @@ public class ControllerItem extends Item {
             stack.set(PORT_NUM, port);
             return ActionResult.SUCCESS_SERVER;
         }
+
+        UUID console = stack.getComponents().get(CONSOLE_LINK_ID);
+        if(!EmuMod.running.containsKey(console)) {
+            user.sendMessage(Text.literal("Controller not linked"), true);
+            return ActionResult.SUCCESS_SERVER;
+        }
+
         ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
-                NetworkId.ScreenType.CONTROLLER, stack.getComponents().get(CONSOLE_LINK_ID), OptionalInt.of(port)));
+                NetworkId.ScreenType.CONTROLLER, EmuMod.running.get(console).getId(), OptionalInt.of(port)));
         return ActionResult.SUCCESS_SERVER;
     }
 
@@ -57,12 +70,14 @@ public class ControllerItem extends Item {
             return ActionResult.PASS;
         if(context.getPlayer() != null && context.getPlayer().isSneaking())
             return ActionResult.PASS;
+
         ItemStack stack = context.getStack();
         BlockEntity entity = context.getWorld().getBlockEntity(context.getBlockPos());
         if (entity instanceof GenericConsoleBlockEntity con) {
             stack.applyComponentsFrom(ComponentMap.builder()
                     .add(CONSOLE_LINK_ID, con.consoleId.consoleId())
                     .add(PORT_NUM, 0).build());
+
             context.getPlayer().sendMessage(Text.literal("Controller linked (Player 1)"), true);
             return ActionResult.SUCCESS_SERVER;
         }

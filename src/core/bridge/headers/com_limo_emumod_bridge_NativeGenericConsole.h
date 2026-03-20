@@ -9,51 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    init
- * Signature: (JJIIII)J
+ * Method:    register
+ * Signature: (IIII)I
  */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_init
-  (JNIEnv *, jclass, jlong, jlong, jint, jint, jint, jint);
+JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_register
+  (JNIEnv *, jclass, jint, jint, jint, jint);
+
+/*
+ * Class:     com_limo_emumod_bridge_NativeGenericConsole
+ * Method:    unregister
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_unregister
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeGenericConsole
  * Method:    start
- * Signature: (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_start
-  (JNIEnv *, jclass, jlong, jstring, jstring, jstring, jstring);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    stop
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_stop
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    getWidth
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getWidth
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    getHeight
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getHeight
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_bridge_NativeGenericConsole
- * Method:    getSampleRate
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_com_limo_emumod_bridge_NativeGenericConsole_getSampleRate
-  (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jint, jstring, jstring, jstring, jstring);
 
 #ifdef __cplusplus
 }

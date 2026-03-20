@@ -26,9 +26,9 @@ public class RawControllerScreen extends Screen {
     );
     private final ControlHandler controlHandler;
 
-    public RawControllerScreen(UUID file, int port) {
+    public RawControllerScreen(int streamId, short port) {
         super(Text.empty());
-        controlHandler = new ControlHandler(inputMap, file, port);
+        controlHandler = new ControlHandler(inputMap, streamId, port);
     }
 
     @Override

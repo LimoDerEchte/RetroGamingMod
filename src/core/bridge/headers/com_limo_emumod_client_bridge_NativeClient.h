@@ -9,67 +9,59 @@ extern "C" {
 #endif
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    connect
- * Signature: (Ljava/lang/String;ILjava/lang/String;)J
+ * Method:    init
+ * Signature: ([B)Z
  */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_client_bridge_NativeClient_connect
-  (JNIEnv *, jclass, jstring, jint, jstring);
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_init
+  (JNIEnv *, jclass, jbyteArray);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    disconnect
- * Signature: (J)V
+ * Method:    deinit
+ * Signature: ()Z
  */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_disconnect
-  (JNIEnv *, jclass, jlong);
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_deinit
+  (JNIEnv *, jclass);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    isAuthenticated
- * Signature: (J)Z
+ * Method:    isConnected
+ * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isAuthenticated
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    registerScreen
- * Signature: (JJIIJII)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerScreen
-  (JNIEnv *, jclass, jlong, jlong, jint, jint, jlong, jint, jint);
-
-/*
- * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    unregisterScreen
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterScreen
-  (JNIEnv *, jclass, jlong, jlong);
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_isConnected
+  (JNIEnv *, jclass);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
  * Method:    screenChanged
- * Signature: (JJ)Z
+ * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_com_limo_emumod_client_bridge_NativeClient_screenChanged
-  (JNIEnv *, jclass, jlong, jlong);
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    lastAudioData
- * Signature: (JJ)[F
+ * Method:    registerId
+ * Signature: (IIIIJI)V
  */
-JNIEXPORT jfloatArray JNICALL Java_com_limo_emumod_client_bridge_NativeClient_lastAudioData
-  (JNIEnv *, jclass, jlong, jlong);
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_registerId
+  (JNIEnv *, jclass, jint, jint, jint, jint, jlong, jint);
 
 /*
  * Class:     com_limo_emumod_client_bridge_NativeClient
- * Method:    sendControlUpdate
- * Signature: (JJIS)V
+ * Method:    unregisterId
+ * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControlUpdate
-  (JNIEnv *, jclass, jlong, jlong, jint, jshort);
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_unregisterId
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     com_limo_emumod_client_bridge_NativeClient
+ * Method:    sendControls
+ * Signature: (ISS)V
+ */
+JNIEXPORT void JNICALL Java_com_limo_emumod_client_bridge_NativeClient_sendControls
+  (JNIEnv *, jclass, jint, jshort, jshort);
 
 #ifdef __cplusplus
 }

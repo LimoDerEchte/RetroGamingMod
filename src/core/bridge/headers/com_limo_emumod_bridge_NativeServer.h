@@ -9,27 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     com_limo_emumod_bridge_NativeServer
- * Method:    startServer
- * Signature: (II)J
+ * Method:    init
+ * Signature: (ILjava/lang/String;[Ljava/lang/String;)Z
  */
-JNIEXPORT jlong JNICALL Java_com_limo_emumod_bridge_NativeServer_startServer
-  (JNIEnv *, jclass, jint, jint);
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeServer_init
+  (JNIEnv *, jclass, jint, jstring, jobjectArray);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeServer
- * Method:    stopServer
- * Signature: (J)V
+ * Method:    deinit
+ * Signature: ()Z
  */
-JNIEXPORT void JNICALL Java_com_limo_emumod_bridge_NativeServer_stopServer
-  (JNIEnv *, jclass, jlong);
+JNIEXPORT jboolean JNICALL Java_com_limo_emumod_bridge_NativeServer_deinit
+  (JNIEnv *, jclass);
 
 /*
  * Class:     com_limo_emumod_bridge_NativeServer
- * Method:    requestToken
- * Signature: (J)Ljava/lang/String;
+ * Method:    generateToken
+ * Signature: ()[B
  */
-JNIEXPORT jstring JNICALL Java_com_limo_emumod_bridge_NativeServer_requestToken
-  (JNIEnv *, jclass, jlong);
+JNIEXPORT jbyteArray JNICALL Java_com_limo_emumod_bridge_NativeServer_generateToken
+  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

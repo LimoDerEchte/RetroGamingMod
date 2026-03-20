@@ -28,9 +28,9 @@ public class EmuSpeaker {
     public void open() {
         source.setStream(new EmuAudioStream(sampleRate, deviceId));
         new Thread(() -> {
-            while (EmuModClient.CLIENT.lastAudioData(deviceId).length == 0)
-                Thread.yield();
-            mc.execute(source::play);
+            //while (EmuModClient.CLIENT.lastAudioData(deviceId).length == 0)
+            //    Thread.yield();
+            //mc.execute(source::play);
         }).start();
     }
 }

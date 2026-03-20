@@ -2,7 +2,6 @@ package com.limo.emumod.console;
 
 import com.limo.emumod.EmuMod;
 import com.limo.emumod.components.ConsoleComponent;
-import com.limo.emumod.components.GameComponent;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -55,27 +54,25 @@ public class GenericHandheldItem extends Item {
         ComponentMap comp = stack.getComponents();
         if(!comp.contains(CONSOLE))
             stack.applyComponentsFrom(ComponentMap.builder().add(CONSOLE, new ConsoleComponent(UUID.randomUUID())).build());
+        UUID console = Objects.requireNonNull(comp.get(CONSOLE)).consoleId();
 
         if(user.isSneaking() && System.currentTimeMillis() > lastInteractionTime + 1000) {
             lastInteractionTime = System.currentTimeMillis();
 
             if(comp.contains(GAME)) {
-                GameComponent game = Objects.requireNonNull(comp.get(GAME));
-
                 ItemStack cart = new ItemStack(cartridgeType);
                 cart.applyComponentsFrom(ComponentMap.builder().add(GAME, stack.getComponents().get(GAME)).build());
                 user.getInventory().insertStack(cart);
 
-                UUID file = game.fileId();
-                if(EmuMod.running.containsKey(file))
-                    EmuMod.running.get(file).stop();
-                EmuMod.running.remove(game.fileId());
+                if(EmuMod.running.containsKey(console))
+                    EmuMod.running.get(console).stop();
+                int id = EmuMod.running.remove(console).getId();
 
                 stack.remove(GAME);
+                PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
+                        new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0)));
+
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
-                PlayerLookup.all(mcs).forEach(player ->
-                        ServerPlayNetworking.send(player, new S2C.UpdateEmulatorPayload(Objects.requireNonNull(stack
-                                .getComponents().get(CONSOLE)).consoleId(), 0, 0, 0, 0)));
             } else {
                 if(link != null) {
                     link = null;
@@ -90,8 +87,14 @@ public class GenericHandheldItem extends Item {
                 user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
                 return ActionResult.PASS;
             }
-            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(screenType,
-                    Objects.requireNonNull(stack.getComponents().get(CONSOLE)).consoleId(), OptionalInt.empty()));
+
+            if(!EmuMod.running.containsKey(console)) {
+                user.sendMessage(Text.translatable("item.emumod.handheld.not_running"), true);
+                return ActionResult.PASS;
+            }
+
+            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
+                    screenType, EmuMod.running.get(console).getId(), OptionalInt.empty()));
         }
         return ActionResult.PASS;
     }
