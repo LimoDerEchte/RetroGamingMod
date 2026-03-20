@@ -1,4 +1,4 @@
-use jni::Env;
+use jni::{Env, EnvUnowned};
 use jni::objects::{JClass, JString};
 use jni::sys::{jint};
 use tracing::warn;
@@ -30,7 +30,7 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_unregist
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_start<'caller>(
-    env: &mut Env<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
     j_retro_core: JString<'caller>,
@@ -39,29 +39,17 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_start<'c
     j_save: JString<'caller>,
 ) {
 
-    let retro_core: String = match j_retro_core.try_to_string(env) {
-        Ok(val) => val,
-        Err(_) => return
-    };
+    unowned.with_env(|env| -> Result<_, jni::errors::Error> {
+        let retro_core = j_retro_core.try_to_string(env)?;
+        let core = j_core.try_to_string(env)?;
+        let rom = j_rom.try_to_string(env)?;
+        let save = j_save.try_to_string(env)?;
 
-    let core: String = match j_core.try_to_string(env) {
-        Ok(val) => val,
-        Err(_) => return
-    };
-
-    let rom: String = match j_rom.try_to_string(env) {
-        Ok(val) => val,
-        Err(_) => return
-    };
-
-    let save: String = match j_save.try_to_string(env) {
-        Ok(val) => val,
-        Err(_) => return
-    };
-
-    if ConsoleRegistry::with_console(id, |console| {
-        console.load(retro_core, core, rom, save)
-    }).is_err() {
-        warn!("Failed to start console!")
-    }
+        if ConsoleRegistry::with_console(id, |console| {
+            console.load(retro_core, core, rom, save)
+        }).is_err() {
+            warn!("Failed to start console!")
+        };
+        Ok(())
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
 }
