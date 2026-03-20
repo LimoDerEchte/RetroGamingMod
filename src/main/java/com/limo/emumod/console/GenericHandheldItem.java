@@ -70,7 +70,7 @@ public class GenericHandheldItem extends Item {
 
                 stack.remove(GAME);
                 PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                        new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0)));
+                        new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0, 0)));
 
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
             } else {

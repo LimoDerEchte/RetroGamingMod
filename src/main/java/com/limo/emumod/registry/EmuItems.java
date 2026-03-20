@@ -38,22 +38,22 @@ public class EmuItems {
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE,
             "gb", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.gearBoy, file, console, "gb", 160, 144,
-                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus, 44100)), ItemId.Registry.GAMEBOY_CARTRIDGE);
 
     public static final Item GAMEBOY_COLOR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE,
             "gbc", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.gearBoy, file, console, "gbc", 160, 144,
-                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus, 44100)), ItemId.Registry.GAMEBOY_COLOR_CARTRIDGE);
 
     public static final Item GAMEBOY_ADVANCE_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE,
             "gba", () -> GenericHandheldItem.link = null, (_, file, console) ->
             runGenericConsole(RequirementManager.beetleGBA, file, console, "gba", 240, 160,
-                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus, 44100)), ItemId.Registry.GAMEBOY_ADVANCE_CARTRIDGE);
 
     public static final Item GAME_GEAR_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAME_GEAR_CARTRIDGE,
             "gg", () -> GenericHandheldItem.link = null, (user, file, console) ->
             runGenericConsoleWithBios(user, RequirementManager.genesisPlusGX, "bios.gg", file, console, "gg", 160, 144,
-                    VideoCodec.AV1, AudioCodec.Opus_44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
+                    VideoCodec.AV1, AudioCodec.Opus, 44100)), ItemId.Registry.GAME_GEAR_CARTRIDGE);
 
     public static final Item GAMEBOY = register(new GenericHandheldItem(ItemId.Registry.GAMEBOY,
             NetworkId.ScreenType.GAMEBOY, GAMEBOY_CARTRIDGE), ItemId.Registry.GAMEBOY);
@@ -113,22 +113,25 @@ public class EmuItems {
         });
     }
 
-    public static boolean runGenericConsole(File core, UUID file, UUID console, String fileType, int width, int height, VideoCodec videoCodec, AudioCodec audioCodec) {
-        NativeGenericConsole con = new NativeGenericConsole(width, height, videoCodec, audioCodec, file, fileType);
+    public static boolean runGenericConsole(File core, UUID file, UUID console, String fileType, int width, int height,
+                                            VideoCodec videoCodec, AudioCodec audioCodec, int sampleRate) {
+        NativeGenericConsole con = new NativeGenericConsole(width, height, videoCodec, audioCodec, file, fileType, sampleRate);
         con.load(core);
         EmuMod.running.put(console, con);
-        PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                new S2C.UpdateEmulatorPayload(console, con.getId(), width, height, videoCodec.ordinal(), audioCodec.ordinal())));
+        PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking
+                .send(player, new S2C.UpdateEmulatorPayload(console, con.getId(), width, height,
+                        videoCodec.ordinal(), audioCodec.ordinal(), sampleRate)));
         return true;
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static boolean runGenericConsoleWithBios(PlayerEntity user, File core, String bios, UUID file, UUID consoleId,
-                                                     String fileType, int width, int height, VideoCodec videoCodec, AudioCodec audioCodec) {
+    private static boolean runGenericConsoleWithBios(PlayerEntity user, File core, String bios, UUID file,
+                                                     UUID consoleId, String fileType, int width, int height,
+                                                     VideoCodec videoCodec, AudioCodec audioCodec, int sampleRate) {
         if(!FileUtil.getRequiredFile(bios).exists()) {
             user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
             return false;
         }
-        return runGenericConsole(core, file, consoleId, fileType, width, height, videoCodec, audioCodec);
+        return runGenericConsole(core, file, consoleId, fileType, width, height, videoCodec, audioCodec, sampleRate);
     }
 }

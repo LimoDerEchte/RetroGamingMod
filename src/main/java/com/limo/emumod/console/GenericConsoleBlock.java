@@ -69,7 +69,7 @@ public class GenericConsoleBlock extends BlockWithEntity {
             int id = EmuMod.running.remove(console).getId();
 
             PlayerLookup.all(mcs).forEach(sp -> ServerPlayNetworking.send(sp,
-                    new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0)));
+                    new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0, 0)));
 
             player.getInventory().insertStack(con.cartridge.copyFirstStack());
             con.cartridge = ContainerComponent.DEFAULT;
