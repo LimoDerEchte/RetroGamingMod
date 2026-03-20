@@ -17,12 +17,14 @@ public class NativeGenericConsole {
 
     private final UUID file;
     private final String fileType;
+    private final int sampleRate;
 
-    public NativeGenericConsole(int width, int height, VideoCodec videoCodec, AudioCodec audioCodec, UUID file, String fileType) {
+    public NativeGenericConsole(int width, int height, VideoCodec videoCodec, AudioCodec audioCodec, UUID file, String fileType, int sampleRate) {
         this.videoCodec = videoCodec;
         this.audioCodec = audioCodec;
         this.width = width;
         this.height = height;
+        this.sampleRate = sampleRate;
 
         this.file = file;
         this.fileType = fileType;
@@ -57,6 +59,10 @@ public class NativeGenericConsole {
 
     public AudioCodec getAudioCodec() {
         return audioCodec;
+    }
+
+    public int getSampleRate() {
+        return sampleRate;
     }
 
     private static native int register(int width, int height, int videoCodec, int audioCodec);

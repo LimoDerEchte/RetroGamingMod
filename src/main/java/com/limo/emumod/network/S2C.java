@@ -66,7 +66,7 @@ public class S2C {
         }
     }
 
-    public record UpdateEmulatorPayload(UUID console, int id, int width, int height, int audioCodec, int videoCodec) implements CustomPayload {
+    public record UpdateEmulatorPayload(UUID console, int id, int width, int height, int audioCodec, int videoCodec, int sampleRate) implements CustomPayload {
         public static final Id<UpdateEmulatorPayload> ID = new Id<>(NetworkId.UPDATE_EMULATOR);
         public static final PacketCodec<RegistryByteBuf, UpdateEmulatorPayload> CODEC = PacketCodec.tuple(
                 Uuids.PACKET_CODEC, UpdateEmulatorPayload::console,
@@ -75,6 +75,7 @@ public class S2C {
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::height,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::audioCodec,
                 PacketCodecs.VAR_INT, UpdateEmulatorPayload::videoCodec,
+                PacketCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
                 UpdateEmulatorPayload::new
         );
 

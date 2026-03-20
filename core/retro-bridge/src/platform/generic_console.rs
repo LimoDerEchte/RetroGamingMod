@@ -13,8 +13,6 @@ use crate::codec::audio_encoder::{AudioEncoder, AudioEncoderOpus};
 use crate::codec::video_encoder::{VideoEncoder, VideoEncoderAV1};
 
 pub struct GenericConsole {
-    id: i32,
-
     audio_encoder: Mutex<Box<dyn AudioEncoder>>,
     video_encoder: Mutex<Box<dyn VideoEncoder>>,
 
@@ -24,7 +22,7 @@ pub struct GenericConsole {
 }
 
 impl GenericConsole {
-    pub fn new(width: i32, height: i32, id: i32, video_codec: i32, audio_codec: i32) -> Self {
+    pub fn new(width: i32, height: i32, video_codec: i32, audio_codec: i32) -> Self {
         let mem_id = Alphanumeric.sample_string(&mut rand::rng(), 64);
         let shared_memory = ShmemConf::new()
             .os_id(mem_id.clone())
@@ -33,8 +31,6 @@ impl GenericConsole {
             .expect("Failed to create shared memory");
 
         Self {
-            id,
-
             audio_encoder: Mutex::new(Box::new(match audio_codec {
                 0 => AudioEncoderOpus::new(),
                 _ => {
@@ -136,7 +132,7 @@ impl ConsoleRegistry {
             let id = instance.incrementor;
             instance.incrementor += 1;
 
-            instance.registry.insert(id, RwLock::new(GenericConsole::new(width, height, id, video_codec, audio_codec)));
+            instance.registry.insert(id, RwLock::new(GenericConsole::new(width, height, video_codec, audio_codec)));
             Ok(id)
         }).unwrap_or(-1)
     }
@@ -148,17 +144,7 @@ impl ConsoleRegistry {
         }).unwrap();
     }
 
-    pub fn with_console<T>(id: i32, func: impl FnOnce(&GenericConsole) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        Self::with_instance(|instance| {
-            if let Some(console) = instance.registry.get(&id) {
-                let guard = console.read().unwrap();
-                return func(&guard);
-            }
-            Err(Box::new(InvalidArgument))
-        })
-    }
-
-    pub fn with_console_mut<T>(id: i32, func: impl FnOnce(&mut GenericConsole) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
+    pub fn with_console<T>(id: i32, func: impl FnOnce(&mut GenericConsole) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
         Self::with_instance(|instance| {
             if let Some(console) = instance.registry.get(&id) {
                 let mut guard = console.write().unwrap();
@@ -177,12 +163,12 @@ impl ConsoleRegistry {
         }).unwrap();
     }
 
-    pub fn foreach_mut(func: impl Fn(&mut GenericConsole)) {
+    /*pub fn foreach_mut(func: impl Fn(&mut GenericConsole)) {
         Self::with_instance(|instance| {
             instance.registry.values().for_each(|reg| {
                 func(&mut reg.write().unwrap());
             });
             Ok(())
         }).unwrap();
-    }
+    }*/
 }

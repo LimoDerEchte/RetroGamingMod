@@ -59,7 +59,7 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_start<'c
         Err(_) => return
     };
 
-    if ConsoleRegistry::with_console_mut(id, |console| {
+    if ConsoleRegistry::with_console(id, |console| {
         console.load(retro_core, core, rom, save)
     }).is_err() {
         warn!("Failed to start console!")

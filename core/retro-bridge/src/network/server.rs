@@ -120,6 +120,9 @@ impl RetroServer {
                     while let Some(pak) = console.retrieve_video_packet() {
                         packets.lock().unwrap().push(pak);
                     }
+                    while let Some(pak) = console.encode_audio_packet() {
+                        packets.lock().unwrap().push(pak);
+                    }
                 });
 
                 for packet in packets.lock().unwrap().iter() {
@@ -127,8 +130,6 @@ impl RetroServer {
                         server.send_message(client, ReliableOrdered, packet.clone());
                     }
                 }
-
-                // TODO: Send encoded audio packets
 
                 transport.send_packets(&mut server);
                 Ok(true)
@@ -171,7 +172,7 @@ impl RetroServer {
                 let port = i16::from_le_bytes([data[4], data[5]]);
                 let data = i16::from_le_bytes([data[6], data[7]]);
 
-                ConsoleRegistry::with_console_mut(id, |console| {
+                ConsoleRegistry::with_console(id, |console| {
                     console.submit_input(port, data);
                     Ok(())
                 }).expect("Failed to submit input");
