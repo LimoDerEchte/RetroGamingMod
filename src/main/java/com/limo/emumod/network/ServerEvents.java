@@ -26,9 +26,15 @@ public class ServerEvents {
             if(serverPort == -1)
                 serverPort = NetworkUtils.findLocalPort();
 
-            NativeServer.init(server.getMaxPlayerCount(), "0.0.0.0:" + serverPort, new String[] {
-                    server.getServerIp() + serverPort  // TODO: Find good way to search for all exposed addresses
-            });
+            String serverIp = server.getServerIp();
+            if(serverIp == null || serverIp.isEmpty())
+                serverIp = "127.0.0.1";
+
+            if(!NativeServer.init(server.getMaxPlayerCount(), "0.0.0.0:" + serverPort, new String[] {
+                    serverIp + ":" + serverPort  // TODO: Find good way to search for all exposed addresses
+            })) {
+                LOGGER.error("The native server failed to initialize!");
+            }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(_ -> {
             EmuMod.running.values().forEach(NativeGenericConsole::stop);
@@ -37,7 +43,7 @@ public class ServerEvents {
                 LOGGER.warn("Something went wrong while deinitializing the native server!");
         });
         ServerPlayConnectionEvents.JOIN.register((_, sender, _) -> {
-            sender.sendPacket(new S2C.EmuModTokenPayload(NativeServer.generateToken()));
+            sender.sendPacket(new S2C.EmuModTokenPayload(NativeServer.createToken()));
             for(Map.Entry<UUID, NativeGenericConsole> pair : EmuMod.running.entrySet()) {
                 NativeGenericConsole console = pair.getValue();
                 sender.sendPacket(new S2C.UpdateEmulatorPayload(pair.getKey(), console.getId(), console.getWidth(), console.getHeight(),

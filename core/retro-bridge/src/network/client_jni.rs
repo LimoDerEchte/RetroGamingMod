@@ -1,7 +1,7 @@
+use crate::network::client::RetroClient;
 use jni::objects::{JByteArray, JClass};
 use jni::sys::{jboolean, jint, jlong, jshort};
-use jni::{Env, EnvUnowned};
-use crate::network::client::RetroClient;
+use jni::EnvUnowned;
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]

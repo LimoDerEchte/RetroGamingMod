@@ -115,8 +115,15 @@ pub struct ConsoleRegistry {
 
 impl ConsoleRegistry {
     fn with_instance<T>(func: impl FnOnce(&ConsoleRegistry) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let guard = REGISTRY.read()?;
-        func(guard.as_ref().unwrap())
+        {
+            let guard = REGISTRY.read()?;
+            if guard.is_some() {
+                return func(guard.as_ref().unwrap())
+            }
+        }
+        Self::with_instance_mut(|instance| {
+            func(instance)
+        })
     }
 
     fn with_instance_mut<T>(func: impl FnOnce(&mut ConsoleRegistry) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {

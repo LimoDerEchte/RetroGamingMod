@@ -24,7 +24,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
             addresses.push(address.try_to_string(env)?);
         }
 
-        if RetroServer::init(max_users, bind.as_str(), addresses).is_err() {
+        if let Err(err) = RetroServer::init(max_users, bind.as_str(), addresses) {
+            
             return Ok(false)
         }
 
