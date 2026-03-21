@@ -2,6 +2,7 @@ use crate::network::server::RetroServer;
 use jni::objects::{JByteArray, JClass, JObjectArray, JString};
 use jni::sys::jboolean;
 use jni::EnvUnowned;
+use tracing::warn;
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
@@ -25,7 +26,7 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
         }
 
         if let Err(err) = RetroServer::init(max_users, bind.as_str(), addresses) {
-            
+            warn!("Failed to initialize RetroServer: {:?}", err);
             return Ok(false)
         }
 

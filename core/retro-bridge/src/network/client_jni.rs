@@ -2,6 +2,7 @@ use crate::network::client::RetroClient;
 use jni::objects::{JByteArray, JClass};
 use jni::sys::{jboolean, jint, jlong, jshort};
 use jni::EnvUnowned;
+use tracing::warn;
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
@@ -15,7 +16,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
         env.convert_byte_array(j_token)
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
 
-    if RetroClient::init(token).is_err() {
+    if let Err(err) = RetroClient::init(token) {
+        warn!("Failed to initialize RetroClient: {:?}", err);
         return false
     }
 
