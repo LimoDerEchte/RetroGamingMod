@@ -4,20 +4,21 @@ use renet::{ClientId, ConnectionConfig, RenetServer};
 use renet_netcode::{ConnectToken, NetcodeServerTransport, ServerAuthentication, ServerConfig};
 use std::error::Error;
 use std::net::{SocketAddr, UdpSocket};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
+use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use renet::DefaultChannel::ReliableOrdered;
 use tracing::warn;
 use crate::platform::generic_console::ConsoleRegistry;
 
-static INSTANCE: RwLock<Option<Arc<RwLock<RetroServer>>>> = RwLock::new(None);
+static INSTANCE: RwLock<Option<RetroServer>> = RwLock::new(None);
 
 pub struct RetroServer {
     server: Mutex<RenetServer>,
     transport: Mutex<NetcodeServerTransport>,
 
     shutdown_requested: AtomicBool,
+    running_loop_count: AtomicI32,
     client_id_incrementor: AtomicU64,
 
     public_addresses: Vec<SocketAddr>,
@@ -28,14 +29,14 @@ impl RetroServer {
     pub fn with_instance<T>(func: impl FnOnce(&RetroServer) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
         let guard = INSTANCE.read()?;
         if let Some(instance) = guard.as_ref() {
-            return func(instance.write().as_mut().unwrap());
+            return func(instance);
         }
         Err("Instance not found!".into())
     }
 
     pub fn init(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<(), Box<dyn Error>> {
         let mut guard = INSTANCE.write()?;
-        *guard = Some(Arc::new(RwLock::new(RetroServer::new(max_users, bind, addresses)?)));
+        *guard = Some(RetroServer::new(max_users, bind, addresses)?);
         Ok(())
     }
 
@@ -43,7 +44,18 @@ impl RetroServer {
         Self::with_instance(|instance| {
             instance.shutdown_requested.store(true, Ordering::Relaxed);
             Ok(())
-        })
+        })?;
+        loop {
+            if Self::with_instance(|instance| {
+                Ok(instance.running_loop_count.load(Ordering::Relaxed))
+            })? <= 0 {
+                break;
+            }
+        }
+        warn!("Disposing RetroServer instance: all loops finished");
+        let mut guard = INSTANCE.write()?;
+        *guard = None;
+        Ok(())
     }
 
     fn new(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<Self, Box<dyn Error>> {
@@ -69,6 +81,7 @@ impl RetroServer {
             transport: Mutex::new(NetcodeServerTransport::new(config, socket)?),
 
             shutdown_requested: AtomicBool::new(false),
+            running_loop_count: AtomicI32::new(0),
             client_id_incrementor: AtomicU64::new(0),
 
             public_addresses,
@@ -93,7 +106,11 @@ impl RetroServer {
     pub fn main_loop() {
         let mut next = Instant::now();
         let delta = Duration::from_millis(10);
-        //let delta = Duration::from_micros(1000000 / 60);
+
+        Self::with_instance(|instance| {
+            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        }).unwrap();
 
         loop {
             next += delta;
@@ -147,15 +164,13 @@ impl RetroServer {
         }
 
         Self::with_instance(|instance| {
+            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
             instance.shutdown_requested.store(true, Ordering::Relaxed);
+
             instance.server.lock().unwrap().disconnect_all();
             drop(instance.server.lock().unwrap());
             Ok(())
         }).expect("Failed to shutdown clientside connection");
-
-        warn!("Disposing RetroServer instance: main loop exited");
-        let mut guard = INSTANCE.write().unwrap();
-        *guard = None;
     }
 
     fn handle_packet(&self, client: ClientId, mut data: Vec<u8>) {
@@ -188,6 +203,11 @@ impl RetroServer {
         let mut next = Instant::now();
         let delta = Duration::from_micros(1000000 / 60);
 
+        Self::with_instance(|instance| {
+            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        }).unwrap();
+
         loop {
             next += delta;
 
@@ -213,5 +233,10 @@ impl RetroServer {
                 std::thread::sleep(next - now);
             }
         }
+
+        Self::with_instance(|instance| {
+            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
+            Ok(())
+        }).unwrap();
     }
 }

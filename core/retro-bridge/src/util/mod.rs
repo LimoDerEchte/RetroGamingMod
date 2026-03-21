@@ -1,3 +1,3 @@
 pub mod display;
 pub mod logging;
-pub mod initial_jni;
+pub mod logging_jni;

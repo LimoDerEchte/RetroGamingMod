@@ -33,7 +33,7 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
         std::thread::spawn(|| { RetroServer::main_loop(); });
         std::thread::spawn(|| { RetroServer::video_packing_loop(); });
 
-        info!("RetroClient initialized and started");
+        info!("RetroServer initialized and started");
         Ok(true)
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
