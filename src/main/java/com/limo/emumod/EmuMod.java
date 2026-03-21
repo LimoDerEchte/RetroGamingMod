@@ -23,6 +23,9 @@ public class EmuMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(EmuMod.class);
     public static final Random RANDOM = Random.create();
 
+    @SuppressWarnings("unused")
+    public static final Logger NATIVE_LOGGER = LogManager.getLogger("EmuModNative");
+
     public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
 
     public static boolean REQUIREMENTS_MET;

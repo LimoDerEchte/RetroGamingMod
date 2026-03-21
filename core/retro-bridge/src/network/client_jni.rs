@@ -2,7 +2,7 @@ use crate::network::client::RetroClient;
 use jni::objects::{JByteArray, JClass};
 use jni::sys::{jboolean, jint, jlong, jshort};
 use jni::EnvUnowned;
-use tracing::warn;
+use tracing::{info, warn};
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
@@ -23,6 +23,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
 
     std::thread::spawn(|| { RetroClient::main_loop(); });
     std::thread::spawn(|| { RetroClient::video_receiving_loop(); });
+
+    info!("RetroClient initialized and started");
     true
 }
 

@@ -109,7 +109,7 @@ impl RetroClient {
                 client.update(delta);
 
                 if !client.is_connected() {
-                    return Ok(false);
+                    return Ok(true);
                 }
 
                 while let Some(msg) = client.receive_message(ReliableOrdered) {
@@ -141,6 +141,7 @@ impl RetroClient {
             Ok(())
         }).expect("Failed to shutdown clientside connection");
 
+        warn!("Disposing RetroClient instance: main loop exited");
         let mut guard = INSTANCE.write().unwrap();
         *guard = None;
     }
@@ -184,7 +185,7 @@ impl RetroClient {
                 }
 
                 Ok(true)
-            }).expect("Failed serverside video packing frame") {
+            }).expect("Failed clientside video receiving frame") {
                 break;
             }
 

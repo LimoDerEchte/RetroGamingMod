@@ -153,6 +153,7 @@ impl RetroServer {
             Ok(())
         }).expect("Failed to shutdown clientside connection");
 
+        warn!("Disposing RetroServer instance: main loop exited");
         let mut guard = INSTANCE.write().unwrap();
         *guard = None;
     }

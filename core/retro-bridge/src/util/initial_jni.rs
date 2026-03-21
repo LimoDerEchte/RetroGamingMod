@@ -24,7 +24,7 @@ pub extern "system" fn JNI_OnLoad(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c
             let class = env.find_class(jni_str!("com/limo/emumod/EmuMod"))?;
             let logger = env.get_static_field(
                 class,
-                jni_str!("LOGGER"),
+                jni_str!("NATIVE_LOGGER"),
                 jni_sig!(org.apache.logging.log4j.Logger),
             )?.l()?;
 

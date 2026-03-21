@@ -2,7 +2,7 @@ use crate::network::server::RetroServer;
 use jni::objects::{JByteArray, JClass, JObjectArray, JString};
 use jni::sys::jboolean;
 use jni::EnvUnowned;
-use tracing::warn;
+use tracing::{info, warn};
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
@@ -33,6 +33,7 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
         std::thread::spawn(|| { RetroServer::main_loop(); });
         std::thread::spawn(|| { RetroServer::video_packing_loop(); });
 
+        info!("RetroClient initialized and started");
         Ok(true)
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }

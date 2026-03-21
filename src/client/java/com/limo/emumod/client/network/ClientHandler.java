@@ -15,9 +15,7 @@ public class ClientHandler {
 
     public static void init() {
         // Protocol Stuff
-        ClientPlayNetworking.registerGlobalReceiver(S2C.EmuModTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            NativeClient.init(payload.token());
-        }));
+        ClientPlayNetworking.registerGlobalReceiver(S2C.EmuModTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> NativeClient.init(payload.token())));
         ClientPlayConnectionEvents.DISCONNECT.register((_, _) -> NativeClient.deinit());
         // Screen Stuff
         //noinspection SwitchStatementWithTooFewBranches
