@@ -1,6 +1,6 @@
 use crate::util::logging::{JavaLoggingEvent, JavaLoggingSubscriber};
 use jni::sys::{jint, JNI_VERSION_1_8};
-use jni::{jni_sig, jni_str, sys, JValue, JavaVM};
+use jni::{jni_sig, jni_str, sys, AttachConfig, JValue, JavaVM, DEFAULT_LOCAL_FRAME_CAPACITY};
 use std::error::Error;
 use std::sync::mpsc::channel;
 use jni::strings::JNIString;
@@ -11,10 +11,12 @@ use tracing_subscriber::{layer::SubscriberExt, Registry};
 pub extern "system" fn JNI_OnLoad(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c_void) -> jint {
     let vm: JavaVM = unsafe { JavaVM::from_raw(ptr) };
 
-    std::thread::Builder::new()
-        .name("Rust Core Logger".to_string())
-        .spawn(move || {
-            vm.attach_current_thread(|env| -> Result<(), Box<dyn Error>> {
+    std::thread::spawn(move || {
+        vm.attach_current_thread_with_config(
+            || AttachConfig::default()
+                .name("Tracing Proxy"),
+            Some(DEFAULT_LOCAL_FRAME_CAPACITY),
+            |env| -> Result<(), Box<dyn Error>> {
                 let (tx, rx) = channel::<JavaLoggingEvent>();
 
                 let subscriber = Registry::default()
@@ -41,9 +43,9 @@ pub extern "system" fn JNI_OnLoad(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c
                         &[ JValue::Object(&msg) ]
                     )?;
                 }
-            }).unwrap();
-        }
-    ).expect("Failed to spawn JNI logging thread");
+            }
+        ).expect("Failed to attach current thread to JVM!");
+    });
 
     JNI_VERSION_1_8
 }
