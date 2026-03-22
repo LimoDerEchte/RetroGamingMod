@@ -64,14 +64,15 @@ public class GenericHandheldItem extends Item {
                 cart.applyComponentsFrom(ComponentMap.builder().add(GAME, stack.getComponents().get(GAME)).build());
                 user.getInventory().insertStack(cart);
 
-                if(EmuMod.running.containsKey(console))
+                if(EmuMod.running.containsKey(console)) {
                     EmuMod.running.get(console).stop();
-                int id = EmuMod.running.remove(console).getId();
+                    int id = EmuMod.running.remove(console).getId();
+
+                    PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
+                            new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0, 0)));
+                }
 
                 stack.remove(GAME);
-                PlayerLookup.all(mcs).forEach(player -> ServerPlayNetworking.send(player,
-                        new S2C.UpdateEmulatorPayload(console, id, 0, 0, 0, 0, 0)));
-
                 user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
             } else {
                 if(link != null) {

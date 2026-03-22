@@ -12,6 +12,15 @@ use rust_libretro_sys::*;
 use rust_libretro_sys::retro_pixel_format::{RETRO_PIXEL_FORMAT_RGB565, RETRO_PIXEL_FORMAT_XRGB8888};
 use tracing::{info, warn};
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct RetroGameInfo {
+    pub path: *const std::os::raw::c_char,
+    pub data: *const std::ffi::c_void,
+    pub size: usize,
+    pub meta: *const std::os::raw::c_char,
+}
+
 static INSTANCE: RwLock<Option<LibRetroCore>> = RwLock::new(None);
 static CONTENT_DIR: OnceLock<CString> = OnceLock::new();
 
@@ -141,7 +150,7 @@ pub struct LibRetroCore {
     retro_deinit: Option<unsafe extern "C" fn()>,
     retro_run: Option<unsafe extern "C" fn()>,
 
-    retro_load_game: Option<unsafe extern "C" fn(game: *const retro_game_info) -> bool>,
+    retro_load_game: Option<unsafe extern "C" fn(game: *const RetroGameInfo) -> bool>,
     retro_unload_game: Option<unsafe extern "C" fn()>,
     retro_get_memory_data: Option<unsafe extern "C" fn(id: u32) -> *const c_void>,
     retro_get_memory_size: Option<unsafe extern "C" fn(id: u32) -> usize>,
@@ -299,7 +308,7 @@ impl LibRetroCore {
                     let data_ptr: *const c_void = buffer.as_ptr() as *const c_void;
                     let data_size: usize = buffer.len();
 
-                    let game_info = retro_game_info {
+                    let game_info = RetroGameInfo {
                         path: c_path.as_ptr(),
                         data: data_ptr,
                         size: data_size,
