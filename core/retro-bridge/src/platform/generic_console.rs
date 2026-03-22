@@ -14,6 +14,7 @@ use wait_timeout::ChildExt;
 use crate::codec::audio_encoder::{AudioEncoder, AudioEncoderOpus};
 use crate::codec::video_encoder::{VideoEncoder, VideoEncoderAV1};
 
+#[allow(unused)]
 pub struct GenericConsole {
     audio_encoder: Mutex<Box<dyn AudioEncoder>>,
     video_encoder: Mutex<Box<dyn VideoEncoder>>,

@@ -5,7 +5,7 @@ use renet_netcode::{ConnectToken, NetcodeServerTransport, ServerAuthentication, 
 use std::error::Error;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
-use std::sync::{Mutex, RwLock};
+use parking_lot::{Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use renet::DefaultChannel::ReliableOrdered;
 use tracing::warn;
@@ -27,15 +27,14 @@ pub struct RetroServer {
 
 impl RetroServer {
     pub fn with_instance<T>(func: impl FnOnce(&RetroServer) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let guard = INSTANCE.read()?;
-        if let Some(instance) = guard.as_ref() {
+        if let Some(instance) = INSTANCE.read().as_ref() {
             return func(instance);
         }
         Err("Instance not found!".into())
     }
 
     pub fn init(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<(), Box<dyn Error>> {
-        let mut guard = INSTANCE.write()?;
+        let mut guard = INSTANCE.write();
         *guard = Some(RetroServer::new(max_users, bind, addresses)?);
         Ok(())
     }
@@ -53,7 +52,7 @@ impl RetroServer {
             }
         }
         warn!("Disposing RetroServer instance: all loops finished");
-        let mut guard = INSTANCE.write()?;
+        let mut guard = INSTANCE.write();
         *guard = None;
         Ok(())
     }
@@ -120,8 +119,8 @@ impl RetroServer {
                     return Ok(false);
                 }
 
-                let mut server = instance.server.lock().unwrap();
-                let mut transport = instance.transport.lock().unwrap();
+                let mut server = instance.server.lock();
+                let mut transport = instance.transport.lock();
 
                 transport.update(delta, &mut server)?;
                 server.update(delta);
@@ -135,14 +134,14 @@ impl RetroServer {
                 let packets: Mutex<Vec<Vec<u8>>> = Mutex::new(Vec::new());
                 ConsoleRegistry::foreach(|console| {
                     while let Some(pak) = console.retrieve_video_packet() {
-                        packets.lock().unwrap().push(pak);
+                        packets.lock().push(pak);
                     }
                     while let Some(pak) = console.encode_audio_packet() {
-                        packets.lock().unwrap().push(pak);
+                        packets.lock().push(pak);
                     }
                 });
 
-                for packet in packets.lock().unwrap().iter() {
+                for packet in packets.lock().iter() {
                     for client in server.clients_id() {
                         server.send_message(client, ReliableOrdered, packet.clone());
                     }
@@ -167,8 +166,8 @@ impl RetroServer {
             instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
             instance.shutdown_requested.store(true, Ordering::Relaxed);
 
-            instance.server.lock().unwrap().disconnect_all();
-            drop(instance.server.lock().unwrap());
+            instance.server.lock().disconnect_all();
+            drop(instance.server.lock());
             Ok(())
         }).expect("Failed to shutdown clientside connection");
     }

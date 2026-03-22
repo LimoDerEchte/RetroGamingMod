@@ -41,11 +41,13 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_deinit<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
 
-    RetroServer::deinit().is_ok()
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        Ok(RetroServer::deinit().is_ok())
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]

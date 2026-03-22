@@ -14,7 +14,7 @@ pub extern "system" fn JNI_OnLoad(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c
     std::thread::spawn(move || {
         vm.attach_current_thread_with_config(
             || AttachConfig::default()
-                .name("Tracing Proxy"),
+                .thread_name(jni_str!("Tracing Proxy")),
             Some(DEFAULT_LOCAL_FRAME_CAPACITY),
             |env| -> Result<(), Box<dyn Error>> {
                 let (tx, rx) = channel::<JavaLoggingEvent>();

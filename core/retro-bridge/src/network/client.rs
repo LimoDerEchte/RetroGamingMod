@@ -1,9 +1,9 @@
 use std::collections::{HashMap};
 use std::error::Error;
 use std::net::UdpSocket;
-use std::sync::{Mutex, RwLock};
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use parking_lot::{Mutex, RwLock};
 use renet::{ConnectionConfig, RenetClient};
 use renet::DefaultChannel::ReliableOrdered;
 use renet_netcode::{ClientAuthentication, ConnectToken, NetcodeClientTransport};
@@ -26,25 +26,22 @@ pub struct RetroClient {
 
 impl RetroClient {
     pub fn with_instance<T>(func: impl FnOnce(&RetroClient) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let guard = INSTANCE.read()?;
-        if let Some(instance) = guard.as_ref() {
+        if let Some(instance) = INSTANCE.read().as_ref() {
             return func(instance);
         }
         Err("Instance not found!".into())
     }
 
     pub fn with_display<T>(&self, id: i32, func: impl FnOnce(&mut NativeDisplay) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error + '_>> {
-        let guard = self.displays.read()?;
-        if let Some(display) = guard.get(&id) {
-            return func(display.lock().as_mut().unwrap());
+        if let Some(display) = self.displays.read().get(&id) {
+            return func(&mut display.lock());
         }
         Err(format!("Display not found: {}", id).into())
     }
 
-    pub fn init(token: Vec<u8>) -> Result<(), Box<dyn Error>> {
-        let mut guard = INSTANCE.write()?;
+    pub fn init(token: Vec<u8>) {
+        let mut guard = INSTANCE.write();
         *guard = Some(RetroClient::new(token));
-        Ok(())
     }
 
     pub fn deinit() -> Result<(), Box<dyn Error>> {
@@ -58,9 +55,10 @@ impl RetroClient {
             })? <= 0 {
                 break;
             }
+            std::thread::sleep(Duration::from_millis(100));
         }
         warn!("Disposing RetroClient instance: all loops finished");
-        let mut guard = INSTANCE.write()?;
+        let mut guard = INSTANCE.write();
         *guard = None;
         Ok(())
     }
@@ -84,11 +82,11 @@ impl RetroClient {
     }
 
     pub fn register_id(&self, id: i32, width: i32, height: i32, video_codec: i32, display_data_ptr: i64, audio_codec: i32) {
-        self.displays.write().unwrap().insert(id, Mutex::new(NativeDisplay::new(width, height, video_codec, display_data_ptr)));
+        self.displays.write().insert(id, Mutex::new(NativeDisplay::new(width, height, video_codec, display_data_ptr)));
     }
 
     pub fn unregister_id(&self, id: i32) {
-        self.displays.write().unwrap().remove(&id);
+        self.displays.write().remove(&id);
     }
 
     pub fn send_input_data(&self, id: i32, port: i16, data: i16) {
@@ -99,7 +97,7 @@ impl RetroClient {
         pak.extend_from_slice(&port.to_le_bytes());
         pak.extend_from_slice(&data.to_le_bytes());
 
-        let mut lock = self.input_packet.lock().unwrap();
+        let mut lock = self.input_packet.lock();
         *lock = Some(pak);
     }
 
@@ -120,8 +118,8 @@ impl RetroClient {
                     return Ok(false);
                 }
 
-                let mut client = instance.client.lock().unwrap();
-                let mut transport = instance.transport.lock().unwrap();
+                let mut client = instance.client.lock();
+                let mut transport = instance.transport.lock();
 
                 transport.update(delta, &mut client)?;
                 client.update(delta);
@@ -134,7 +132,7 @@ impl RetroClient {
                     instance.handle_packet(msg.to_vec());
                 }
 
-                if let Some(packet) = { instance.input_packet.lock().unwrap().take() } {
+                if let Some(packet) = { instance.input_packet.lock().take() } {
                     client.send_message(ReliableOrdered, packet);
                 }
 
@@ -157,12 +155,12 @@ impl RetroClient {
             instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
             instance.shutdown_requested.store(true, Ordering::Relaxed);
 
-            instance.client.lock().unwrap().disconnect();
+            instance.client.lock().disconnect();
             Ok(())
         }).expect("Failed to shutdown clientside connection");
 
         warn!("Disposing RetroClient instance: main loop exited");
-        let mut guard = INSTANCE.write().unwrap();
+        let mut guard = INSTANCE.write();
         *guard = None;
     }
 
@@ -204,9 +202,9 @@ impl RetroClient {
                     return Ok(false);
                 }
 
-                let displays = instance.displays.read().unwrap();
+                let displays = instance.displays.read();
                 for display in displays.values() {
-                    display.lock().unwrap().try_transmit();
+                    display.lock().try_transmit();
                 }
 
                 Ok(true)
@@ -230,6 +228,6 @@ impl RetroClient {
     }
 
     pub fn is_connected(&self) -> bool {
-        self.client.lock().unwrap().is_connected()
+        self.client.lock().is_connected()
     }
 }

@@ -2,7 +2,7 @@ use crate::network::client::RetroClient;
 use jni::objects::{JByteArray, JClass};
 use jni::sys::{jboolean, jint, jlong, jshort};
 use jni::EnvUnowned;
-use tracing::{info, warn};
+use tracing::{info};
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
@@ -12,48 +12,49 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
     j_token: JByteArray<'caller>
 ) -> jboolean {
 
-    let token = unowned.with_env(|env| {
-        env.convert_byte_array(j_token)
+    unowned.with_env(|env| -> Result<_, jni::errors::Error> {
+        let token = env.convert_byte_array(j_token)?;
+
+        RetroClient::init(token);
+        std::thread::spawn(|| { RetroClient::main_loop(); });
+        std::thread::spawn(|| { RetroClient::video_receiving_loop(); });
+
+        info!("RetroClient initialized and started");
+        Ok(())
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
-
-    if let Err(err) = RetroClient::init(token) {
-        warn!("Failed to initialize RetroClient: {:?}", err);
-        return false
-    }
-
-    std::thread::spawn(|| { RetroClient::main_loop(); });
-    std::thread::spawn(|| { RetroClient::video_receiving_loop(); });
-
-    info!("RetroClient initialized and started");
     true
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_deinit<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
 
-    RetroClient::deinit().is_ok()
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        Ok(RetroClient::deinit().is_ok())
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnected<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
 
-    RetroClient::with_instance(|instance| {
-        Ok(instance.is_connected())
-    }).unwrap()
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        Ok(RetroClient::with_instance(|instance| {
+            Ok(instance.is_connected())
+        }).unwrap())
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerId<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
     width: jint,
@@ -62,50 +63,65 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerI
     display_data_ptr: jlong,
     audio_codec: jint,
 ) {
-    RetroClient::with_instance(|instance| {
-        instance.register_id(id, width, height, video_codec, display_data_ptr, audio_codec);
+
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        RetroClient::with_instance(|instance| {
+            instance.register_id(id, width, height, video_codec, display_data_ptr, audio_codec);
+            Ok(())
+        }).unwrap();
         Ok(())
-    }).unwrap();
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregisterId<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
 ) {
-    RetroClient::with_instance(|instance| {
-        instance.unregister_id(id);
+
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        RetroClient::with_instance(|instance| {
+            instance.unregister_id(id);
+            Ok(())
+        }).unwrap();
         Ok(())
-    }).unwrap();
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendControls<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
     port: jshort,
     data: jshort,
 ) {
-    RetroClient::with_instance(|instance| {
-        instance.send_input_data(id, port, data);
+
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        RetroClient::with_instance(|instance| {
+            instance.send_input_data(id, port, data);
+            Ok(())
+        }).unwrap();
         Ok(())
-    }).unwrap();
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_screenChanged<'caller>(
-    _: EnvUnowned<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
 ) -> jboolean {
-    RetroClient::with_instance(|instance| {
-        Ok(instance.with_display(id, |display| {
-            Ok(display.changed())
+
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        Ok(RetroClient::with_instance(|instance| {
+            Ok(instance.with_display(id, |display| {
+                Ok(display.changed())
+            }).unwrap_or(false))
         }).unwrap_or(false))
-    }).unwrap_or(false)
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
