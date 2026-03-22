@@ -1,30 +1,39 @@
-use jni::{Env, EnvUnowned};
+use jni::{EnvUnowned};
 use jni::objects::{JClass, JString};
 use jni::sys::{jint};
-use tracing::warn;
+use tracing::{info, warn};
 use crate::platform::generic_console::ConsoleRegistry;
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_register<'caller>(
-    _: &mut Env<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     width: jint,
     height: jint,
     video_codec: jint,
     audio_codec: jint,
 ) -> jint {
-    ConsoleRegistry::register_new(width, height, video_codec, audio_codec)
+
+    let id = unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        Ok(ConsoleRegistry::register_new(width, height, video_codec, audio_codec))
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
+    info!("Console registered: {:?}", id);
+    id
 }
 
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_unregister<'caller>(
-    _: &mut Env<'caller>,
+    mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
 ) {
-    ConsoleRegistry::unregister(id)
+
+    unowned.with_env(|_| -> Result<_, jni::errors::Error> {
+        ConsoleRegistry::unregister(id);
+        Ok(())
+    }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
 }
 
 #[allow(non_snake_case)]

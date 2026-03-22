@@ -3,10 +3,12 @@ use std::error::Error;
 use rand::distr::{Alphanumeric, SampleString};
 use retro_shared::shared::shared_memory::SharedMemory;
 use std::process::{Child, Command};
-use std::sync::{Mutex, RwLock};
+use parking_lot::{Mutex, RwLock};
+use std::sync::atomic::AtomicI32;
+use std::sync::OnceLock;
 use std::time::{Duration};
 use dav1d::Error::InvalidArgument;
-use shared_memory::ShmemConf;
+use shared_memory::{Shmem, ShmemConf};
 use tracing::{info, warn};
 use wait_timeout::ChildExt;
 use crate::codec::audio_encoder::{AudioEncoder, AudioEncoderOpus};
@@ -17,18 +19,24 @@ pub struct GenericConsole {
     video_encoder: Mutex<Box<dyn VideoEncoder>>,
 
     shared_id: String,
-    shared_data: SharedMemory,
+    shared_segment: Shmem,
+    shared_data: *mut SharedMemory,
     core_process: Option<Child>,
 }
 
+unsafe impl Send for GenericConsole {}
+unsafe impl Sync for GenericConsole {}
+
 impl GenericConsole {
     pub fn new(width: i32, height: i32, video_codec: i32, audio_codec: i32) -> Self {
-        let mem_id = Alphanumeric.sample_string(&mut rand::rng(), 64);
+        let mem_id = Alphanumeric.sample_string(&mut rand::rng(), 60);
         let shared_memory = ShmemConf::new()
             .os_id(mem_id.clone())
             .size(size_of::<SharedMemory>())
             .create()
             .expect("Failed to create shared memory");
+        info!("Created shared memory: {:?}", mem_id);
+        let data = shared_memory.as_ptr() as *mut SharedMemory;
 
         Self {
             audio_encoder: Mutex::new(Box::new(match audio_codec {
@@ -47,7 +55,8 @@ impl GenericConsole {
             })),
 
             shared_id: mem_id,
-            shared_data: unsafe { *(shared_memory.as_ptr() as *mut SharedMemory) },
+            shared_segment: shared_memory,
+            shared_data: data,
             core_process: None,
         }
     }
@@ -66,30 +75,30 @@ impl GenericConsole {
     }
 
     pub fn retrieve_video_packet(&self) -> Option<Vec<u8>> {
-        self.video_encoder.lock().unwrap().retrieve_packet()
+        self.video_encoder.lock().retrieve_packet()
     }
 
     pub fn encode_video_frame(&self) {
-        if self.shared_data.display_changed {
-            self.video_encoder.lock().unwrap().submit_frame(self.shared_data.display_data.to_vec())
+        if unsafe { &*self.shared_data }.display_changed {
+            self.video_encoder.lock().submit_frame(unsafe { &*self.shared_data }.display_data.to_vec())
         }
     }
 
     pub fn encode_audio_packet(&self) -> Option<Vec<u8>> {
-        if !self.shared_data.audio_changed {
+        if !unsafe { &*self.shared_data }.audio_changed {
             return None;
         }
-        self.audio_encoder.lock().unwrap().encode_frame(self.shared_data.audio_data.to_vec()).ok()
+        self.audio_encoder.lock().encode_frame(unsafe { &*self.shared_data }.audio_data.to_vec()).ok()
     }
 
     pub fn submit_input(&mut self, port: i16, data: i16) {
-        self.shared_data.controls[port as usize] = data as u16
+        unsafe { &mut *self.shared_data }.controls[port as usize] = data as u16
     }
 }
 
 impl Drop for GenericConsole {
     fn drop(&mut self) {
-        self.shared_data.shutdown_requested = true;
+        unsafe { &mut *self.shared_data }.shutdown_requested = true;
         if let Some(mut core_process) = self.core_process.take() {
             match core_process.wait_timeout(Duration::from_secs(10)) {
                 Ok(Some(status)) => {
@@ -105,77 +114,41 @@ impl Drop for GenericConsole {
     }
 }
 
-static REGISTRY: RwLock<Option<ConsoleRegistry>> = RwLock::new(None);
+static REGISTRY: OnceLock<ConsoleRegistry> = OnceLock::new();
 
 #[derive(Default)]
 pub struct ConsoleRegistry {
-    incrementor: i32,
-    registry: HashMap<i32, RwLock<GenericConsole>>
+    incrementor: AtomicI32,
+    registry: RwLock<HashMap<i32, RwLock<GenericConsole>>>,
 }
 
 impl ConsoleRegistry {
-    fn with_instance<T>(func: impl FnOnce(&ConsoleRegistry) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        {
-            let guard = REGISTRY.read()?;
-            if guard.is_some() {
-                return func(guard.as_ref().unwrap())
-            }
-        }
-        Self::with_instance_mut(|instance| {
-            func(instance)
-        })
-    }
-
-    fn with_instance_mut<T>(func: impl FnOnce(&mut ConsoleRegistry) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        let mut guard = REGISTRY.write()?;
-        if guard.is_none() {
-            *guard = Some(ConsoleRegistry::default());
-        }
-        func(guard.as_mut().unwrap())
-    }
-
     pub fn register_new(width: i32, height: i32, video_codec: i32, audio_codec: i32) -> i32 {
-        Self::with_instance_mut(|instance| {
-            let id = instance.incrementor;
-            instance.incrementor += 1;
-
-            instance.registry.insert(id, RwLock::new(GenericConsole::new(width, height, video_codec, audio_codec)));
-            Ok(id)
-        }).unwrap_or(-1)
+        let instance = REGISTRY.get_or_init(ConsoleRegistry::default);
+        let id = instance.incrementor.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        instance.registry.write().insert(id, RwLock::new(GenericConsole::new(width, height, video_codec, audio_codec)));
+        id
     }
 
     pub fn unregister(id: i32) {
-        Self::with_instance_mut(|instance| {
-            instance.registry.remove(&id);
-            Ok(())
-        }).unwrap();
+        let instance = REGISTRY.get_or_init(ConsoleRegistry::default);
+        instance.registry.write().remove(&id);
     }
 
     pub fn with_console<T>(id: i32, func: impl FnOnce(&mut GenericConsole) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
-        Self::with_instance(|instance| {
-            if let Some(console) = instance.registry.get(&id) {
-                let mut guard = console.write().unwrap();
-                return func(&mut guard);
-            }
-            Err(Box::new(InvalidArgument))
-        })
+        let instance = REGISTRY.get_or_init(ConsoleRegistry::default);
+
+        if let Some(console) = instance.registry.read().get(&id) {
+            return func(&mut console.write());
+        }
+        Err(Box::new(InvalidArgument))
     }
 
     pub fn foreach(func: impl Fn(&GenericConsole)) {
-        Self::with_instance(|instance| {
-            instance.registry.values().for_each(|reg| {
-                func(&reg.read().unwrap());
-            });
-            Ok(())
-        }).unwrap();
-    }
+        let instance = REGISTRY.get_or_init(ConsoleRegistry::default);
 
-    /*pub fn foreach_mut(func: impl Fn(&mut GenericConsole)) {
-        Self::with_instance(|instance| {
-            instance.registry.values().for_each(|reg| {
-                func(&mut reg.write().unwrap());
-            });
-            Ok(())
-        }).unwrap();
-    }*/
+        instance.registry.read().values().for_each(|reg| {
+            func(&reg.read());
+        });
+    }
 }
