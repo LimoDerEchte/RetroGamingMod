@@ -39,7 +39,7 @@ public class ControllerItem extends Item {
 
         ItemStack stack = user.getStackInHand(hand);
         if(!stack.getComponents().contains(PORT_NUM) || !stack.getComponents().contains(CONSOLE_LINK_ID)) {
-            user.sendMessage(Text.literal("Controller not linked"), true);
+            user.sendMessage(Text.translatable("item.emumod.controller.no_link"), true);
             return ActionResult.PASS;
         }
 
@@ -48,14 +48,14 @@ public class ControllerItem extends Item {
             port++;
             if(port > maxPortNum)
                 port = 0;
-            user.sendMessage(Text.literal("Switched to Player " + (port + 1)), true);
+            user.sendMessage(Text.translatable("item.emumod.controller.switch", port + 1), true);
             stack.set(PORT_NUM, port);
             return ActionResult.SUCCESS_SERVER;
         }
 
         UUID console = stack.getComponents().get(CONSOLE_LINK_ID);
         if(!EmuMod.running.containsKey(console)) {
-            user.sendMessage(Text.literal("Controller not linked"), true);
+            user.sendMessage(Text.translatable("item.emumod.controller.no_link"), true);
             return ActionResult.SUCCESS_SERVER;
         }
 
@@ -78,7 +78,7 @@ public class ControllerItem extends Item {
                     .add(CONSOLE_LINK_ID, con.consoleId.consoleId())
                     .add(PORT_NUM, 0).build());
 
-            context.getPlayer().sendMessage(Text.literal("Controller linked (Player 1)"), true);
+            context.getPlayer().sendMessage(Text.translatable("item.emumod.controller.linked"), true);
             return ActionResult.SUCCESS_SERVER;
         }
         return ActionResult.SUCCESS_SERVER;

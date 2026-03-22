@@ -158,10 +158,6 @@ impl RetroClient {
             instance.client.lock().disconnect();
             Ok(())
         }).expect("Failed to shutdown clientside connection");
-
-        warn!("Disposing RetroClient instance: main loop exited");
-        let mut guard = INSTANCE.write();
-        *guard = None;
     }
 
     fn handle_packet(&self, mut data: Vec<u8>) {
