@@ -3,7 +3,7 @@ use crate::codec::video_decoder::{VideoDecoder, VideoDecoderAV1};
 
 #[allow(unused)]
 pub struct NativeDisplay {
-    data: Vec<u8>,
+    data: *mut u8,
     decoder: Box<dyn VideoDecoder>,
 
     changed: bool,
@@ -12,13 +12,13 @@ pub struct NativeDisplay {
     codec: i32,
 }
 
+unsafe impl Send for NativeDisplay {}
+unsafe impl Sync for NativeDisplay {}
+
 impl NativeDisplay {
     pub fn new(width: i32, height: i32, codec: i32, data_ptr: i64) -> Self {
-        let size = (width * height * 3) as usize;
         NativeDisplay {
-            data: unsafe {
-                Vec::from_raw_parts(data_ptr as *mut u8, size, size)
-            },
+            data: data_ptr as *mut u8,
             decoder: Box::new(match codec {
                 0 => VideoDecoderAV1::new(width as u32, height as u32),
                 _ => {
@@ -43,7 +43,9 @@ impl NativeDisplay {
 
     pub fn try_transmit(&mut self) {
         if let Some(data) = self.decoder.retrieve_frame() {
-            self.data.copy_from_slice(data.as_slice());
+            unsafe {
+                self.data.copy_from(data.as_ptr(), data.len());
+            }
         }
     }
 }

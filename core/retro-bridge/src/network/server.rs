@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 use parking_lot::{Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use renet::DefaultChannel::ReliableOrdered;
-use tracing::warn;
+use tracing::{info, warn};
 use crate::platform::generic_console::ConsoleRegistry;
 
 static INSTANCE: RwLock<Option<RetroServer>> = RwLock::new(None);
@@ -51,7 +51,7 @@ impl RetroServer {
                 break;
             }
         }
-        warn!("Disposing RetroServer instance: all loops finished");
+        info!("Disposing RetroServer instance: all loops finished");
         let mut guard = INSTANCE.write();
         *guard = None;
         Ok(())

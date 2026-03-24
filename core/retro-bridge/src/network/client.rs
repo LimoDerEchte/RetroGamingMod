@@ -7,7 +7,7 @@ use parking_lot::{Mutex, RwLock};
 use renet::{ConnectionConfig, RenetClient};
 use renet::DefaultChannel::ReliableOrdered;
 use renet_netcode::{ClientAuthentication, ConnectToken, NetcodeClientTransport};
-use tracing::warn;
+use tracing::{info, warn};
 use crate::network::network_definitions::PacketType;
 use crate::util::display::NativeDisplay;
 
@@ -57,7 +57,7 @@ impl RetroClient {
             }
             std::thread::sleep(Duration::from_millis(100));
         }
-        warn!("Disposing RetroClient instance: all loops finished");
+        info!("Disposing RetroClient instance: all loops finished");
         let mut guard = INSTANCE.write();
         *guard = None;
         Ok(())
