@@ -124,7 +124,12 @@ impl RetroClient {
                 transport.update(delta, &mut client)?;
                 client.update(delta);
 
-                if !client.is_connected() {
+                if client.is_disconnected() {
+                    if let Some(reason) = client.disconnect_reason() {
+                        info!("Client disconnected: {:?}", reason);
+                    } else {
+                        info!("Client disconnected (no specific reason given)");
+                    }
                     return Ok(true);
                 }
 
