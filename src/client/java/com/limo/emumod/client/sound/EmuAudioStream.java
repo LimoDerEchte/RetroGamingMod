@@ -1,12 +1,11 @@
 package com.limo.emumod.client.sound;
 
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
-import net.minecraft.client.sound.BufferedAudioStream;
-
 import javax.sound.sampled.AudioFormat;
+import net.minecraft.client.sounds.FloatSampleSource;
 import java.util.UUID;
 
-public class EmuAudioStream implements BufferedAudioStream {
+public class EmuAudioStream implements FloatSampleSource {
     private final AudioFormat format;
     private final UUID uuid;
 
@@ -16,7 +15,7 @@ public class EmuAudioStream implements BufferedAudioStream {
     }
 
     @Override
-    public boolean read(FloatConsumer consumer) {
+    public boolean readChunk(FloatConsumer consumer) {
         // TODO: Reimplement if streaming over java is possible
         float[] buffer = new float[0]; // EmuModClient.CLIENT.lastAudioData(uuid);
         if(buffer.length == 0)

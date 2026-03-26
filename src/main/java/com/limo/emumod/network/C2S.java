@@ -1,24 +1,25 @@
 package com.limo.emumod.network;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import org.jspecify.annotations.NonNull;
 
 public class C2S {
 
-    public record CreateCartridgePayload(int handle, byte type, byte[] data) implements CustomPayload {
-        public static final Id<CreateCartridgePayload> ID = new Id<>(NetworkId.CREATE_CARTRIDGE);
-        public static final PacketCodec<RegistryByteBuf, CreateCartridgePayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.INTEGER, CreateCartridgePayload::handle,
-                PacketCodecs.BYTE, CreateCartridgePayload::type,
-                PacketCodecs.BYTE_ARRAY, CreateCartridgePayload::data,
+    public record CreateCartridgePayload(int handle, byte cartType, byte[] data) implements CustomPacketPayload {
+        public static final Type<CreateCartridgePayload> ID = new Type<>(NetworkId.CREATE_CARTRIDGE);
+        public static final StreamCodec<RegistryFriendlyByteBuf, CreateCartridgePayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, CreateCartridgePayload::handle,
+                ByteBufCodecs.BYTE, CreateCartridgePayload::cartType,
+                ByteBufCodecs.BYTE_ARRAY, CreateCartridgePayload::data,
                 CreateCartridgePayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }

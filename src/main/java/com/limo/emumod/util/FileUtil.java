@@ -2,8 +2,7 @@ package com.limo.emumod.util;
 
 import com.limo.emumod.EmuMod;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.WorldSavePath;
-
+import net.minecraft.world.level.storage.LevelResource;
 import java.io.File;
 import java.util.UUID;
 
@@ -35,7 +34,7 @@ public class FileUtil {
     }
 
     public static String getSavePath() {
-        String savePath = FabricLoader.getInstance().getGameDir().resolve(WorldSavePath.ROOT.getRelativePath()).toString();
+        String savePath = FabricLoader.getInstance().getGameDir().resolve(LevelResource.ROOT.getId()).toString();
         if (savePath.lastIndexOf('.') == savePath.length() - 1) {
             savePath = savePath.substring(0, savePath.length() - 1);
         }

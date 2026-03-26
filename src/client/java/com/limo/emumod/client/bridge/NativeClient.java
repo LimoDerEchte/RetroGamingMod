@@ -2,13 +2,13 @@ package com.limo.emumod.client.bridge;
 
 import com.limo.emumod.util.AudioCodec;
 import com.limo.emumod.util.VideoCodec;
-import net.minecraft.client.texture.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage;
 
 public class NativeClient {
 
     public static NativeImage registerScreen(int id, int width, int height, VideoCodec videoCodec, AudioCodec audioCodec) {
         NativeImage img = new NativeImage(NativeImage.Format.RGBA, width, height, true);
-        registerId(id, width, height, videoCodec.ordinal(), img.imageId(), audioCodec.ordinal());
+        registerId(id, width, height, videoCodec.ordinal(), img.getPointer(), audioCodec.ordinal());
         return img;
     }
 

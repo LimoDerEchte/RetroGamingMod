@@ -5,11 +5,10 @@ import com.limo.emumod.components.GameComponent;
 import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,7 +25,7 @@ public class ServerHandler {
             byte[] nameBytes;
             Item item;
             String fileExtension;
-            switch (payload.type()) {
+            switch (payload.cartType()) {
                 case 0 -> {
                     if(payload.data().length >= 0x142)
                         nameBytes = Arrays.copyOfRange(payload.data(), 0x134, 0x142);
@@ -61,7 +60,7 @@ public class ServerHandler {
                     fileExtension = "nes";
                 }
                 default -> {
-                    ctx.player().sendMessage(Text.literal("Invalid request"), true);
+                    ctx.player().displayClientMessage(Component.literal("Invalid request"), true);
                     return;
                 }
             }
@@ -74,18 +73,18 @@ public class ServerHandler {
                     fos.write(payload.data());
                     fos.flush();
                 } catch (IOException e) {
-                    ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.file_write_error"), true);
+                    ctx.player().displayClientMessage(Component.translatable("gui.emumod.cartridge.file_write_error"), true);
                     return;
                 }
-                if(!(ctx.player().getMainHandStack().getItem() instanceof CartridgeItem)) {
-                    ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.item_unavailable"), true);
+                if(!(ctx.player().getMainHandItem().getItem() instanceof CartridgeItem)) {
+                    ctx.player().displayClientMessage(Component.translatable("gui.emumod.cartridge.item_unavailable"), true);
                     return;
                 }
-                ctx.player().getMainHandStack().decrement(1);
+                ctx.player().getMainHandItem().shrink(1);
                 ItemStack stack = new ItemStack(item);
-                stack.applyComponentsFrom(ComponentMap.builder().add(GAME, new GameComponent(fileUuid, game)).build());
-                ctx.player().getInventory().insertStack(stack);
-                ctx.player().sendMessage(Text.translatable("gui.emumod.cartridge.success"), true);
+                stack.applyComponents(DataComponentMap.builder().set(GAME, new GameComponent(fileUuid, game)).build());
+                ctx.player().getInventory().add(stack);
+                ctx.player().displayClientMessage(Component.translatable("gui.emumod.cartridge.success"), true);
             });
         });
     }

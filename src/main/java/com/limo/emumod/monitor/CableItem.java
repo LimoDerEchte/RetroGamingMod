@@ -2,57 +2,57 @@ package com.limo.emumod.monitor;
 
 import com.limo.emumod.console.GenericConsoleBlockEntity;
 import com.limo.emumod.registry.ItemId;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import static com.limo.emumod.registry.EmuComponents.CONSOLE_LINK_ID;
 
 public class CableItem extends Item {
 
     public CableItem() {
-        super(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.CABLE));
+        super(new Item.Properties().stacksTo(8).setId(ItemId.Registry.CABLE));
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        PlayerEntity user = context.getPlayer();
-        World world = context.getWorld();
-        if(world.isClient())
-            return super.useOnBlock(context);
-        if(!(user instanceof ServerPlayerEntity player))
-            return ActionResult.PASS;
-        ItemStack stack = context.getStack();
-        BlockPos pos = context.getBlockPos();
+    public InteractionResult useOn(UseOnContext context) {
+        Player user = context.getPlayer();
+        Level world = context.getLevel();
+        if(world.isClientSide())
+            return super.useOn(context);
+        if(!(user instanceof ServerPlayer player))
+            return InteractionResult.PASS;
+        ItemStack stack = context.getItemInHand();
+        BlockPos pos = context.getClickedPos();
         BlockState state = world.getBlockState(pos);
         BlockEntity entity = world.getBlockEntity(pos);
         // Link Game to Monitor
         if(entity instanceof MonitorBlockEntity mon) {
-            if(!stack.hasChangedComponent(CONSOLE_LINK_ID)) {
-                player.sendMessage(Text.translatable("item.emumod.cable.no_link"), true);
-                return ActionResult.SUCCESS;
+            if(!stack.hasNonDefault(CONSOLE_LINK_ID)) {
+                player.displayClientMessage(Component.translatable("item.emumod.cable.no_link"), true);
+                return InteractionResult.SUCCESS;
             }
             mon.consoleId = stack.get(CONSOLE_LINK_ID);
-            mon.markDirty();
-            world.updateListeners(pos, state, state, 0);
+            mon.setChanged();
+            world.sendBlockUpdated(pos, state, state, 0);
             stack.remove(CONSOLE_LINK_ID);
-            player.sendMessage(Text.translatable("item.emumod.cable.link"), true);
-            return ActionResult.SUCCESS;
+            player.displayClientMessage(Component.translatable("item.emumod.cable.link"), true);
+            return InteractionResult.SUCCESS;
         }
         // Read Game from Console
         if(entity instanceof GenericConsoleBlockEntity con) {
-            stack.applyComponentsFrom(ComponentMap.builder().add(CONSOLE_LINK_ID, con.consoleId.consoleId()).build());
-            player.sendMessage(Text.translatable("item.emumod.cable.read"), true);
+            stack.applyComponents(DataComponentMap.builder().set(CONSOLE_LINK_ID, con.consoleId.consoleId()).build());
+            player.displayClientMessage(Component.translatable("item.emumod.cable.read"), true);
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

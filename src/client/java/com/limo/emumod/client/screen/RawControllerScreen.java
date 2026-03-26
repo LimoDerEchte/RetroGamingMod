@@ -1,14 +1,14 @@
 package com.limo.emumod.client.screen;
 
 import com.limo.emumod.client.util.ControlHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 
 public class RawControllerScreen extends Screen {
 
@@ -27,31 +27,31 @@ public class RawControllerScreen extends Screen {
     private final ControlHandler controlHandler;
 
     public RawControllerScreen(int streamId, short port) {
-        super(Text.empty());
+        super(Component.empty());
         controlHandler = new ControlHandler(inputMap, streamId, port);
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if(controlHandler.down(input.getKeycode()))
+    public boolean keyPressed(KeyEvent input) {
+        if(controlHandler.down(input.input()))
             return true;
         return super.keyPressed(input);
     }
 
     @Override
-    public boolean keyReleased(KeyInput input) {
-        if(controlHandler.up(input.getKeycode()))
+    public boolean keyReleased(KeyEvent input) {
+        if(controlHandler.up(input.input()))
             return true;
         return super.keyReleased(input);
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
         // Nope
     }
 }

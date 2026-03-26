@@ -7,8 +7,7 @@ import com.limo.emumod.util.FileUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.NetworkUtils;
-
+import net.minecraft.util.HttpUtil;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,15 +21,15 @@ public class ServerEvents {
             mcs = server;
             FileUtil.init();
 
-            int serverPort = server.getServerPort();
+            int serverPort = server.getPort();
             if(serverPort == -1)
-                serverPort = NetworkUtils.findLocalPort();
+                serverPort = HttpUtil.getAvailablePort();
 
-            String serverIp = server.getServerIp();
+            String serverIp = server.getLocalIp();
             if(serverIp == null || serverIp.isEmpty())
                 serverIp = "127.0.0.1";
 
-            if(!NativeServer.init(server.getMaxPlayerCount(), "0.0.0.0:" + serverPort, new String[] {
+            if(!NativeServer.init(server.getMaxPlayers(), "0.0.0.0:" + serverPort, new String[] {
                     serverIp + ":" + serverPort  // TODO: Find good way to search for all exposed addresses
             })) {
                 LOGGER.error("The native server failed to initialize!");

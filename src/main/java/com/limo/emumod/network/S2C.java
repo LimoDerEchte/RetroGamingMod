@@ -1,86 +1,87 @@
 package com.limo.emumod.network;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Uuids;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import org.jspecify.annotations.NonNull;
 
 import java.util.OptionalInt;
 import java.util.UUID;
 
 public class S2C {
 
-    public record OpenScreenPayload(byte type) implements CustomPayload {
-        public static final Id<OpenScreenPayload> ID = new Id<>(NetworkId.OPEN_SCREEN);
-        public static final PacketCodec<RegistryByteBuf, OpenScreenPayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.BYTE, OpenScreenPayload::type,
+    public record OpenScreenPayload(byte screenType) implements CustomPacketPayload {
+        public static final Type<OpenScreenPayload> ID = new Type<>(NetworkId.OPEN_SCREEN);
+        public static final StreamCodec<RegistryFriendlyByteBuf, OpenScreenPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.BYTE, OpenScreenPayload::screenType,
                 OpenScreenPayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
-    public record OpenGameScreenPayload(byte type, int streamId, OptionalInt port) implements CustomPayload {
-        public static final Id<OpenGameScreenPayload> ID = new Id<>(NetworkId.OPEN_GAME_SCREEN);
-        public static final PacketCodec<RegistryByteBuf, OpenGameScreenPayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.BYTE, OpenGameScreenPayload::type,
-                PacketCodecs.VAR_INT, OpenGameScreenPayload::streamId,
-                PacketCodecs.OPTIONAL_INT, OpenGameScreenPayload::port,
+    public record OpenGameScreenPayload(byte screenType, int streamId, OptionalInt port) implements CustomPacketPayload {
+        public static final Type<OpenGameScreenPayload> ID = new Type<>(NetworkId.OPEN_GAME_SCREEN);
+        public static final StreamCodec<RegistryFriendlyByteBuf, OpenGameScreenPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.BYTE, OpenGameScreenPayload::screenType,
+                ByteBufCodecs.VAR_INT, OpenGameScreenPayload::streamId,
+                ByteBufCodecs.OPTIONAL_VAR_INT, OpenGameScreenPayload::port,
                 OpenGameScreenPayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
-    public record CloseScreenPayload(int handle) implements CustomPayload {
-        public static final Id<CloseScreenPayload> ID = new Id<>(NetworkId.CLOSE_SCREEN);
-        public static final PacketCodec<RegistryByteBuf, CloseScreenPayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.INTEGER, CloseScreenPayload::handle,
+    public record CloseScreenPayload(int handle) implements CustomPacketPayload {
+        public static final Type<CloseScreenPayload> ID = new Type<>(NetworkId.CLOSE_SCREEN);
+        public static final StreamCodec<RegistryFriendlyByteBuf, CloseScreenPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, CloseScreenPayload::handle,
                 CloseScreenPayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
-    public record EmuModTokenPayload(byte[] token) implements CustomPayload {
-        public static final Id<EmuModTokenPayload> ID = new Id<>(NetworkId.ENET_TOKEN);
-        public static final PacketCodec<RegistryByteBuf, EmuModTokenPayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.BYTE_ARRAY, EmuModTokenPayload::token,
+    public record EmuModTokenPayload(byte[] token) implements CustomPacketPayload {
+        public static final Type<EmuModTokenPayload> ID = new Type<>(NetworkId.ENET_TOKEN);
+        public static final StreamCodec<RegistryFriendlyByteBuf, EmuModTokenPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.BYTE_ARRAY, EmuModTokenPayload::token,
                 EmuModTokenPayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
-    public record UpdateEmulatorPayload(UUID console, int id, int width, int height, int audioCodec, int videoCodec, int sampleRate) implements CustomPayload {
-        public static final Id<UpdateEmulatorPayload> ID = new Id<>(NetworkId.UPDATE_EMULATOR);
-        public static final PacketCodec<RegistryByteBuf, UpdateEmulatorPayload> CODEC = PacketCodec.tuple(
-                Uuids.PACKET_CODEC, UpdateEmulatorPayload::console,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::id,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::width,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::height,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::audioCodec,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::videoCodec,
-                PacketCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
+    public record UpdateEmulatorPayload(UUID console, int id, int width, int height, int audioCodec, int videoCodec, int sampleRate) implements CustomPacketPayload {
+        public static final Type<UpdateEmulatorPayload> ID = new Type<>(NetworkId.UPDATE_EMULATOR);
+        public static final StreamCodec<RegistryFriendlyByteBuf, UpdateEmulatorPayload> CODEC = StreamCodec.composite(
+                UUIDUtil.STREAM_CODEC, UpdateEmulatorPayload::console,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::id,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::width,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::height,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::audioCodec,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::videoCodec,
+                ByteBufCodecs.VAR_INT, UpdateEmulatorPayload::sampleRate,
                 UpdateEmulatorPayload::new
         );
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public @NonNull Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }

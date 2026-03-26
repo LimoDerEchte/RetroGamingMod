@@ -5,18 +5,17 @@ import com.limo.emumod.components.ConsoleComponent;
 import com.limo.emumod.network.S2C;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipData;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
-
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import java.util.*;
 
 import static com.limo.emumod.network.ServerEvents.mcs;
@@ -29,40 +28,40 @@ public class GenericHandheldItem extends Item {
     private final byte screenType;
     private final Item cartridgeType;
 
-    public GenericHandheldItem(RegistryKey<Item> type, byte screenType, Item cartridgeType) {
-        super(new Settings().maxCount(1).registryKey(type));
+    public GenericHandheldItem(ResourceKey<Item> type, byte screenType, Item cartridgeType) {
+        super(new Properties().stacksTo(1).setId(type));
         this.screenType = screenType;
         this.cartridgeType = cartridgeType;
     }
 
     @Override
-    public Optional<TooltipData> getTooltipData(ItemStack stack) {
-        return super.getTooltipData(stack);
+    public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+        return super.getTooltipImage(stack);
     }
 
     @Override
-    public boolean hasGlint(ItemStack stack) {
-        return stack.getComponents().contains(GAME);
+    public boolean isFoil(ItemStack stack) {
+        return stack.getComponents().has(GAME);
     }
 
     @Override
-    public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if(world.isClient())
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        if(world.isClientSide())
             return super.use(world, user, hand);
-        ItemStack stack = user.getStackInHand(hand);
+        ItemStack stack = user.getItemInHand(hand);
 
-        ComponentMap comp = stack.getComponents();
-        if(!comp.contains(CONSOLE))
-            stack.applyComponentsFrom(ComponentMap.builder().add(CONSOLE, new ConsoleComponent(UUID.randomUUID())).build());
+        DataComponentMap comp = stack.getComponents();
+        if(!comp.has(CONSOLE))
+            stack.applyComponents(DataComponentMap.builder().set(CONSOLE, new ConsoleComponent(UUID.randomUUID())).build());
         UUID console = Objects.requireNonNull(comp.get(CONSOLE)).consoleId();
 
-        if(user.isSneaking() && System.currentTimeMillis() > lastInteractionTime + 1000) {
+        if(user.isShiftKeyDown() && System.currentTimeMillis() > lastInteractionTime + 1000) {
             lastInteractionTime = System.currentTimeMillis();
 
-            if(comp.contains(GAME)) {
+            if(comp.has(GAME)) {
                 ItemStack cart = new ItemStack(cartridgeType);
-                cart.applyComponentsFrom(ComponentMap.builder().add(GAME, stack.getComponents().get(GAME)).build());
-                user.getInventory().insertStack(cart);
+                cart.applyComponents(DataComponentMap.builder().set(GAME, stack.getComponents().get(GAME)).build());
+                user.getInventory().add(cart);
 
                 if(EmuMod.running.containsKey(console)) {
                     EmuMod.running.get(console).stop();
@@ -73,30 +72,30 @@ public class GenericHandheldItem extends Item {
                 }
 
                 stack.remove(GAME);
-                user.sendMessage(Text.translatable("item.emumod.handheld.eject"), true);
+                user.displayClientMessage(Component.translatable("item.emumod.handheld.eject"), true);
             } else {
                 if(link != null) {
                     link = null;
-                    user.sendMessage(Text.translatable("item.emumod.handheld.cancel_link"), true);
+                    user.displayClientMessage(Component.translatable("item.emumod.handheld.cancel_link"), true);
                 } else {
-                    link = user.getStackInHand(hand);
-                    user.sendMessage(Text.translatable("item.emumod.handheld.start_link"), true);
+                    link = user.getItemInHand(hand);
+                    user.displayClientMessage(Component.translatable("item.emumod.handheld.start_link"), true);
                 }
             }
         } else {
-            if(!stack.hasChangedComponent(GAME)) {
-                user.sendMessage(Text.translatable("item.emumod.handheld.no_game"), true);
-                return ActionResult.PASS;
+            if(!stack.hasNonDefault(GAME)) {
+                user.displayClientMessage(Component.translatable("item.emumod.handheld.no_game"), true);
+                return InteractionResult.PASS;
             }
 
             if(!EmuMod.running.containsKey(console)) {
-                user.sendMessage(Text.translatable("item.emumod.handheld.not_running"), true);
-                return ActionResult.PASS;
+                user.displayClientMessage(Component.translatable("item.emumod.handheld.not_running"), true);
+                return InteractionResult.PASS;
             }
 
-            ServerPlayNetworking.send((ServerPlayerEntity) user, new S2C.OpenGameScreenPayload(
+            ServerPlayNetworking.send((ServerPlayer) user, new S2C.OpenGameScreenPayload(
                     screenType, EmuMod.running.get(console).getId(), OptionalInt.empty()));
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 }

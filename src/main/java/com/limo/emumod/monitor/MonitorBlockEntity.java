@@ -1,23 +1,25 @@
 package com.limo.emumod.monitor;
 
+import com.limo.emumod.EmuMod;
 import com.limo.emumod.registry.EmuBlockEntities;
 import com.limo.emumod.registry.EmuComponents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.ComponentsAccess;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.util.Uuids;
-import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponentGetter;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import org.jspecify.annotations.NonNull;
 
 public class MonitorBlockEntity extends BlockEntity {
     public UUID consoleId;
@@ -27,41 +29,41 @@ public class MonitorBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void readComponents(ComponentsAccess components) {
-        super.readComponents(components);
-        consoleId = components.getOrDefault(EmuComponents.CONSOLE_LINK_ID, null);
+    protected void applyImplicitComponents(@NonNull DataComponentGetter components) {
+        super.applyImplicitComponents(components);
+        consoleId = components.getOrDefault(EmuComponents.CONSOLE_LINK_ID, EmuMod.UUID_ZERO);
     }
 
     @Override
-    protected void addComponents(ComponentMap.Builder builder) {
-        super.addComponents(builder);
+    protected void collectImplicitComponents(DataComponentMap.@NonNull Builder builder) {
+        super.collectImplicitComponents(builder);
         if(consoleId != null) {
-            builder.add(EmuComponents.CONSOLE_LINK_ID, consoleId);
+            builder.set(EmuComponents.CONSOLE_LINK_ID, consoleId);
         }
     }
 
     @Override
-    protected void writeData(WriteView view) {
+    protected void saveAdditional(@NonNull ValueOutput view) {
         if(consoleId != null)
-            view.put("file_id", Uuids.CODEC, consoleId);
+            view.store("file_id", UUIDUtil.AUTHLIB_CODEC, consoleId);
 
-        super.writeData(view);
+        super.saveAdditional(view);
     }
 
     @Override
-    protected void readData(ReadView view) {
-        super.readData(view);
+    protected void loadAdditional(@NonNull ValueInput view) {
+        super.loadAdditional(view);
 
-        consoleId = view.read("file_id", Uuids.CODEC).orElse(consoleId);
+        consoleId = view.read("file_id", UUIDUtil.AUTHLIB_CODEC).orElse(consoleId);
     }
 
     @Override
-    public @Nullable Packet<ClientPlayPacketListener> toUpdatePacket() {
-        return BlockEntityUpdateS2CPacket.create(this);
+    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
-    public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registries) {
-        return createNbt(registries);
+    public @NonNull CompoundTag getUpdateTag(HolderLookup.@NonNull Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 }

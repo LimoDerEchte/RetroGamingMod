@@ -4,32 +4,31 @@ import com.limo.emumod.components.ConsoleComponent;
 import com.limo.emumod.components.GameComponent;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.item.v1.ComponentTooltipAppenderRegistry;
-import net.minecraft.component.ComponentType;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Uuids;
-
+import net.minecraft.core.Registry;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.component.ItemContainerContents;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public class EmuComponents {
-    public static final ComponentType<UUID> CONSOLE_LINK_ID = register("link_id", builder -> builder
-            .codec(Uuids.CODEC).packetCodec(Uuids.PACKET_CODEC));
-    public static final ComponentType<Integer> PORT_NUM = register("port_num", builder -> builder
-            .codec(Codec.INT).packetCodec(PacketCodecs.VAR_INT));
+    public static final DataComponentType<UUID> CONSOLE_LINK_ID = register("link_id", builder -> builder
+            .persistent(UUIDUtil.AUTHLIB_CODEC).networkSynchronized(UUIDUtil.STREAM_CODEC));
+    public static final DataComponentType<Integer> PORT_NUM = register("port_num", builder -> builder
+            .persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
-    public static final ComponentType<GameComponent> GAME = register("game", builder -> builder
-            .codec(GameComponent.CODEC).packetCodec(GameComponent.PACKET_CODEC));
-    public static final ComponentType<ConsoleComponent> CONSOLE = register("console", builder -> builder
-            .codec(ConsoleComponent.CODEC).packetCodec(ConsoleComponent.PACKET_CODEC));
-    public static final ComponentType<ContainerComponent> CARTRIDGE = register("cartridge", builder -> builder
-            .codec(ContainerComponent.CODEC).packetCodec(ContainerComponent.PACKET_CODEC));
+    public static final DataComponentType<GameComponent> GAME = register("game", builder -> builder
+            .persistent(GameComponent.CODEC).networkSynchronized(GameComponent.PACKET_CODEC));
+    public static final DataComponentType<ConsoleComponent> CONSOLE = register("console", builder -> builder
+            .persistent(ConsoleComponent.CODEC).networkSynchronized(ConsoleComponent.PACKET_CODEC));
+    public static final DataComponentType<ItemContainerContents> CARTRIDGE = register("cartridge", builder -> builder
+            .persistent(ItemContainerContents.CODEC).networkSynchronized(ItemContainerContents.STREAM_CODEC));
 
-    public static <T> ComponentType<T> register(String path, UnaryOperator<ComponentType.Builder<T>> builderOperator) {
-        return Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of("emumod", path), builderOperator.apply(ComponentType.builder()).build());
+    public static <T> DataComponentType<T> register(String path, UnaryOperator<DataComponentType.Builder<T>> builderOperator) {
+        return Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, Identifier.fromNamespaceAndPath("emumod", path), builderOperator.apply(DataComponentType.builder()).build());
     }
 
     public static void init() {

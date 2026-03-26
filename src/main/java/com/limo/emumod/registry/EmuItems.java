@@ -17,15 +17,14 @@ import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
 import java.io.File;
 import java.util.UUID;
 
@@ -33,7 +32,7 @@ import static com.limo.emumod.network.ServerEvents.mcs;
 
 public class EmuItems {
     public static final Item CARTRIDGE = register(new CartridgeItem(), ItemId.Registry.CARTRIDGE);
-    public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Settings().maxCount(8).registryKey(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
+    public static final Item BROKEN_CARTRIDGE = register(new Item(new Item.Properties().stacksTo(8).setId(ItemId.Registry.BROKEN_CARTRIDGE)), ItemId.Registry.BROKEN_CARTRIDGE);
 
     public static final Item GAMEBOY_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.GAMEBOY_CARTRIDGE,
             "gb", () -> GenericHandheldItem.link = null, (_, file, console) ->
@@ -66,26 +65,26 @@ public class EmuItems {
 
     public static final Item NES_CARTRIDGE = register(new LinkedCartridgeItem(ItemId.Registry.NES_CARTRIDGE), ItemId.Registry.NES_CARTRIDGE);
     public static final Item NES_CONTROLLER = register(new ControllerItem(ItemId.Registry.NES_CONTROLLER, 2), ItemId.Registry.NES_CONTROLLER);
-    public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Settings().maxCount(8)
-            .registryKey(ItemId.Registry.NES)), ItemId.Registry.NES);
+    public static final Item NES = register(new BlockItem(EmuBlocks.NES, new Item.Properties().stacksTo(8)
+            .setId(ItemId.Registry.NES)), ItemId.Registry.NES);
 
-    public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Settings().maxCount(8)
-            .registryKey(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
-    public static final Item LARGE_TV = register(new BlockItem(EmuBlocks.LARGE_TV, new Item.Settings().maxCount(8)
-            .registryKey(ItemId.Registry.LARGE_TV)), ItemId.Registry.LARGE_TV);
+    public static final Item MONITOR = register(new BlockItem(EmuBlocks.MONITOR, new Item.Properties().stacksTo(8)
+            .setId(ItemId.Registry.MONITOR)), ItemId.Registry.MONITOR);
+    public static final Item LARGE_TV = register(new BlockItem(EmuBlocks.LARGE_TV, new Item.Properties().stacksTo(8)
+            .setId(ItemId.Registry.LARGE_TV)), ItemId.Registry.LARGE_TV);
     public static final Item CABLE = register(new CableItem(), ItemId.Registry.CABLE);
 
-    public static final ItemGroup MAIN_GROUP = register(FabricItemGroup.builder()
-            .displayName(Text.translatable("itemGroup.emumod.main"))
-            .icon(GAMEBOY_ADVANCE::getDefaultStack)
+    public static final CreativeModeTab MAIN_GROUP = register(FabricItemGroup.builder()
+            .title(Component.translatable("itemGroup.emumod.main"))
+            .icon(GAMEBOY_ADVANCE::getDefaultInstance)
             .build(), ItemId.Registry.MAIN_GROUP);
 
-    public static Item register(Item item, RegistryKey<Item> registryKey) {
-        return Registry.register(Registries.ITEM, registryKey.getValue(), item);
+    public static Item register(Item item, ResourceKey<Item> registryKey) {
+        return Registry.register(BuiltInRegistries.ITEM, registryKey.identifier(), item);
     }
 
-    public static ItemGroup register(ItemGroup group, RegistryKey<ItemGroup> registryKey) {
-        return Registry.register(Registries.ITEM_GROUP, registryKey.getValue(), group);
+    public static CreativeModeTab register(CreativeModeTab group, ResourceKey<CreativeModeTab> registryKey) {
+        return Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, registryKey.identifier(), group);
     }
 
     public static void init() {
@@ -96,20 +95,20 @@ public class EmuItems {
         ((LinkedCartridgeItem)GAME_GEAR_CARTRIDGE).linkItem = GAME_GEAR;
         // Item Group
         ItemGroupEvents.modifyEntriesEvent(ItemId.Registry.MAIN_GROUP).register(group -> {
-            group.add(CARTRIDGE);
-            group.add(BROKEN_CARTRIDGE);
+            group.accept(CARTRIDGE);
+            group.accept(BROKEN_CARTRIDGE);
 
-            group.add(GAMEBOY);
-            group.add(GAMEBOY_COLOR);
-            group.add(GAMEBOY_ADVANCE);
-            group.add(GAME_GEAR);
+            group.accept(GAMEBOY);
+            group.accept(GAMEBOY_COLOR);
+            group.accept(GAMEBOY_ADVANCE);
+            group.accept(GAME_GEAR);
 
-            group.add(NES);
-            group.add(NES_CONTROLLER);
+            group.accept(NES);
+            group.accept(NES_CONTROLLER);
 
-            group.add(MONITOR);
-            group.add(LARGE_TV);
-            group.add(CABLE);
+            group.accept(MONITOR);
+            group.accept(LARGE_TV);
+            group.accept(CABLE);
         });
     }
 
@@ -125,11 +124,11 @@ public class EmuItems {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static boolean runGenericConsoleWithBios(PlayerEntity user, File core, String bios, UUID file,
+    private static boolean runGenericConsoleWithBios(Player user, File core, String bios, UUID file,
                                                      UUID consoleId, String fileType, int width, int height,
                                                      VideoCodec videoCodec, AudioCodec audioCodec, int sampleRate) {
         if(!FileUtil.getRequiredFile(bios).exists()) {
-            user.sendMessage(Text.translatable("item.emumod.handheld.bios", bios), true);
+            user.displayClientMessage(Component.translatable("item.emumod.handheld.bios", bios), true);
             return false;
         }
         return runGenericConsole(core, file, consoleId, fileType, width, height, videoCodec, audioCodec, sampleRate);

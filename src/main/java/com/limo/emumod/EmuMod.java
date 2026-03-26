@@ -11,7 +11,7 @@ import com.limo.emumod.registry.EmuItems;
 import com.limo.emumod.util.RequirementManager;
 import com.limo.emumod.util.FileUtil;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.RandomSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +21,8 @@ import java.util.UUID;
 
 public class EmuMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(EmuMod.class);
-    public static final Random RANDOM = Random.create();
+    public static final RandomSource RANDOM = RandomSource.create();
+    public static final UUID UUID_ZERO = UUID.fromString("00000000-0000-0000-0000-0000000000");
 
     public static final Map<UUID, NativeGenericConsole> running = new HashMap<>();
 

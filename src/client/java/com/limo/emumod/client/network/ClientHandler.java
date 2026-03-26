@@ -13,6 +13,7 @@ import static com.limo.emumod.client.EmuModClient.mc;
 
 public class ClientHandler {
 
+    @SuppressWarnings("resource")
     public static void init() {
         // Protocol Stuff
         ClientPlayNetworking.registerGlobalReceiver(S2C.EmuModTokenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> NativeClient.init(payload.token())));
@@ -20,12 +21,12 @@ public class ClientHandler {
         // Screen Stuff
         //noinspection SwitchStatementWithTooFewBranches
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
-                ctx.client().setScreen(switch (payload.type()) {
+                ctx.client().setScreen(switch (payload.screenType()) {
                     case NetworkId.ScreenType.CARTRIDGE -> new CartridgeScreen();
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.OpenGameScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() ->
-                ctx.client().setScreen(switch (payload.type()) {
+                ctx.client().setScreen(switch (payload.screenType()) {
                     case NetworkId.ScreenType.GAMEBOY -> new GameboyScreen(false, payload.streamId());
                     case NetworkId.ScreenType.GAMEBOY_COLOR -> new GameboyScreen(true, payload.streamId());
                     case NetworkId.ScreenType.GAMEBOY_ADVANCE -> new GameboyAdvanceScreen(payload.streamId());
@@ -34,8 +35,8 @@ public class ClientHandler {
                     default -> throw new AssertionError();
         })));
         ClientPlayNetworking.registerGlobalReceiver(S2C.CloseScreenPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {
-            if(mc.currentScreen instanceof CartridgeScreen screen && screen.handle == payload.handle())
-                screen.close();
+            if(mc.screen instanceof CartridgeScreen screen && screen.handle == payload.handle())
+                screen.onClose();
         }));
         // Other Stuff
         ClientPlayNetworking.registerGlobalReceiver(S2C.UpdateEmulatorPayload.ID, (payload, ctx) -> ctx.client().execute(() -> {

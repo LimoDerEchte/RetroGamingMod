@@ -4,26 +4,26 @@ import com.limo.emumod.network.NetworkId;
 import com.limo.emumod.network.S2C;
 import com.limo.emumod.registry.ItemId;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 
 public class CartridgeItem extends Item {
 
     public CartridgeItem() {
-        super(new Settings().maxCount(8).registryKey(ItemId.Registry.CARTRIDGE));
+        super(new Properties().stacksTo(8).setId(ItemId.Registry.CARTRIDGE));
     }
 
     @Override
-    public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if(world.isClient())
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        if(world.isClientSide())
             return super.use(world, user, hand);
-        if(!(user instanceof ServerPlayerEntity player))
-            return ActionResult.PASS;
+        if(!(user instanceof ServerPlayer player))
+            return InteractionResult.PASS;
         ServerPlayNetworking.send(player, new S2C.OpenScreenPayload(NetworkId.ScreenType.CARTRIDGE));
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

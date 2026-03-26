@@ -7,11 +7,11 @@ import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
-import net.minecraft.data.recipe.RecipeExporter;
-import net.minecraft.data.recipe.RecipeGenerator;
-import net.minecraft.item.Items;
-import net.minecraft.recipe.book.RecipeCategory;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -28,127 +28,127 @@ public class EmuModDataGenerator implements DataGeneratorEntrypoint {
 
     private static class EmuModBlockLootTableProvider extends FabricBlockLootTableProvider {
 
-        protected EmuModBlockLootTableProvider(FabricDataOutput dataOutput, CompletableFuture<RegistryWrapper.WrapperLookup> registryLookup) {
+        protected EmuModBlockLootTableProvider(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
             super(dataOutput, registryLookup);
         }
 
         @Override
         public void generate() {
-            addDrop(EmuBlocks.NES);
-            addDrop(EmuBlocks.MONITOR);
-            addDrop(EmuBlocks.LARGE_TV);
+            dropSelf(EmuBlocks.NES);
+            dropSelf(EmuBlocks.MONITOR);
+            dropSelf(EmuBlocks.LARGE_TV);
         }
     }
 
     private static class EmuModRecipeProvider extends FabricRecipeProvider {
 
-        public EmuModRecipeProvider(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
+        public EmuModRecipeProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
             super(output, registriesFuture);
         }
 
         @Override
-        protected @NotNull RecipeGenerator getRecipeGenerator(RegistryWrapper.@NotNull WrapperLookup wrapperLookup, @NotNull RecipeExporter recipeExporter) {
-            return new RecipeGenerator(wrapperLookup, recipeExporter) {
+        protected @NotNull RecipeProvider createRecipeProvider(HolderLookup.@NotNull Provider wrapperLookup, @NotNull RecipeOutput recipeExporter) {
+            return new RecipeProvider(wrapperLookup, recipeExporter) {
                 @Override
-                public void generate() {
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.CARTRIDGE, 3)
+                public void buildRecipes() {
+                    shaped(RecipeCategory.REDSTONE, EmuItems.CARTRIDGE, 3)
                             .pattern("IPI")
                             .pattern("IPI")
                             .pattern("CCC")
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('P', Items.PAPER)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('P', Items.PAPER)
+                            .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                            .save(recipeExporter);
 
-                    createShapeless(RecipeCategory.REDSTONE, EmuItems.CABLE, 3)
-                            .input(Items.COPPER_INGOT, 3)
-                            .input(Items.REDSTONE, 2)
-                            .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT))
-                            .offerTo(recipeExporter);
+                    shapeless(RecipeCategory.REDSTONE, EmuItems.CABLE, 3)
+                            .requires(Items.COPPER_INGOT, 3)
+                            .requires(Items.REDSTONE, 2)
+                            .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.NES_CONTROLLER)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.NES_CONTROLLER)
                             .pattern("BBB")
                             .pattern("III")
                             .pattern("CRC")
-                            .input('B', Items.STONE_BUTTON)
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('R', Items.REDSTONE)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('B', Items.STONE_BUTTON)
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('R', Items.REDSTONE)
+                            .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.MONITOR)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.MONITOR)
                             .pattern("IGI")
                             .pattern("GGG")
                             .pattern("III")
-                            .input('I', Items.IRON_INGOT)
-                            .input('G', Items.GLASS_PANE)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('G', Items.GLASS_PANE)
+                            .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.LARGE_TV)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.LARGE_TV)
                             .pattern("IGI")
                             .pattern("GMG")
                             .pattern("IGI")
-                            .input('I', Items.IRON_INGOT)
-                            .input('G', Items.GLASS_PANE)
-                            .input('M', EmuItems.MONITOR)
-                            .criterion(hasItem(EmuItems.MONITOR), conditionsFromItem(EmuItems.MONITOR))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('G', Items.GLASS_PANE)
+                            .define('M', EmuItems.MONITOR)
+                            .unlockedBy(getHasName(EmuItems.MONITOR), has(EmuItems.MONITOR))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.GAMEBOY)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.GAMEBOY)
                             .pattern("ICI")
                             .pattern("BPB")
                             .pattern("ICI")
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('B', Items.STONE_BUTTON)
-                            .input('P', Items.GLASS_PANE)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('B', Items.STONE_BUTTON)
+                            .define('P', Items.GLASS_PANE)
+                            .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                            .save(recipeExporter);
 
-                    createShapeless(RecipeCategory.REDSTONE, EmuItems.GAMEBOY_COLOR)
-                            .input(EmuItems.GAMEBOY)
-                            .input(Items.RED_DYE)
-                            .input(Items.GREEN_DYE)
-                            .input(Items.BLUE_DYE)
-                            .criterion(hasItem(EmuItems.GAMEBOY), conditionsFromItem(EmuItems.GAMEBOY))
-                            .offerTo(recipeExporter);
+                    shapeless(RecipeCategory.REDSTONE, EmuItems.GAMEBOY_COLOR)
+                            .requires(EmuItems.GAMEBOY)
+                            .requires(Items.RED_DYE)
+                            .requires(Items.GREEN_DYE)
+                            .requires(Items.BLUE_DYE)
+                            .unlockedBy(getHasName(EmuItems.GAMEBOY), has(EmuItems.GAMEBOY))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.GAMEBOY_ADVANCE)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.GAMEBOY_ADVANCE)
                             .pattern("RCR")
                             .pattern("IGI")
                             .pattern("RCR")
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('R', Items.REDSTONE)
-                            .input('G', EmuItems.GAMEBOY_COLOR)
-                            .criterion(hasItem(EmuItems.GAMEBOY_COLOR), conditionsFromItem(EmuItems.GAMEBOY_COLOR))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('R', Items.REDSTONE)
+                            .define('G', EmuItems.GAMEBOY_COLOR)
+                            .unlockedBy(getHasName(EmuItems.GAMEBOY_COLOR), has(EmuItems.GAMEBOY_COLOR))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.GAME_GEAR)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.GAME_GEAR)
                             .pattern("III")
                             .pattern("IPI")
                             .pattern("CRC")
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('R', Items.REDSTONE)
-                            .input('P', Items.PAPER)
-                            .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('R', Items.REDSTONE)
+                            .define('P', Items.PAPER)
+                            .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                            .save(recipeExporter);
 
-                    createShaped(RecipeCategory.REDSTONE, EmuItems.NES)
+                    shaped(RecipeCategory.REDSTONE, EmuItems.NES)
                             .pattern("RIR")
                             .pattern("CCC")
                             .pattern("RIR")
-                            .input('I', Items.IRON_INGOT)
-                            .input('C', Items.COPPER_INGOT)
-                            .input('R', Items.REDSTONE)
-                            .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT))
-                            .offerTo(recipeExporter);
+                            .define('I', Items.IRON_INGOT)
+                            .define('C', Items.COPPER_INGOT)
+                            .define('R', Items.REDSTONE)
+                            .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                            .save(recipeExporter);
 
-                    offerSmelting(
+                    oreSmelting(
                             List.of(EmuItems.BROKEN_CARTRIDGE),
                             RecipeCategory.REDSTONE,
                             EmuItems.CARTRIDGE,
