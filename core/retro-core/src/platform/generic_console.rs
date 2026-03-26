@@ -5,8 +5,9 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::process::exit;
 use std::ptr;
-use std::sync::RwLock;
 use std::time::{Duration, Instant};
+use parking_lot::RwLock;
+use tracing::info;
 
 static INSTANCE: RwLock<Option<GenericConsole>> = RwLock::new(None);
 
@@ -26,14 +27,14 @@ impl GenericConsole {
     pub fn init(data: SharedMemory, core: &str, rom: &str, save: &str) -> Result<(), Box<dyn std::error::Error>> {
         LibRetroCore::construct_instance(core, get_directory(core).unwrap().as_str(), rom, save)?;
 
-        let mut guard = INSTANCE.write()?;
-        *guard = Some(Self {
+        INSTANCE.write().replace(Self {
             shared: data,
             audio_buffer: Default::default(),
         });
 
         LibRetroCore::set_video_callback(|fmt, data, width, height, pitch| {
-            let mut guard = INSTANCE.write().unwrap();
+            info!("Video frame received");
+            let mut guard = INSTANCE.write();
             let instance = guard.as_mut().unwrap();
 
             let slice: &mut [u8] = &mut instance.shared.display_data;
@@ -43,7 +44,7 @@ impl GenericConsole {
         });
 
         LibRetroCore::set_audio_callback(|data, pitch| {
-            let mut guard = INSTANCE.write().unwrap();
+            let mut guard = INSTANCE.write();
             let instance = guard.as_mut().unwrap();
 
             let samples = pitch * 2;
@@ -63,7 +64,7 @@ impl GenericConsole {
         });
 
         LibRetroCore::set_input_callback(|port, id| {
-            let guard = INSTANCE.read().unwrap();
+            let guard = INSTANCE.read();
             let instance = guard.as_ref().unwrap();
 
             match instance.shared.controls[port as usize] & 1 << id {
@@ -83,7 +84,7 @@ impl GenericConsole {
 
     fn core_loop() {
         let save_delay = Duration::from_secs(Self::SAVE_DELAY_SECONDS);
-        let wait_delay = Duration::from_millis(500);
+        let wait_delay = Duration::from_millis(300);
         let mut next = Instant::now() + save_delay;
 
         loop {
@@ -94,7 +95,7 @@ impl GenericConsole {
             }
 
             {
-                let guard = INSTANCE.read().unwrap();
+                let guard = INSTANCE.read();
                 let instance = guard.as_ref().unwrap();
                 if instance.shared.shutdown_requested {
                     break;
@@ -102,6 +103,7 @@ impl GenericConsole {
             }
 
             std::thread::sleep(wait_delay);
+            info!("Waiting");
         }
 
         LibRetroCore::save_game();

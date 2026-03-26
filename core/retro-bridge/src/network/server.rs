@@ -34,8 +34,7 @@ impl RetroServer {
     }
 
     pub fn init(max_users: i32, bind: &str, addresses: Vec<String>) -> Result<(), Box<dyn Error>> {
-        let mut guard = INSTANCE.write();
-        *guard = Some(RetroServer::new(max_users, bind, addresses)?);
+        INSTANCE.write().replace(RetroServer::new(max_users, bind, addresses)?);
         Ok(())
     }
 
@@ -52,8 +51,7 @@ impl RetroServer {
             }
         }
         info!("Disposing RetroServer instance: all loops finished");
-        let mut guard = INSTANCE.write();
-        *guard = None;
+        INSTANCE.write().take();
         Ok(())
     }
 

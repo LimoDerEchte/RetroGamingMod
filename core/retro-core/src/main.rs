@@ -1,14 +1,36 @@
 mod platform;
 mod util;
 
-use std::env;
+use std::{env, panic};
+use std::panic::catch_unwind;
 use shared_memory::ShmemConf;
-use tracing::{warn};
+use tracing::{error, warn};
 use retro_shared::shared::shared_memory::SharedMemory;
 use crate::platform::generic_console::GenericConsole;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     tracing_subscriber::fmt::init();
+
+    panic::set_hook(Box::new(|info| {
+        let location = info.location();
+        let message = info.payload()
+            .downcast_ref::<&str>()
+            .copied()
+            .or_else(|| info.payload().downcast_ref::<String>().map(|s| s.as_str()))
+            .unwrap_or("unknown panic");
+
+        error!(
+            panic.message = message,
+            panic.file = location.map(|l| l.file()),
+            panic.line = location.map(|l| l.line()),
+            "panic captured"
+        );
+    }));
+
+    let _ = catch_unwind(inner_main);
+}
+
+fn inner_main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args: Vec<String> = env::args().collect();
     if args.len() != 6 {

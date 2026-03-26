@@ -5,9 +5,10 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::mem::MaybeUninit;
 use std::{ptr, slice};
-use std::sync::{OnceLock, RwLock};
+use std::sync::{OnceLock};
 use std::time::{Duration, Instant};
 use libloading::Library;
+use parking_lot::RwLock;
 use rust_libretro_sys::*;
 use rust_libretro_sys::retro_pixel_format::{RETRO_PIXEL_FORMAT_RGB565, RETRO_PIXEL_FORMAT_XRGB8888};
 use tracing::{info, warn};
@@ -16,7 +17,7 @@ use tracing::{info, warn};
 #[derive(Debug, Copy, Clone)]
 pub struct RetroGameInfo {
     pub path: *const std::os::raw::c_char,
-    pub data: *const std::ffi::c_void,
+    pub data: *const c_void,
     pub size: usize,
     pub meta: *const std::os::raw::c_char,
 }
@@ -26,7 +27,7 @@ static CONTENT_DIR: OnceLock<CString> = OnceLock::new();
 
 #[allow(dead_code, unused_assignments)]
 unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> bool {
-    unsafe { match INSTANCE.write().unwrap().as_mut() {
+    unsafe { match INSTANCE.write().as_mut() {
         Some(instance) => {
             match cmd {
                 RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
@@ -97,7 +98,7 @@ unsafe extern "C" fn set_environment_callback(cmd: u32, data: *const c_void) -> 
 
 #[allow(dead_code)]
 unsafe extern "C" fn input_state_callback(port: u32, _: u32, _: u32, id: u32) -> u16 {
-    match INSTANCE.read().unwrap().as_ref() {
+    match INSTANCE.read().as_ref() {
         Some(instance) => {
             match instance.callback_input {
                 Some(input) => {
@@ -117,7 +118,7 @@ unsafe extern "C" fn input_poll_callback() {
 
 #[allow(dead_code)]
 unsafe extern "C" fn video_refresh_callback(data: *const c_void, width: u32, height: u32, pitch: usize) {
-    if let Some(instance) = INSTANCE.read().unwrap().as_ref()
+    if let Some(instance) = INSTANCE.read().as_ref()
             && let Some(video) = instance.callback_video {
         video(instance.pixel_format, data as *const u8, width, height, pitch as u32);
     }
@@ -130,7 +131,7 @@ unsafe extern "C" fn audio_sample_callback(_: i16, _: i16) {
 
 #[allow(dead_code)]
 unsafe extern "C" fn audio_sample_batch_callback(data: *const u16, frames: usize) -> usize {
-    match INSTANCE.read().unwrap().as_ref() {
+    match INSTANCE.read().as_ref() {
         Some(instance) => {
             match instance.callback_audio {
                 Some(audio) => {
@@ -181,7 +182,7 @@ pub struct LibRetroCore {
 
 impl LibRetroCore {
     pub fn construct_instance(core_path: &str, system_path: &str, rom_path: &str, save_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        INSTANCE.write()?.replace(Self {
+        INSTANCE.write().replace(Self {
             core: unsafe{ Library::new(core_path)? },
 
             retro_init: None,
@@ -218,11 +219,11 @@ impl LibRetroCore {
     }
 
     pub fn run_core() {
-        let fps = { INSTANCE.read().unwrap().as_ref().unwrap().fps };
+        let fps = { INSTANCE.read().as_ref().unwrap().fps };
         let frame_time = Duration::from_micros((1000000.0 / fps) as u64);
         info!("Starting main loop at {:?} fps", fps);
 
-        let retro_run = { INSTANCE.read().unwrap().as_ref().unwrap().retro_run.unwrap() };
+        let retro_run = { INSTANCE.read().as_ref().unwrap().retro_run.unwrap() };
 
         let mut next = Instant::now();
         loop {
@@ -240,25 +241,25 @@ impl LibRetroCore {
     }
 
     pub fn set_video_callback(callback: fn(fmt: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32)) {
-        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+        if let Some(instance) = INSTANCE.write().as_mut() {
             instance.callback_video = Some(callback);
         }
     }
 
     pub fn set_audio_callback(callback: fn(data: *const u16, frames: usize) -> usize) {
-        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+        if let Some(instance) = INSTANCE.write().as_mut() {
             instance.callback_audio = Some(callback);
         }
     }
 
     pub fn set_input_callback(callback: fn(port: u32, id: u32) -> u16) {
-        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+        if let Some(instance) = INSTANCE.write().as_mut() {
             instance.callback_input = Some(callback);
         }
     }
 
     pub fn init() -> Result<(), Box<dyn std::error::Error>> {
-        match INSTANCE.write()?.as_mut() {
+        match INSTANCE.write().as_mut() {
             Some(instance) => {
                 unsafe {
                     // Load Symbols
@@ -362,7 +363,7 @@ impl LibRetroCore {
     }
 
     pub fn deinit() {
-        if let Some(instance) = INSTANCE.write().unwrap().as_mut() {
+        if let Some(instance) = INSTANCE.write().as_mut() {
             unsafe {
                 if let Some(unload_game) = instance.retro_unload_game { unload_game(); }
                 if let Some(deinit) = instance.retro_deinit { deinit(); }
@@ -371,7 +372,7 @@ impl LibRetroCore {
     }
 
     pub fn save_game() {
-        if let Some(instance) = INSTANCE.read().unwrap().as_ref() {
+        if let Some(instance) = INSTANCE.read().as_ref() {
             if !instance.saving_supported {
                 return;
             }

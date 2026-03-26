@@ -40,8 +40,7 @@ impl RetroClient {
     }
 
     pub fn init(token: Vec<u8>) {
-        let mut guard = INSTANCE.write();
-        *guard = Some(RetroClient::new(token));
+        INSTANCE.write().replace(RetroClient::new(token));
     }
 
     pub fn deinit() -> Result<(), Box<dyn Error>> {
@@ -58,8 +57,7 @@ impl RetroClient {
             std::thread::sleep(Duration::from_millis(100));
         }
         info!("Disposing RetroClient instance: all loops finished");
-        let mut guard = INSTANCE.write();
-        *guard = None;
+        INSTANCE.write().take();
         Ok(())
     }
 
