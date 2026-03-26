@@ -4,9 +4,8 @@ use jni::sys::jboolean;
 use jni::EnvUnowned;
 use tracing::{info, warn};
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeServer_init")]
+pub extern "system" fn native_server_init<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     max_users: i32,
@@ -38,9 +37,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_init<'caller>(
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_deinit<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeServer_deinit")]
+pub extern "system" fn native_server_deinit<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
@@ -50,9 +48,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_deinit<'caller>(
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeServer_generateToken<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeServer_generateToken")]
+pub extern "system" fn native_server_gen_token<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> JByteArray<'caller> {

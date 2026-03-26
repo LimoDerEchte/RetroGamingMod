@@ -4,9 +4,8 @@ use jni::sys::{jboolean, jint, jlong, jshort};
 use jni::EnvUnowned;
 use tracing::{info};
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_init")]
+pub extern "system" fn native_client_init<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     j_token: JByteArray<'caller>
@@ -25,9 +24,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_init<'cal
     true
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_deinit<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_deinit")]
+pub extern "system" fn native_client_deinit<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
@@ -37,9 +35,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_deinit<'c
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnected<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_isConnected")]
+pub extern "system" fn native_client_connected<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
 ) -> jboolean {
@@ -51,9 +48,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_isConnect
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerId<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_registerId")]
+pub extern "system" fn native_client_register_id<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
@@ -73,9 +69,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_registerI
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregisterId<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_unregisterId")]
+pub extern "system" fn native_client_unregister_id<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
@@ -90,9 +85,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_unregiste
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendControls<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_sendControls")]
+pub extern "system" fn native_client_send_controls<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
@@ -109,9 +103,8 @@ pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_sendContr
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>()
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_client_bridge_NativeClient_screenChanged<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_client_bridge_NativeClient_screenChanged")]
+pub extern "system" fn native_client_display_changed<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,

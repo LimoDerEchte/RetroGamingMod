@@ -229,6 +229,6 @@ impl RetroClient {
     }
 
     pub fn is_connected(&self) -> bool {
-        self.client.lock().is_connected()
+        !self.client.lock().is_disconnected()
     }
 }

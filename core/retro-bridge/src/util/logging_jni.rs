@@ -6,9 +6,8 @@ use std::sync::mpsc::channel;
 use jni::strings::JNIString;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn JNI_OnLoad(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c_void) -> jint {
+#[unsafe(export_name = "JNI_OnLoad")]
+pub extern "system" fn jni_on_load(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c_void) -> jint {
     let vm: JavaVM = unsafe { JavaVM::from_raw(ptr) };
 
     std::thread::spawn(move || {

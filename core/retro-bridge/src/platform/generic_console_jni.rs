@@ -4,9 +4,8 @@ use jni::sys::{jint};
 use tracing::{info, warn};
 use crate::platform::generic_console::ConsoleRegistry;
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_register<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeGenericConsole_register")]
+pub extern "system" fn generic_console_register<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     width: jint,
@@ -22,9 +21,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_register
     id
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_unregister<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeGenericConsole_unregister")]
+pub extern "system" fn generic_console_unregister<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
@@ -36,9 +34,8 @@ pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_unregist
     }).resolve::<jni::errors::ThrowRuntimeExAndDefault>();
 }
 
-#[allow(non_snake_case)]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_limo_emumod_bridge_NativeGenericConsole_start<'caller>(
+#[unsafe(export_name = "Java_com_limo_emumod_bridge_NativeGenericConsole_start")]
+pub extern "system" fn generic_console_start<'caller>(
     mut unowned: EnvUnowned<'caller>,
     _: JClass<'caller>,
     id: jint,
