@@ -60,74 +60,75 @@ unsafe extern "C" {
 
 #[allow(dead_code, unused_assignments)]
 unsafe extern "C" fn set_environment_callback(cmd: u32, data: *mut c_void) -> bool {
-    warn!("4 {:?}", cmd);
-    unsafe { match INSTANCE.write().as_mut() {
-        Some(instance) => {
-            match cmd {
-                RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
-                    let callback = data as *mut retro_log_callback;
-                    (*callback).log = Some(log_printf_trampoline);
-                    true
-                }
-                RETRO_ENVIRONMENT_GET_CAN_DUPE => {
-                    *(data as *mut u8) = 1;
-                    true
-                }
-                RETRO_ENVIRONMENT_SET_PIXEL_FORMAT => {
-                    let format = *(data as *const retro_pixel_format);
-                    if format as i32 > RETRO_PIXEL_FORMAT_RGB565 as i32 {
-                        warn!("Core tried to use unsupported pixel format: {:?}", format);
-                        false
-                    } else {
-                        instance.pixel_format = format;
-                        true
-                    }
-                }
-                RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY | RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY | RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY => {
-                    let out = data as *mut *const c_char;
-                    match CONTENT_DIR.get() {
-                        Some(path) => {
-                            *out = path.as_ptr();
-                            true
-                        }
-                        None => false,
-                    }
-                }
-                RETRO_ENVIRONMENT_SET_VARIABLE => {
-                    !data.is_null()
-                }
-                RETRO_ENVIRONMENT_GET_VARIABLE => {
-                    let mut var = *(data as *mut retro_variable);
-                    let key = CStr::from_ptr(var.key).to_str().unwrap();
-
-                    match instance.environment_variables.get(key) {
-                        Some(value) => {
-                            var.value = value.as_ptr();
-                            true
-                        }
-                        None => {
-                            warn!("Environment variable not found: {:?}", key);
-                            var.value = ptr::null();
-                            false
-                        }
-                    }
-                }
-                RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
-                    if !data.is_null() {
-                        *(data as *mut u8) = instance.environment_vars_updated;
-                        if instance.environment_vars_updated == 1 {
-                            instance.environment_vars_updated = 0;
-                        }
-                        true
-                    } else {
-                        false
-                    }
-                }
-                _ => false
+    unsafe {
+        match cmd {
+            RETRO_ENVIRONMENT_GET_LOG_INTERFACE => {
+                // TODO: Create impl that doesn't crash
+                //let callback = data as *mut retro_log_callback;
+                //(*callback).log = Some(log_printf_trampoline);
+                //true
+                false
             }
+            RETRO_ENVIRONMENT_GET_CAN_DUPE => {
+                *(data as *mut u8) = 1;
+                true
+            }
+            RETRO_ENVIRONMENT_SET_PIXEL_FORMAT => {
+                let format = *(data as *const retro_pixel_format);
+                if format as i32 > RETRO_PIXEL_FORMAT_RGB565 as i32 {
+                    warn!("Core tried to use unsupported pixel format: {:?}", format);
+                    false
+                } else {
+                    INSTANCE.write().as_mut().unwrap().pixel_format = format;
+                    true
+                }
+            }
+            RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY | RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY | RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY => {
+                let out = data as *mut *const c_char;
+                match CONTENT_DIR.get() {
+                    Some(path) => {
+                        *out = path.as_ptr();
+                        true
+                    }
+                    None => false,
+                }
+            }
+            RETRO_ENVIRONMENT_SET_VARIABLE => {
+                !data.is_null()
+            }
+            RETRO_ENVIRONMENT_GET_VARIABLE => {
+                let mut var = *(data as *mut retro_variable);
+                let key = CStr::from_ptr(var.key).to_str().unwrap();
+
+                match INSTANCE.read().as_ref().unwrap().environment_variables.get(key) {
+                    Some(value) => {
+                        var.value = value.as_ptr();
+                        true
+                    }
+                    None => {
+                        warn!("Environment variable not found: {:?}", key);
+                        var.value = ptr::null();
+                        false
+                    }
+                }
+            }
+            RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE => {
+                if !data.is_null() {
+                    let mut guard = INSTANCE.write();
+                    let instance = guard.as_mut().unwrap();
+
+                    *(data as *mut u8) = instance.environment_vars_updated;
+                    if instance.environment_vars_updated == 1 {
+                        instance.environment_vars_updated = 0;
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false
         }
-        None => false
-    }}
+    }
 }
 
 #[allow(dead_code)]
@@ -229,7 +230,7 @@ impl LibRetroCore {
 
             next += frame_time;
             let now = Instant::now();
-            if now > next {
+            if now < next {
                 std::thread::sleep(next - now);
             } else {
                 next = now;

@@ -7,7 +7,6 @@ use std::process::exit;
 use std::ptr;
 use std::time::{Duration, Instant};
 use parking_lot::RwLock;
-use tracing::{info};
 
 static INSTANCE: RwLock<Option<GenericConsole>> = RwLock::new(None);
 
@@ -33,7 +32,6 @@ impl GenericConsole {
         });
 
         LibRetroCore::set_video_callback(|fmt, data, width, height, pitch| {
-            info!("Video frame received");
             let mut guard = INSTANCE.write();
             let instance = guard.as_mut().unwrap();
 
@@ -103,7 +101,6 @@ impl GenericConsole {
             }
 
             std::thread::sleep(wait_delay);
-            info!("Waiting");
         }
 
         LibRetroCore::save_game();
