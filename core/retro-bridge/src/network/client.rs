@@ -13,14 +13,14 @@ use crate::util::display::NativeDisplay;
 
 static INSTANCE: RwLock<Option<RetroClient>> = RwLock::new(None);
 
+static SHUTDOWN_REQUESTED: AtomicBool = AtomicBool::new(false);
+static RUNNING_LOOP_COUNT: AtomicI32 = AtomicI32::new(0);
+
 pub struct RetroClient {
     client: Mutex<RenetClient>,
     transport: Mutex<NetcodeClientTransport>,
 
     displays: RwLock<HashMap<i32, Mutex<NativeDisplay>>>,
-    running_loop_count: AtomicI32,
-    shutdown_requested: AtomicBool,
-
     input_packet: Mutex<Option<Vec<u8>>>,
 }
 
@@ -44,18 +44,14 @@ impl RetroClient {
     }
 
     pub fn deinit() -> Result<(), Box<dyn Error>> {
-        Self::with_instance(|instance| {
-            instance.shutdown_requested.store(true, Ordering::Relaxed);
-            Ok(())
-        })?;
+        SHUTDOWN_REQUESTED.store(true, Ordering::Relaxed);
         loop {
-            if Self::with_instance(|instance| {
-                Ok(instance.running_loop_count.load(Ordering::Relaxed))
-            })? <= 0 {
+            if RUNNING_LOOP_COUNT.load(Ordering::Relaxed) <= 0 {
                 break;
             }
             std::thread::sleep(Duration::from_millis(100));
         }
+
         info!("Disposing RetroClient instance: all loops finished");
         INSTANCE.write().take();
         Ok(())
@@ -67,14 +63,14 @@ impl RetroClient {
         let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
         let transport = NetcodeClientTransport::new(now, ClientAuthentication::Secure { connect_token: token }, socket).unwrap();
 
+        SHUTDOWN_REQUESTED.store(false, Ordering::SeqCst);
+        RUNNING_LOOP_COUNT.store(0, Ordering::SeqCst);
+
         Self {
             client: Mutex::new(RenetClient::new(ConnectionConfig::default())),
             transport: Mutex::new(transport),
 
             displays: RwLock::new(Default::default()),
-            running_loop_count: AtomicI32::new(0),
-            shutdown_requested: AtomicBool::new(false),
-
             input_packet: Mutex::new(None),
         }
     }
@@ -103,16 +99,13 @@ impl RetroClient {
         let mut next = Instant::now();
         let delta = Duration::from_millis(10);
 
-        Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
-            Ok(())
-        }).unwrap();
+        RUNNING_LOOP_COUNT.fetch_add(1, Ordering::Relaxed);
 
         loop {
             next += delta;
 
             if !Self::with_instance(|instance| {
-                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                if SHUTDOWN_REQUESTED.load(Ordering::Relaxed) {
                     return Ok(false);
                 }
 
@@ -155,10 +148,10 @@ impl RetroClient {
         }
 
         Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
-            instance.shutdown_requested.store(true, Ordering::Relaxed);
-
             instance.client.lock().disconnect();
+
+            RUNNING_LOOP_COUNT.fetch_sub(1, Ordering::Relaxed);
+            SHUTDOWN_REQUESTED.store(true, Ordering::Relaxed);
             Ok(())
         }).expect("Failed to shutdown clientside connection");
     }
@@ -188,16 +181,13 @@ impl RetroClient {
         let mut next = Instant::now();
         let delta = Duration::from_micros(1000000 / 60);
 
-        Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
-            Ok(())
-        }).unwrap();
+        RUNNING_LOOP_COUNT.fetch_add(1, Ordering::Relaxed);
 
         loop {
             next += delta;
 
             if !Self::with_instance(|instance| {
-                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                if SHUTDOWN_REQUESTED.load(Ordering::Relaxed) {
                     return Ok(false);
                 }
 
@@ -220,10 +210,7 @@ impl RetroClient {
             }
         }
 
-        Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
-            Ok(())
-        }).unwrap();
+        RUNNING_LOOP_COUNT.fetch_sub(1, Ordering::Relaxed);
     }
 
     pub fn is_connected(&self) -> bool {

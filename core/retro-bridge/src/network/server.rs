@@ -13,13 +13,13 @@ use crate::platform::generic_console::ConsoleRegistry;
 
 static INSTANCE: RwLock<Option<RetroServer>> = RwLock::new(None);
 
+static SHUTDOWN_REQUESTED: AtomicBool = AtomicBool::new(false);
+static RUNNING_LOOP_COUNT: AtomicI32 = AtomicI32::new(0);
+static CLIENT_ID_INCREMENTOR: AtomicU64 = AtomicU64::new(0);
+
 pub struct RetroServer {
     server: Mutex<RenetServer>,
     transport: Mutex<NetcodeServerTransport>,
-
-    shutdown_requested: AtomicBool,
-    running_loop_count: AtomicI32,
-    client_id_incrementor: AtomicU64,
 
     public_addresses: Vec<SocketAddr>,
     private_key: [u8; 32],
@@ -39,14 +39,9 @@ impl RetroServer {
     }
 
     pub fn deinit() -> Result<(), Box<dyn Error>> {
-        Self::with_instance(|instance| {
-            instance.shutdown_requested.store(true, Ordering::Relaxed);
-            Ok(())
-        })?;
+        SHUTDOWN_REQUESTED.store(true, Ordering::Relaxed);
         loop {
-            if Self::with_instance(|instance| {
-                Ok(instance.running_loop_count.load(Ordering::Relaxed))
-            })? <= 0 {
+            if RUNNING_LOOP_COUNT.load(Ordering::Relaxed) <= 0 {
                 break;
             }
         }
@@ -73,13 +68,13 @@ impl RetroServer {
             authentication: ServerAuthentication::Secure { private_key },
         };
 
+        SHUTDOWN_REQUESTED.store(false, Ordering::SeqCst);
+        RUNNING_LOOP_COUNT.store(0, Ordering::SeqCst);
+        CLIENT_ID_INCREMENTOR.store(0, Ordering::SeqCst);
+
         Ok(Self {
             server: Mutex::new(RenetServer::new(ConnectionConfig::default())),
             transport: Mutex::new(NetcodeServerTransport::new(config, socket)?),
-
-            shutdown_requested: AtomicBool::new(false),
-            running_loop_count: AtomicI32::new(0),
-            client_id_incrementor: AtomicU64::new(0),
 
             public_addresses,
             private_key,
@@ -88,7 +83,7 @@ impl RetroServer {
 
     pub fn gen_token(&self) -> Result<Vec<u8>, Box<dyn Error>> {
         let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
-        let client_id = self.client_id_incrementor.fetch_add(1, Ordering::Relaxed);
+        let client_id = CLIENT_ID_INCREMENTOR.fetch_add(1, Ordering::Relaxed);
 
         let token = ConnectToken::generate(
             now, RETRO_PROTOCOL, 30, client_id, 15,
@@ -105,7 +100,7 @@ impl RetroServer {
         let delta = Duration::from_millis(10);
 
         Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
+            RUNNING_LOOP_COUNT.fetch_add(1, Ordering::Relaxed);
             Ok(())
         }).unwrap();
 
@@ -113,7 +108,7 @@ impl RetroServer {
             next += delta;
 
             if !Self::with_instance(|instance| {
-                if instance.shutdown_requested.load(Ordering::Relaxed) {
+                if SHUTDOWN_REQUESTED.load(Ordering::Relaxed) {
                     return Ok(false);
                 }
 
@@ -161,11 +156,10 @@ impl RetroServer {
         }
 
         Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
-            instance.shutdown_requested.store(true, Ordering::Relaxed);
-
             instance.server.lock().disconnect_all();
-            drop(instance.server.lock());
+
+            RUNNING_LOOP_COUNT.fetch_sub(1, Ordering::Relaxed);
+            SHUTDOWN_REQUESTED.store(true, Ordering::Relaxed);
             Ok(())
         }).expect("Failed to shutdown clientside connection");
     }
@@ -200,40 +194,28 @@ impl RetroServer {
         let mut next = Instant::now();
         let delta = Duration::from_micros(1000000 / 60);
 
-        Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_add(1, Ordering::Relaxed);
-            Ok(())
-        }).unwrap();
+        RUNNING_LOOP_COUNT.fetch_add(1, Ordering::Relaxed);
 
         loop {
             next += delta;
 
-            if !Self::with_instance(|instance| {
-                if instance.shutdown_requested.load(Ordering::Relaxed) {
-                    return Ok(false);
-                }
-
-                ConsoleRegistry::foreach(|console| {
-                    console.encode_video_frame();
-                });
-
-                Ok(true)
-            }).expect("Failed serverside video packing frame") {
+            if SHUTDOWN_REQUESTED.load(Ordering::Relaxed) {
                 break;
             }
 
+            ConsoleRegistry::foreach(|console| {
+                console.encode_video_frame();
+            });
+
             let now = Instant::now();
             if now > next {
-                warn!("RetroServer main loop lagging behind!");
+                warn!("RetroServer video packing loop lagging behind!");
                 next = now;
             } else {
                 std::thread::sleep(next - now);
             }
         }
 
-        Self::with_instance(|instance| {
-            instance.running_loop_count.fetch_sub(1, Ordering::Relaxed);
-            Ok(())
-        }).unwrap();
+        RUNNING_LOOP_COUNT.fetch_sub(1, Ordering::Relaxed);
     }
 }
