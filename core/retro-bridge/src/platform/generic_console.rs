@@ -62,6 +62,22 @@ impl GenericConsole {
         }
     }
 
+    fn dispose(&mut self) {
+        unsafe { &mut *self.shared_data }.shutdown_requested = true;
+        if let Some(mut core_process) = self.core_process.take() {
+            match core_process.wait_timeout(Duration::from_secs(10)) {
+                Ok(Some(status)) => {
+                    info!("Core process exited with status {:?}", status);
+                }
+                _ => {
+                    core_process.kill().expect("Failed to kill child");
+                    core_process.wait().expect("Failed to wait after kill");
+                    warn!("Core process had to be killed after 10 seconds!")
+                }
+            }
+        }
+    }
+
     pub fn load(&mut self, retro_core: String, core: String, rom: String, save: String) -> Result<(), Box<dyn Error>> {
         self.core_process = Some(
             Command::new(retro_core)
@@ -97,24 +113,6 @@ impl GenericConsole {
     }
 }
 
-impl Drop for GenericConsole {
-    fn drop(&mut self) {
-        unsafe { &mut *self.shared_data }.shutdown_requested = true;
-        if let Some(mut core_process) = self.core_process.take() {
-            match core_process.wait_timeout(Duration::from_secs(10)) {
-                Ok(Some(status)) => {
-                    info!("Core process exited with status {:?}", status);
-                }
-                _ => {
-                    core_process.kill().expect("Failed to kill child");
-                    core_process.wait().expect("Failed to wait after kill");
-                    warn!("Core process had to be killed after 10 seconds!")
-                }
-            }
-        }
-    }
-}
-
 static REGISTRY: OnceLock<ConsoleRegistry> = OnceLock::new();
 
 #[derive(Default)]
@@ -133,7 +131,11 @@ impl ConsoleRegistry {
 
     pub fn unregister(id: i32) {
         let instance = REGISTRY.get_or_init(ConsoleRegistry::default);
-        instance.registry.write().remove(&id);
+        if let Some(removed) = instance.registry.write().remove(&id) {
+            std::thread::spawn(move || {
+                removed.write().dispose();
+            });
+        }
     }
 
     pub fn with_console<T>(id: i32, func: impl FnOnce(&mut GenericConsole) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
