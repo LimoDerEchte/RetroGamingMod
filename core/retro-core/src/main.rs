@@ -39,12 +39,9 @@ fn inner_main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let shared_memory = ShmemConf::new().os_id(args[2].clone()).open()?;
-
     let ptr = shared_memory.as_ptr() as *mut SharedMemory;
-    let data = unsafe { &mut *ptr };
 
-    GenericConsole::init(*data, &args[3], &args[4], &args[5])?;
-    warn!("4");
+    GenericConsole::init(ptr, &args[3], &args[4], &args[5])?;
     GenericConsole::run();
 
     Ok(())

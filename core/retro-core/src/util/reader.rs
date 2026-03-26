@@ -26,21 +26,20 @@ fn rgb1555_to_rgb8888(pixel: u16) -> u32 {
     0xFF000000 | r8 | g8 | b8
 }
 
-pub fn convert_data(format: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32, dst: &mut [u8]) {
+pub fn convert_data(format: retro_pixel_format, data: *const u8, width: u32, height: u32, pitch: u32, dst: *mut u8) {
     match format {
         retro_pixel_format::RETRO_PIXEL_FORMAT_XRGB8888 => {
             if pitch == width * 4 {
-                let src_slice = unsafe {
-                    std::slice::from_raw_parts(data, (width * height * 4) as usize)
+                unsafe {
+                    ptr::copy(data, dst, (width * height * 4) as usize);
                 };
-                dst.copy_from_slice(src_slice);
             } else {
                 for y in 0..height {
                     let row = unsafe { data.add((y * pitch) as usize) };
                     for x in 0..(width * 4) {
-                        dst[(y * width + x) as usize] = unsafe {
-                            ptr::read_unaligned(row.add(x as usize))
-                        };
+                        unsafe {
+                            ptr::write_unaligned(dst.add((y * width + x) as usize), ptr::read_unaligned(row.add(x as usize)))
+                        }
                     }
                 }
             }
@@ -54,14 +53,11 @@ pub fn convert_data(format: retro_pixel_format, data: *const u8, width: u32, hei
             for y in 0..height {
                 let row = unsafe { data.add((y * pitch) as usize) };
                 for x in 0..width {
-                    let val = unsafe {
-                        ptr::read_unaligned(row.add((x * 2) as usize) as *const u16)
-                    };
-                    let parts = converter(val).to_le_bytes();
-                    dst[(y * width + x) as usize] = parts[0];
-                    dst[(y * width + x) as usize + 1] = parts[1];
-                    dst[(y * width + x) as usize + 2] = parts[2];
-                    dst[(y * width + x) as usize + 3] = parts[3];
+                    unsafe {
+                        let val = ptr::read_unaligned(row.add((x * 2) as usize) as *const u16);
+                        let parts = converter(val).to_le_bytes();
+                        ptr::copy(parts.as_ptr(), dst.add((y * width + x * 4) as usize), 4);
+                    }
                 }
             }
         },

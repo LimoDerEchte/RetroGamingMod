@@ -5,10 +5,12 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::process::exit;
 use std::ptr;
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
-use parking_lot::RwLock;
+use parking_lot::{Mutex};
+use tracing::info;
 
-static INSTANCE: RwLock<Option<GenericConsole>> = RwLock::new(None);
+static INSTANCE: OnceLock<GenericConsole> = OnceLock::new();
 
 fn get_directory(file_path: &str) -> Option<String> {
     let path = Path::new(file_path);
@@ -16,56 +18,58 @@ fn get_directory(file_path: &str) -> Option<String> {
 }
 
 pub struct GenericConsole {
-    shared: SharedMemory,
-    audio_buffer: VecDeque<i16>
+    shared_data: *mut SharedMemory,
+    audio_buffer: Mutex<VecDeque<i16>>
 }
+
+unsafe impl Send for GenericConsole {}
+unsafe impl Sync for GenericConsole {}
 
 impl GenericConsole {
     const SAVE_DELAY_SECONDS: u64 = 30;
 
-    pub fn init(data: SharedMemory, core: &str, rom: &str, save: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn init(data: *mut SharedMemory, core: &str, rom: &str, save: &str) -> Result<(), Box<dyn std::error::Error>> {
         LibRetroCore::construct_instance(core, get_directory(core).unwrap().as_str(), rom, save)?;
 
-        INSTANCE.write().replace(Self {
-            shared: data,
+        let _ = INSTANCE.set(Self {
+            shared_data: data,
             audio_buffer: Default::default(),
         });
 
         LibRetroCore::set_video_callback(|fmt, data, width, height, pitch| {
-            let mut guard = INSTANCE.write();
-            let instance = guard.as_mut().unwrap();
+            let instance = INSTANCE.get().unwrap();
 
-            let slice: &mut [u8] = &mut instance.shared.display_data;
-            convert_data(fmt, data, width, height, pitch, slice);
-
-            instance.shared.display_changed = true;
+            convert_data(fmt, data, width, height, pitch, unsafe{ &mut *instance.shared_data }.display_data.as_mut_ptr());
+            unsafe{ &mut *instance.shared_data }.display_changed = true;
         });
 
         LibRetroCore::set_audio_callback(|data, pitch| {
-            let mut guard = INSTANCE.write();
-            let instance = guard.as_mut().unwrap();
+            let instance = INSTANCE.get().unwrap();
+            let mut buffer = instance.audio_buffer.lock();
 
             let samples = pitch * 2;
             for i in 0..samples {
-                instance.audio_buffer.push_back(unsafe {
+                buffer.push_back(unsafe {
                     ptr::read_unaligned(data.add(i * 2))
                 })
             }
 
-            while instance.audio_buffer.len() > SharedMemory::AUDIO_FRAME_SIZE {
+            let data = unsafe{ &mut *instance.shared_data }.audio_data.as_mut_ptr();
+            while buffer.len() > SharedMemory::AUDIO_FRAME_SIZE {
                 for i in 0..SharedMemory::AUDIO_FRAME_SIZE {
-                    instance.shared.audio_data[i] = instance.audio_buffer.pop_front().unwrap() as i16
+                    unsafe {
+                        ptr::write_unaligned(data.add(i), buffer.pop_front().unwrap());
+                    }
                 }
-                instance.shared.audio_changed = true;
+                unsafe{ &mut *instance.shared_data }.audio_changed = true;
             }
             pitch
         });
 
         LibRetroCore::set_input_callback(|port, id| {
-            let guard = INSTANCE.read();
-            let instance = guard.as_ref().unwrap();
+            let instance = INSTANCE.get().unwrap();
 
-            match instance.shared.controls[port as usize] & 1 << id {
+            match unsafe{ &*instance.shared_data }.controls[port as usize] & 1 << id {
                 1 => 0x7FFF,
                 _ => 0,
             }
@@ -93,9 +97,8 @@ impl GenericConsole {
             }
 
             {
-                let guard = INSTANCE.read();
-                let instance = guard.as_ref().unwrap();
-                if instance.shared.shutdown_requested {
+                let instance = INSTANCE.get().unwrap();
+                if unsafe{ &mut *instance.shared_data }.shutdown_requested {
                     break;
                 }
             }
