@@ -7,7 +7,7 @@ use std::process::exit;
 use std::ptr;
 use std::time::{Duration, Instant};
 use parking_lot::RwLock;
-use tracing::info;
+use tracing::{info};
 
 static INSTANCE: RwLock<Option<GenericConsole>> = RwLock::new(None);
 
@@ -18,7 +18,7 @@ fn get_directory(file_path: &str) -> Option<String> {
 
 pub struct GenericConsole {
     shared: SharedMemory,
-    audio_buffer: VecDeque<u16>
+    audio_buffer: VecDeque<i16>
 }
 
 impl GenericConsole {

@@ -6,8 +6,10 @@ use std::sync::mpsc::channel;
 use jni::strings::JNIString;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
+/// # Safety
+/// Clippy wants me to write something so here you go
 #[unsafe(export_name = "JNI_OnLoad")]
-pub extern "system" fn jni_on_load(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c_void) -> jint {
+pub unsafe extern "system" fn jni_on_load(ptr: *mut sys::JavaVM, _: *mut std::os::raw::c_void) -> jint {
     let vm: JavaVM = unsafe { JavaVM::from_raw(ptr) };
 
     std::thread::spawn(move || {

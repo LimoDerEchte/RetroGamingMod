@@ -31,7 +31,6 @@ fn main() {
 }
 
 fn inner_main() -> Result<(), Box<dyn std::error::Error>> {
-
     let args: Vec<String> = env::args().collect();
     if args.len() != 6 {
         warn!("This should NEVER be called by a user (to few arguments)");
@@ -45,6 +44,7 @@ fn inner_main() -> Result<(), Box<dyn std::error::Error>> {
     let data = unsafe { &mut *ptr };
 
     GenericConsole::init(*data, &args[3], &args[4], &args[5])?;
+    warn!("4");
     GenericConsole::run();
 
     Ok(())
